@@ -84,7 +84,7 @@ public class TGCGame : Game
 
         // Cargo el modelo del logo.
         _modeloTGC = new CustomModel(
-            Content.Load<Model>(ContentFolder3D + "tgc-logo/tgc-logo"),
+            Content.Load<Model>(ContentFolder3D + "buildings/industrial/building-a"),
             Content.Load<Effect>(ContentFolderEffects + "BasicShader")
         );
 
