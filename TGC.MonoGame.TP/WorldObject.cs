@@ -8,10 +8,18 @@ namespace TGC.MonoGame.TP;
 
 public class WorldObject
 {
-    private Model _model;
-    private Matrix _initial_world;
+    private readonly Model _model;
+    private readonly Matrix _initial_world;
     private Vector3 _offset;
     private Quaternion _rotation;
+
+    public WorldObject(Model model, Matrix initial_world, Vector3 initial_offset, Quaternion initial_rotation)
+    {
+        _model = model;
+        _initial_world = initial_world;
+        _offset = initial_offset;
+        _rotation = initial_rotation;
+    }
 
     private Matrix GetCurrentWorld(GameTime gameTime)
     {
