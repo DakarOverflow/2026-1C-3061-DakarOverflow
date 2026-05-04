@@ -11,10 +11,13 @@ public class CustomModel
     private Effect _effect;
     private Model _model;
 
-    public CustomModel(Model model, Effect effect)
+    private Color _diffusionColor;
+
+    public CustomModel(Model model, Effect effect, Color diffusionColor)
     {
         _model = model;
         _effect = effect;
+        _diffusionColor = diffusionColor;
 
         foreach (var mesh in _model.Meshes)
         {
@@ -30,7 +33,7 @@ public class CustomModel
     {
         _effect.Parameters["View"].SetValue(view);
         _effect.Parameters["Projection"].SetValue(projection);
-        _effect.Parameters["DiffuseColor"].SetValue(Color.DarkBlue.ToVector3());
+        _effect.Parameters["DiffuseColor"].SetValue(_diffusionColor.ToVector3());
 
         var modelMeshesBaseTransforms = new Matrix[_model.Bones.Count];
         _model.CopyAbsoluteBoneTransformsTo(modelMeshesBaseTransforms);

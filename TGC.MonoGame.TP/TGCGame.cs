@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using TGC.MonoGame.TP.Zero;
 
 namespace TGC.MonoGame.TP;
 
@@ -21,13 +22,17 @@ public class TGCGame : Game
     
     private readonly GraphicsDeviceManager _graphics;
 
-    CustomModel _modeloTGC;
-    WorldObject _objetoTGC;
+    CustomModel _modeloPiso;
+    WorldObject _objetoPiso;
 
-    private Matrix _projection;
+    CustomModel _modeloAuto;
+    WorldObject _objetoAutoNuestro;
+
+    FollowCamera _currentCamera;
+    
     private SpriteBatch _spriteBatch;
-    private Matrix _view;
-    private Matrix _world;
+
+
 
     /// <summary>
     ///     Constructor del juego.
@@ -63,12 +68,9 @@ public class TGCGame : Game
         GraphicsDevice.RasterizerState = rasterizerState;
         // Seria hasta aca.
 
+        _currentCamera = new FollowCamera(GraphicsDevice.Viewport.AspectRatio);
         // Configuramos nuestras matrices de la escena.
-        _world = Matrix.Identity;
-        _view = Matrix.CreateLookAt(Vector3.UnitZ * 150, Vector3.Zero, Vector3.Up);
-        _projection =
-            Matrix.CreatePerspectiveFieldOfView(MathHelper.PiOver4, GraphicsDevice.Viewport.AspectRatio, 1, 250);
-
+        
         base.Initialize();
     }
 
@@ -83,13 +85,32 @@ public class TGCGame : Game
         _spriteBatch = new SpriteBatch(GraphicsDevice);
 
         // Cargo el modelo del logo.
-        _modeloTGC = new CustomModel(
-            Content.Load<Model>(ContentFolder3D + "tgc-logo/tgc-logo"),
-            Content.Load<Effect>(ContentFolderEffects + "BasicShader")
+        _modeloPiso = new CustomModel(
+            Content.Load<Model>(ContentFolder3D + "road-tiles/road-square"),
+            Content.Load<Effect>(ContentFolderEffects + "BasicShader"),
+            Color.DarkBlue
         );
 
-        _objetoTGC = new WorldObject(_modeloTGC, _world, Vector3.Zero, Vector3.Zero);
-        
+        _modeloAuto = new CustomModel(
+            Content.Load<Model>(ContentFolder3D + "car-kit/sedan-sports"),
+            Content.Load<Effect>(ContentFolderEffects + "BasicShader"),
+            Color.Green
+        );
+
+        _objetoPiso = new WorldObject(
+            _modeloPiso, 
+            Matrix.CreateScale(1f) * Matrix.CreateTranslation(new Vector3(0f,-50f,0f)),
+            Vector3.Zero, 
+            Vector3.Zero
+        );
+
+        _objetoAutoNuestro = new WorldObject(
+            _modeloAuto,
+            Matrix.Identity,
+            Vector3.Zero,
+            Vector3.Zero
+        );
+
         base.LoadContent();
     }
 
@@ -108,7 +129,12 @@ public class TGCGame : Game
             //Salgo del juego.
             Exit();
         }
-        _objetoTGC.Update(gameTime);
+        
+        _objetoPiso.Update(gameTime);
+        _objetoAutoNuestro.Update(gameTime);
+
+        _currentCamera.Update(gameTime, _objetoAutoNuestro.GetCurrentWorld(gameTime));
+
         base.Update(gameTime);
     }
 
@@ -121,7 +147,8 @@ public class TGCGame : Game
         // Aca deberiamos poner toda la logia de renderizado del juego.
         GraphicsDevice.Clear(Color.Black);
 
-        _objetoTGC.Draw(gameTime, _view, _projection);
+        _objetoPiso.DrawOn(gameTime, _currentCamera);
+        _objetoAutoNuestro.DrawOn(gameTime, _currentCamera);
     }
 
     /// <summary>

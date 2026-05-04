@@ -13,6 +13,7 @@ public class WorldObject
     private Vector3 _offset;
     private Vector3 _rotation;
 
+
     public WorldObject(CustomModel model, Matrix initial_world, Vector3 initial_offset, Vector3 initial_rotation)
     {
         _model = model;
@@ -21,7 +22,7 @@ public class WorldObject
         _rotation = initial_rotation;
     }
 
-    private Matrix GetCurrentWorld(GameTime gameTime)
+    public Matrix GetCurrentWorld(GameTime gameTime)
     {
         return Matrix.CreateFromQuaternion(Quaternion.CreateFromYawPitchRoll(_rotation.X, _rotation.Y, _rotation.Z)) * Matrix.CreateTranslation(_offset) * _initial_world;
     }
@@ -36,6 +37,10 @@ public class WorldObject
         _model.Draw(this.GetCurrentWorld(gameTime), view, projection);
     }
 
+    public void DrawOn(GameTime gameTime, CameraI camera)
+    {
+        this.Draw(gameTime, camera.GetView(), camera.GetProjection());
+    }
 
 
 }
