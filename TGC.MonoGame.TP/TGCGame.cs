@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -19,20 +19,21 @@ public class TGCGame : Game
     public const string ContentFolderSounds = "Sounds/";
     public const string ContentFolderSpriteFonts = "SpriteFonts/";
     public const string ContentFolderTextures = "Textures/";
-    
+
     private readonly GraphicsDeviceManager _graphics;
 
-    CustomModel _modeloPiso;
-    WorldObject _objetoPiso;
+    CustomModel _modeloBase;
+    WorldObject _objetoBase;
+
+    CustomModel _modeloRoadStraight;
+    WorldObject _objetoRoadStraight;
 
     CustomModel _modeloAuto;
-    WorldObject _objetoAutoNuestro;
+    WorldObject _objetoAutoJugador;
 
     FollowCamera _currentCamera;
-    
+
     private SpriteBatch _spriteBatch;
-
-
 
     /// <summary>
     ///     Constructor del juego.
@@ -70,7 +71,7 @@ public class TGCGame : Game
 
         _currentCamera = new FollowCamera(GraphicsDevice.Viewport.AspectRatio);
         // Configuramos nuestras matrices de la escena.
-        
+
         base.Initialize();
     }
 
@@ -85,26 +86,39 @@ public class TGCGame : Game
         _spriteBatch = new SpriteBatch(GraphicsDevice);
 
         // Cargo el modelo del logo.
-        _modeloPiso = new CustomModel(
+        _modeloBase = new CustomModel(
             Content.Load<Model>(ContentFolder3D + "road-tiles/road-square"),
             Content.Load<Effect>(ContentFolderEffects + "BasicShader"),
-            Color.DarkBlue
+            Color.DarkGreen
+        );
+
+        _modeloRoadStraight = new CustomModel(
+            Content.Load<Model>(ContentFolder3D + "road-tiles/road-straight"),
+            Content.Load<Effect>(ContentFolderEffects + "BasicShader"),
+            Color.Gray
         );
 
         _modeloAuto = new CustomModel(
             Content.Load<Model>(ContentFolder3D + "car-kit/sedan-sports"),
             Content.Load<Effect>(ContentFolderEffects + "BasicShader"),
-            Color.Green
+            Color.DarkRed
         );
 
-        _objetoPiso = new WorldObject(
-            _modeloPiso, 
-            Matrix.CreateScale(1f) * Matrix.CreateTranslation(new Vector3(0f,-50f,0f)),
-            Vector3.Zero, 
+        _objetoBase = new WorldObject(
+            _modeloBase,
+            Matrix.CreateScale(12f) * Matrix.CreateTranslation(new Vector3(0f, -50f, 0f)),
+            Vector3.Zero,
             Vector3.Zero
         );
 
-        _objetoAutoNuestro = new WorldObject(
+        _objetoRoadStraight = new WorldObject(
+            _modeloRoadStraight,
+            Matrix.CreateScale(new Vector3(10f, 5f, 5f)) * Matrix.CreateRotationY(MathHelper.Pi / 2f) * Matrix.CreateTranslation(Vector3.Zero),
+            Vector3.Zero,
+            Vector3.Zero
+        );
+
+        _objetoAutoJugador = new WorldObject(
             _modeloAuto,
             Matrix.Identity,
             Vector3.Zero,
@@ -121,34 +135,29 @@ public class TGCGame : Game
     /// </summary>
     protected override void Update(GameTime gameTime)
     {
-        // Aca deberiamos poner toda la logica de actualizacion del juego.
-
-        // Capturar Input teclado
-        if (Keyboard.GetState().IsKeyDown(Keys.Escape))
-        {
+        // Aca deberiamos poner toda la loBace de actualizacion 
+        if (Keyboard.GetState().IsKeyDown(Keys.Escape)){
             //Salgo del juego.
             Exit();
         }
-        
-        _objetoPiso.Update(gameTime);
-        _objetoAutoNuestro.Update(gameTime);
 
-        _currentCamera.Update(gameTime, _objetoAutoNuestro.GetCurrentWorld(gameTime));
+        _objetoBase.Update(gameTime);
+        _objetoRoadStraight.Update(gameTime);
+        _objetoAutoJugador.Update(gameTime);
+
+        _currentCamera.Update(gameTime, _objetoAutoJugador.GetCurrentWorld(gameTime));
 
         base.Update(gameTime);
     }
 
-    /// <summary>
-    ///     Se llama cada vez que hay que refrescar la pantalla.
-    ///     Escribir aqui el codigo referido al renderizado.
-    /// </summary>
     protected override void Draw(GameTime gameTime)
     {
         // Aca deberiamos poner toda la logia de renderizado del juego.
-        GraphicsDevice.Clear(Color.Black);
+        GraphicsDevice.Clear(Color.CornflowerBlue);
 
-        _objetoPiso.DrawOn(gameTime, _currentCamera);
-        _objetoAutoNuestro.DrawOn(gameTime, _currentCamera);
+        _objetoBase.DrawOn(gameTime, _currentCamera);
+        _objetoRoadStraight.DrawOn(gameTime, _currentCamera);
+        _objetoAutoJugador.DrawOn(gameTime, _currentCamera);
     }
 
     /// <summary>

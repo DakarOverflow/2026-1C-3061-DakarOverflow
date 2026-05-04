@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.Xna.Framework;
 
 namespace TGC.MonoGame.TP.Zero;
@@ -12,9 +12,9 @@ internal class FollowCamera : CameraI
     private const float AngleFollowSpeed = 0.015f;
     private const float AngleThreshold = 0.85f;
 
-    private Vector3 _currentRightVector = Vector3.Right;
-    private Vector3 _pastRightVector = Vector3.Right;
-    private float _rightVectorInterpolator;
+    private Vector3 _currentForwardVector = Vector3.Forward;
+    private Vector3 _pastForwardVector = Vector3.Forward;
+    private float _forwardVectorInterpolator;
 
     /// <summary>
     ///     Crea una FollowCamera que sigue a una matriz de mundo.
@@ -51,41 +51,42 @@ internal class FollowCamera : CameraI
         // Obtengo la posicion de la matriz de mundo que estoy siguiendo.
         var followedPosition = followedWorld.Translation;
 
-        // Obtengo el vector Derecha de la matriz de mundo que estoy siguiendo.
-        var followedRight = followedWorld.Right;
+        // Obtengo el vector Adelante de la matriz de mundo que estoy siguiendo.
+        var followedForward = followedWorld.Forward;
 
-        // Si el producto escalar entre el vector Derecha anterior
+        // Si el producto escalar entre el vector Adelante anterior
         // y el actual es mas grande que un limite,
         // muevo el Interpolator (desde 0 a 1) mas cerca de 1.
-        if (Vector3.Dot(followedRight, _pastRightVector) > AngleThreshold)
+        if (Vector3.Dot(followedForward, _pastForwardVector) > AngleThreshold)
         {
             // Incremento el Interpolator.
-            _rightVectorInterpolator += elapsedTime * AngleFollowSpeed;
+            _forwardVectorInterpolator += elapsedTime * AngleFollowSpeed;
 
             // No permito que Interpolator pase de 1.
-            _rightVectorInterpolator = MathF.Min(_rightVectorInterpolator, 1f);
+            _forwardVectorInterpolator = MathF.Min(_forwardVectorInterpolator, 1f);
 
-            // Calculo el vector Derecha a partir de la interpolacion.
-            // Esto mueve el vector Derecha para igualar al vector Derecha que sigo.
+            // Calculo el vector Adelante a partir de la interpolacion.
+            // Esto mueve el vector Adelante para igualar al vector Adelante que sigo.
             // En este caso uso la curva x^2 para hacerlo mas suave.
             // Interpolator se convertira en 1 eventualmente.
-            _currentRightVector = Vector3.Lerp(_currentRightVector, followedRight,
-                _rightVectorInterpolator * _rightVectorInterpolator);
+            _currentForwardVector = Vector3.Lerp(_currentForwardVector, followedForward,
+                _forwardVectorInterpolator * _forwardVectorInterpolator);
         }
         else
             // Si el angulo no pasa de cierto limite, lo pongo de nuevo en cero.
         {
-            _rightVectorInterpolator = 0f;
+            _forwardVectorInterpolator = 0f;
         }
 
-        // Guardo el vector Derecha para usar en la siguiente iteracion.
-        _pastRightVector = followedRight;
+        // Guardo el vector Adelante para usar en la siguiente iteracion.
+        _pastForwardVector = followedForward;
 
-        // Calculo la posicion del a camara
-        // tomo la posicion que estoy siguiendo, agrego un offset en los ejes Y y Derecha.
+        // Calculo la posicion de la camara
+        // tomo la posicion que estoy siguiendo, agrego un offset hacia atras y hacia arriba.
+        // Restar el vector Adelante (-Forward = Backward) coloca la camara detras del auto.
         var offsetedPosition = followedPosition
-                               + _currentRightVector * AxisDistanceToTarget
-                               + Vector3.Up * AxisDistanceToTarget;
+                               - _currentForwardVector * AxisDistanceToTarget
+                               + Vector3.Up * (AxisDistanceToTarget * 0.4f); // Altura de la camara ajustada
 
         // Calculo el vector Arriba actualizado.
         // Nota: No se puede usar el vector Arriba por defecto (0, 1, 0).
