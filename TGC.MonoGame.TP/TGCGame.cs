@@ -3,6 +3,8 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using TGC.MonoGame.TP.Zero;
+using System.Collections;
+using System.Collections.Generic;
 
 namespace TGC.MonoGame.TP;
 
@@ -27,6 +29,11 @@ public class TGCGame : Game
 
     CustomModel _modeloRoadStraight;
     WorldObject _objetoRoadStraight;
+
+        List<CustomModel> _singleTile = new List<CustomModel>();
+        List<WorldObject> _singleTileObjs = new List<WorldObject>();
+
+        Vector3 _singleTileParentCoord =  new Vector3(0f, -50f, 0f);
 
     CustomModel _modeloAuto;
     WorldObject _objetoAutoJugador;
@@ -82,21 +89,15 @@ public class TGCGame : Game
     /// </summary>
     protected override void LoadContent()
     {
+   
+
         // Aca es donde deberiamos cargar todos los contenido necesarios antes de iniciar el juego.
         _spriteBatch = new SpriteBatch(GraphicsDevice);
 
         // Cargo el modelo del logo.
-        _modeloBase = new CustomModel(
-            Content.Load<Model>(ContentFolder3D + "road-tiles/road-square"),
-            Content.Load<Effect>(ContentFolderEffects + "BasicShader"),
-            Color.DarkGreen
-        );
-
-        _modeloRoadStraight = new CustomModel(
-            Content.Load<Model>(ContentFolder3D + "road-tiles/road-straight"),
-            Content.Load<Effect>(ContentFolderEffects + "BasicShader"),
-            Color.Gray
-        );
+        AddObjtsToTile(_singleTile,ContentFolder3D + "road-tiles/road-square",ContentFolderEffects + "BasicShader",Color.DarkGreen);
+        AddObjtsToTile(_singleTile,ContentFolder3D + "road-tiles/road-straight",ContentFolderEffects + "BasicShader", Color.Gray);
+        
 
         _modeloAuto = new CustomModel(
             Content.Load<Model>(ContentFolder3D + "car-kit/sedan-sports"),
@@ -104,19 +105,9 @@ public class TGCGame : Game
             Color.DarkRed
         );
 
-        _objetoBase = new WorldObject(
-            _modeloBase,
-            Matrix.CreateScale(12f) * Matrix.CreateTranslation(new Vector3(0f, -50f, 0f)),
-            Vector3.Zero,
-            Vector3.Zero
-        );
-
-        _objetoRoadStraight = new WorldObject(
-            _modeloRoadStraight,
-            Matrix.CreateScale(new Vector3(10f, 5f, 5f)) * Matrix.CreateRotationY(MathHelper.Pi / 2f) * Matrix.CreateTranslation(Vector3.Zero),
-            Vector3.Zero,
-            Vector3.Zero
-        );
+        AddObjtsToWorldTile(_singleTileObjs,_singleTile[0],new Vector3(12f),_singleTileParentCoord,0);
+        AddObjtsToWorldTile(_singleTileObjs,_singleTile[1],new Vector3(10f, 5f, 5f),_singleTileParentCoord + new Vector3(0f,10f,0f),
+        MathHelper.Pi / 2f);
 
         _objetoAutoJugador = new WorldObject(
             _modeloAuto,
@@ -125,7 +116,27 @@ public class TGCGame : Game
             Vector3.Zero
         );
 
+   
         base.LoadContent();
+    }
+    //Para agregar los CustomModel a los elem de la tile
+      public void AddObjtsToTile(List<CustomModel>Tile,string ContentFolder3DRoot,string ContentFolderEffectsRoot,Color color ){
+        Tile.Add(new CustomModel(
+            Content.Load<Model>(ContentFolder3DRoot),
+            Content.Load<Effect>(ContentFolderEffectsRoot),
+            color
+            )
+        );
+    }
+        //Para agregar Todos los elementos a la tile y que se vean al mundo
+     public void AddObjtsToWorldTile(List<WorldObject>Tile,CustomModel Model,Vector3 Scale,Vector3 Coord,float RotationY){
+        Tile.Add( new WorldObject(
+            Model,
+            Matrix.CreateScale(Scale) * Matrix.CreateRotationY(RotationY) * Matrix.CreateTranslation(Coord),
+            Vector3.Zero,
+            Vector3.Zero
+        )
+        );
     }
 
     /// <summary>
@@ -141,8 +152,12 @@ public class TGCGame : Game
             Exit();
         }
 
-        _objetoBase.Update(gameTime);
-        _objetoRoadStraight.Update(gameTime);
+          for (var i = 0; i < _singleTileObjs.Count; i++){
+            _singleTileObjs[i].Update(gameTime);
+        }
+
+        // _objetoBase.Update(gameTime);
+        // _objetoRoadStraight.Update(gameTime);
         _objetoAutoJugador.Update(gameTime);
 
         _currentCamera.Update(gameTime, _objetoAutoJugador.GetCurrentWorld(gameTime));
@@ -153,10 +168,17 @@ public class TGCGame : Game
     protected override void Draw(GameTime gameTime)
     {
         // Aca deberiamos poner toda la logia de renderizado del juego.
+        
         GraphicsDevice.Clear(Color.CornflowerBlue);
+            
+            
+        for (var i = 0; i < _singleTileObjs.Count; i++){
+            _singleTileObjs[i].DrawOn(gameTime, _currentCamera);
+        }
+        
 
-        _objetoBase.DrawOn(gameTime, _currentCamera);
-        _objetoRoadStraight.DrawOn(gameTime, _currentCamera);
+        // _objetoBase.DrawOn(gameTime, _currentCamera);
+        // _objetoRoadStraight.DrawOn(gameTime, _currentCamera);
         _objetoAutoJugador.DrawOn(gameTime, _currentCamera);
     }
 
