@@ -114,11 +114,11 @@ public class TGCGame : Game
         );
 
 
-        float gap = 800f;
+        float gap =1200f;
         for (int i = 0; i < 100; i++){  //Modularizarlo aparte y que cada tile por separado tenga su propia cordenada relativa a esa
             //Piso y Autopista 
             AddObjtsToWorldTile(_singleTileObjs,_singleTile[0],new Vector3(12f),_singleTileParentCoord-new Vector3(0,0f,i*gap),0);
-            AddObjtsToWorldTile(_singleTileObjs,_singleTile[1],new Vector3(10f, 5f, 5f),_singleTileParentCoord + new Vector3(0f,10f,0f-i*gap),
+            AddObjtsToWorldTile(_singleTileObjs,_singleTile[1],new Vector3(12f, 12f, 5f),_singleTileParentCoord + new Vector3(0f,10f,0f-i*gap),
             MathHelper.Pi / 2f);
             //Edificios 
             AddObjtsToWorldTile(_singleTileObjs,_singleTile[2],new Vector3(2f),_singleTileParentCoord + new Vector3(460f,10f,0f-i*gap) ,0);
