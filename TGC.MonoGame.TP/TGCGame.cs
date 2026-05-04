@@ -24,17 +24,22 @@ public class TGCGame : Game
 
     private readonly GraphicsDeviceManager _graphics;
 
-    CustomModel _modeloBase;
-    WorldObject _objetoBase;
+    // CustomModel _modeloBase;
+    // WorldObject _objetoBase;
 
-    CustomModel _modeloRoadStraight;
-    WorldObject _objetoRoadStraight;
+    // CustomModel _modeloRoadStraight;
+    // WorldObject _objetoRoadStraight;
 
-        List<CustomModel> _singleTile = new List<CustomModel>();
-        List<WorldObject> _singleTileObjs = new List<WorldObject>();
 
-        Vector3 _singleTileParentCoord =  new Vector3(0f, -50f, 0f);
+    
+    List<CustomModel> _singleTile = new List<CustomModel>();
+    List<WorldObject> _singleTileObjs = new List<WorldObject>();
+    Vector3 _singleTileParentCoord =  new Vector3(0f, -50f, 0f);
 
+    public Tile [] _allTiles;
+    public Tile _recto;
+
+    
     CustomModel _modeloAuto;
     WorldObject _objetoAutoJugador;
 
@@ -97,7 +102,10 @@ public class TGCGame : Game
         // Cargo el modelo del logo.
         AddObjtsToTile(_singleTile,ContentFolder3D + "road-tiles/road-square",ContentFolderEffects + "BasicShader",Color.DarkGreen);
         AddObjtsToTile(_singleTile,ContentFolder3D + "road-tiles/road-straight",ContentFolderEffects + "BasicShader", Color.Gray);
-        
+        AddObjtsToTile(_singleTile,ContentFolder3D + "buildings/suburban/building-type-c",ContentFolderEffects + "BasicShader", Color.DarkBlue);
+        AddObjtsToTile(_singleTile,ContentFolder3D + "buildings/suburban/building-type-k",ContentFolderEffects + "BasicShader", Color.DarkBlue);
+        AddObjtsToTile(_singleTile,ContentFolder3D + "buildings/suburban/building-type-f",ContentFolderEffects + "BasicShader", Color.DarkBlue);
+        AddObjtsToTile(_singleTile,ContentFolder3D + "buildings/suburban/building-type-k",ContentFolderEffects + "BasicShader", Color.DarkBlue);
 
         _modeloAuto = new CustomModel(
             Content.Load<Model>(ContentFolder3D + "car-kit/sedan-sports"),
@@ -108,6 +116,19 @@ public class TGCGame : Game
         AddObjtsToWorldTile(_singleTileObjs,_singleTile[0],new Vector3(12f),_singleTileParentCoord,0);
         AddObjtsToWorldTile(_singleTileObjs,_singleTile[1],new Vector3(10f, 5f, 5f),_singleTileParentCoord + new Vector3(0f,10f,0f),
         MathHelper.Pi / 2f);
+
+        //Edificios 
+        AddObjtsToWorldTile(_singleTileObjs,_singleTile[2],new Vector3(2f),_singleTileParentCoord + new Vector3(460f,10f,0f),0);
+        AddObjtsToWorldTile(_singleTileObjs,_singleTile[2],new Vector3(2f),_singleTileParentCoord + new Vector3(-460f,10f,0f),0);
+
+        AddObjtsToWorldTile(_singleTileObjs,_singleTile[3],new Vector3(2f),_singleTileParentCoord + new Vector3(460f,10f,500f),0);
+        AddObjtsToWorldTile(_singleTileObjs,_singleTile[3],new Vector3(2f),_singleTileParentCoord + new Vector3(-460f,10f,500f),0);
+
+        AddObjtsToWorldTile(_singleTileObjs,_singleTile[4],new Vector3(2f),_singleTileParentCoord + new Vector3(460f,10f,200f),0);
+        AddObjtsToWorldTile(_singleTileObjs,_singleTile[4],new Vector3(2f),_singleTileParentCoord + new Vector3(-460f,10f,200f),0);
+
+        AddObjtsToWorldTile(_singleTileObjs,_singleTile[5],new Vector3(2f),_singleTileParentCoord + new Vector3(460f,10f,-400f),0);
+        AddObjtsToWorldTile(_singleTileObjs,_singleTile[5],new Vector3(2f),_singleTileParentCoord + new Vector3(-460f,10f,-400f),0);
 
         _objetoAutoJugador = new WorldObject(
             _modeloAuto,
