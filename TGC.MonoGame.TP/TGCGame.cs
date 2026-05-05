@@ -1,7 +1,10 @@
-﻿using System;
+using System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using TGC.MonoGame.TP.Zero;
+using System.Collections;
+using System.Collections.Generic;
 
 namespace TGC.MonoGame.TP;
 
@@ -18,16 +21,31 @@ public class TGCGame : Game
     public const string ContentFolderSounds = "Sounds/";
     public const string ContentFolderSpriteFonts = "SpriteFonts/";
     public const string ContentFolderTextures = "Textures/";
-    
+
     private readonly GraphicsDeviceManager _graphics;
 
-    private Effect _effect;
-    private Model _model;
-    private Matrix _projection;
-    private float _rotation;
+    // CustomModel _modeloBase;
+    // WorldObject _objetoBase;
+
+    // CustomModel _modeloRoadStraight;
+    // WorldObject _objetoRoadStraight;
+
+
+    
+    List<CustomModel> _singleTile = new List<CustomModel>();
+    List<WorldObject> _singleTileObjs = new List<WorldObject>();
+    Vector3 _singleTileParentCoord =  new Vector3(0f, -50f, 0f);
+
+    public Tile [] _allTiles;
+    public Tile _recto;
+
+    
+    CustomModel _modeloAuto;
+    WorldObject _objetoAutoJugador;
+
+    FollowCamera _currentCamera;
+
     private SpriteBatch _spriteBatch;
-    private Matrix _view;
-    private Matrix _world;
 
     /// <summary>
     ///     Constructor del juego.
@@ -63,11 +81,8 @@ public class TGCGame : Game
         GraphicsDevice.RasterizerState = rasterizerState;
         // Seria hasta aca.
 
+        _currentCamera = new FollowCamera(GraphicsDevice.Viewport.AspectRatio);
         // Configuramos nuestras matrices de la escena.
-        _world = Matrix.Identity;
-        _view = Matrix.CreateLookAt(Vector3.UnitZ * 150, Vector3.Zero, Vector3.Up);
-        _projection =
-            Matrix.CreatePerspectiveFieldOfView(MathHelper.PiOver4, GraphicsDevice.Viewport.AspectRatio, 1, 250);
 
         base.Initialize();
     }
@@ -79,28 +94,73 @@ public class TGCGame : Game
     /// </summary>
     protected override void LoadContent()
     {
+   
+
         // Aca es donde deberiamos cargar todos los contenido necesarios antes de iniciar el juego.
         _spriteBatch = new SpriteBatch(GraphicsDevice);
 
-        // Cargo el modelo del logo.
-        _model = Content.Load<Model>(ContentFolder3D + "tgc-logo/tgc-logo");
+        // Cargo el modelo del logo.  //Modularizarlo aparte
+        AddObjtsToTile(_singleTile,ContentFolder3D + "road-tiles/road-square",ContentFolderEffects + "BasicShader",Color.DarkGreen);
+        AddObjtsToTile(_singleTile,ContentFolder3D + "road-tiles/road-straight",ContentFolderEffects + "BasicShader", Color.Gray);
+        AddObjtsToTile(_singleTile,ContentFolder3D + "buildings/suburban/building-type-c",ContentFolderEffects + "BasicShader", Color.DarkBlue);
+        AddObjtsToTile(_singleTile,ContentFolder3D + "buildings/suburban/building-type-k",ContentFolderEffects + "BasicShader", Color.DarkBlue);
+        AddObjtsToTile(_singleTile,ContentFolder3D + "buildings/suburban/building-type-f",ContentFolderEffects + "BasicShader", Color.DarkBlue);
+        AddObjtsToTile(_singleTile,ContentFolder3D + "buildings/suburban/building-type-k",ContentFolderEffects + "BasicShader", Color.DarkBlue);
 
-        // Cargo un efecto basico propio declarado en el Content pipeline.
-        // En el juego no pueden usar BasicEffect de MG, deben usar siempre efectos propios.
-        _effect = Content.Load<Effect>(ContentFolderEffects + "BasicShader");
+        _modeloAuto = new CustomModel(
+            Content.Load<Model>(ContentFolder3D + "car-kit/sedan-sports"),
+            Content.Load<Effect>(ContentFolderEffects + "BasicShader"),
+            Color.DarkRed
+        );
 
-        // Asigno el efecto que cargue a cada parte del mesh.
-        // Un modelo puede tener mas de 1 mesh internamente.
-        foreach (var mesh in _model.Meshes)
-        {
-            // Un mesh puede tener mas de 1 mesh part (cada 1 puede tener su propio efecto).
-            foreach (var meshPart in mesh.MeshParts)
-            {
-                meshPart.Effect = _effect;
-            }
+
+        float gap =1200f;
+        for (int i = 0; i < 100; i++){  //Modularizarlo aparte y que cada tile por separado tenga su propia cordenada relativa a esa
+            //Piso y Autopista 
+            AddObjtsToWorldTile(_singleTileObjs,_singleTile[0],new Vector3(12f),_singleTileParentCoord-new Vector3(0,0f,i*gap),0);
+            AddObjtsToWorldTile(_singleTileObjs,_singleTile[1],new Vector3(12f, 12f, 5f),_singleTileParentCoord + new Vector3(0f,10f,0f-i*gap),
+            MathHelper.Pi / 2f);
+            //Edificios 
+            AddObjtsToWorldTile(_singleTileObjs,_singleTile[2],new Vector3(2f),_singleTileParentCoord + new Vector3(460f,10f,0f-i*gap) ,0);
+            AddObjtsToWorldTile(_singleTileObjs,_singleTile[2],new Vector3(2f),_singleTileParentCoord + new Vector3(-460f,10f,0f-i*gap),0);
+            AddObjtsToWorldTile(_singleTileObjs,_singleTile[3],new Vector3(2f),_singleTileParentCoord + new Vector3(460f,10f,500f-i*gap),0);
+            AddObjtsToWorldTile(_singleTileObjs,_singleTile[3],new Vector3(2f),_singleTileParentCoord + new Vector3(-460f,10f,500f-i*gap),0);
+
+            AddObjtsToWorldTile(_singleTileObjs,_singleTile[4],new Vector3(2f),_singleTileParentCoord + new Vector3(460f,10f,200f-i*gap),0);
+            AddObjtsToWorldTile(_singleTileObjs,_singleTile[4],new Vector3(2f),_singleTileParentCoord + new Vector3(-460f,10f,200f-i*gap),0);
+
+            AddObjtsToWorldTile(_singleTileObjs,_singleTile[5],new Vector3(2f),_singleTileParentCoord + new Vector3(460f,10f,-400f-i*gap),0);
+            AddObjtsToWorldTile(_singleTileObjs,_singleTile[5],new Vector3(2f),_singleTileParentCoord + new Vector3(-460f,10f,-400f-i*gap),0);
         }
 
+        _objetoAutoJugador = new WorldObject(
+            _modeloAuto,
+            Matrix.Identity,
+            Vector3.Zero,
+            Vector3.Zero
+        );
+
+   
         base.LoadContent();
+    }
+    //Para agregar los CustomModel a los elem de la tile
+      public void AddObjtsToTile(List<CustomModel>Tile,string ContentFolder3DRoot,string ContentFolderEffectsRoot,Color color ){
+        Tile.Add(new CustomModel(
+            Content.Load<Model>(ContentFolder3DRoot),
+            Content.Load<Effect>(ContentFolderEffectsRoot),
+            color
+            )
+        );
+    }
+        //Para agregar Todos los elementos a la tile y que se vean al mundo
+     public void AddObjtsToWorldTile(List<WorldObject>Tile,CustomModel Model,Vector3 Scale,Vector3 Coord,float RotationY){
+        Tile.Add( new WorldObject(
+            Model,
+            Matrix.CreateScale(Scale) * Matrix.CreateRotationY(RotationY) * Matrix.CreateTranslation(Coord),
+            Vector3.Zero,
+            Vector3.Zero
+        )
+        );
     }
 
     /// <summary>
@@ -110,42 +170,40 @@ public class TGCGame : Game
     /// </summary>
     protected override void Update(GameTime gameTime)
     {
-        // Aca deberiamos poner toda la logica de actualizacion del juego.
-
-        // Capturar Input teclado
-        if (Keyboard.GetState().IsKeyDown(Keys.Escape))
-        {
+        // Aca deberiamos poner toda la loBace de actualizacion 
+        if (Keyboard.GetState().IsKeyDown(Keys.Escape)){
             //Salgo del juego.
             Exit();
         }
 
-        // Basado en el tiempo que paso se va generando una rotacion.
-        _rotation += Convert.ToSingle(gameTime.ElapsedGameTime.TotalSeconds);
+          for (var i = 0; i < _singleTileObjs.Count; i++){
+            _singleTileObjs[i].Update(gameTime);
+        }
 
-        _world = Matrix.CreateRotationY(_rotation);
+        // _objetoBase.Update(gameTime);
+        // _objetoRoadStraight.Update(gameTime);
+        _objetoAutoJugador.Update(gameTime);
+
+        _currentCamera.Update(gameTime, _objetoAutoJugador.GetCurrentWorld(gameTime));
 
         base.Update(gameTime);
     }
 
-    /// <summary>
-    ///     Se llama cada vez que hay que refrescar la pantalla.
-    ///     Escribir aqui el codigo referido al renderizado.
-    /// </summary>
     protected override void Draw(GameTime gameTime)
     {
         // Aca deberiamos poner toda la logia de renderizado del juego.
-        GraphicsDevice.Clear(Color.Black);
-
-        // Para dibujar le modelo necesitamos pasarle informacion que el efecto esta esperando.
-        _effect.Parameters["View"].SetValue(_view);
-        _effect.Parameters["Projection"].SetValue(_projection);
-        _effect.Parameters["DiffuseColor"].SetValue(Color.DarkBlue.ToVector3());
-
-        foreach (var mesh in _model.Meshes)
-        {
-            _effect.Parameters["World"].SetValue(mesh.ParentBone.Transform * _world);
-            mesh.Draw();
+        
+        GraphicsDevice.Clear(Color.CornflowerBlue);
+            
+            
+        for (var i = 0; i < _singleTileObjs.Count; i++){
+            _singleTileObjs[i].DrawOn(gameTime, _currentCamera);
         }
+        
+
+        // _objetoBase.DrawOn(gameTime, _currentCamera);
+        // _objetoRoadStraight.DrawOn(gameTime, _currentCamera);
+        _objetoAutoJugador.DrawOn(gameTime, _currentCamera);
     }
 
     /// <summary>

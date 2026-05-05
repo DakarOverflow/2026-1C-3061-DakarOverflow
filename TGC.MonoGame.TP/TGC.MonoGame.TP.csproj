@@ -14,6 +14,24 @@
   <ItemGroup>
     <None Remove="Icon.ico" />
     <None Remove="Icon.bmp" />
+    <None Remove="Content\Models\road-tiles\building-type-q.fbx" />
+    <None Remove="Content\Models\road-tiles\building-type-p.fbx" />
+    <None Remove="Content\Models\road-tiles\building-type-o.fbx" />
+    <None Remove="Content\Models\road-tiles\building-type-m.fbx" />
+    <None Remove="Content\Models\road-tiles\building-type-k.fbx" />
+    <None Remove="Content\Models\road-tiles\building-type-j.fbx" />
+    <None Remove="Content\Models\road-tiles\building-type-h.fbx" />
+    <None Remove="Content\Models\road-tiles\building-type-g.fbx" />
+    <None Remove="Content\Models\road-tiles\building-type-d.fbx" />
+    <None Remove="Content\Models\road-tiles\building-type-c.fbx" />
+    <None Remove="Content\Models\road-tiles\building-type-b.fbx" />
+    <None Remove="Content\Models\road-tiles\driveway-short.fbx" />
+    <None Remove="Content\Models\road-tiles\tree-small.fbx" />
+    <None Remove="Content\Models\road-tiles\path-short.fbx" />
+    <None Remove="Content\Models\road-tiles\fence-low.fbx" />
+    <None Remove="Content\Models\road-tiles\fence-3x2.fbx" />
+    <None Remove="Content\Models\road-tiles\fence-2x2.fbx" />
+    <None Remove="Content\Models\road-tiles\fence-1x4.fbx" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Icon.ico" />
