@@ -9,5 +9,4 @@ namespace TGC.MonoGame.TP;
 public interface CameraI
 {
     Matrix GetView();
-    Matrix GetProjection();
 }
