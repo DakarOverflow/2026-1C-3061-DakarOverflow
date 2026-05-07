@@ -1,12 +1,13 @@
 using System;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace TGC.MonoGame.TP.Zero;
 
 /// <summary>
 ///     Una camara que sigue objetos.
 /// </summary>
-internal class FollowCamera : CameraI
+internal class FollowCamera : Camera
 {
     private const float AxisDistanceToTarget = 1000f;
     private const float AngleFollowSpeed = 0.015f;
@@ -15,26 +16,47 @@ internal class FollowCamera : CameraI
     private Vector3 _currentForwardVector = Vector3.Forward;
     private Vector3 _pastForwardVector = Vector3.Forward;
     private float _forwardVectorInterpolator;
+    private readonly GraphicsDevice _graphicsDevice;
 
     /// <summary>
     ///     Crea una FollowCamera que sigue a una matriz de mundo.
     /// </summary>
     /// <param name="aspectRatio"></param>
-    public FollowCamera(float aspectRatio)
+    public FollowCamera(GraphicsDevice graphicsDevice)
     {
-        // Orthographic camera.
-        // Projection = Matrix.CreateOrthographic(screenWidth, screenHeight, 0.01f, 10000f);
-
-        // Perspective camera.
-        // Uso 60° como FOV, aspect ratio, pongo las distancias a near plane y far plane en 0.1 y 100000 (mucho) respectivamente.
+        _graphicsDevice = graphicsDevice;
+        _projection = Matrix.CreatePerspectiveFieldOfView(
+            MathHelper.PiOver4,
+            graphicsDevice.Viewport.AspectRatio,
+            0.1f,
+            4000f
+        );
     }
 
-    public Matrix Projection { get; private set; }
+    private Matrix _projection;
 
-    public Matrix View { get; private set; }
+    private Matrix _view;
 
-    public Matrix GetView() { return this.View; }
-    public Matrix GetProjection() { return this.Projection; }
+    public void OnClientSizeChanged(object sender, EventArgs e)
+    {
+        _projection = Matrix.CreatePerspectiveFieldOfView(
+            MathHelper.PiOver4, _graphicsDevice.Viewport.AspectRatio, 0.1f, 1000f);
+    }
+
+    public static string GetName()
+    {
+        return "Follow Camera";
+    }
+
+    public Matrix GetView()
+    {
+        return _view;
+    }
+
+    public Matrix GetProjection()
+    {
+        return _projection;
+    }
 
 
     /// <summary>
@@ -107,6 +129,6 @@ internal class FollowCamera : CameraI
 
         // Calculo la matriz de Vista de la camara usando la Posicion, La Posicion a donde esta mirando,
         // y su vector Arriba.
-        View = Matrix.CreateLookAt(offsetedPosition, followedPosition, cameraCorrectUp);
+        _view = Matrix.CreateLookAt(offsetedPosition, followedPosition, cameraCorrectUp);
     }
 }

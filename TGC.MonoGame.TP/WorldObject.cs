@@ -37,7 +37,7 @@ public class WorldObject
         _model.Draw(this.GetCurrentWorld(gameTime), view, projection);
     }
 
-    public void DrawOn(GameTime gameTime, CameraI camera, Matrix projection)
+    public void DrawOn(GameTime gameTime, Camera camera, Matrix projection)
     {
         this.Draw(gameTime, camera.GetView(), projection);
     }

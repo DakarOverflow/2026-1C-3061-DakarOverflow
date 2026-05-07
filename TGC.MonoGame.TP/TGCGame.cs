@@ -36,12 +36,13 @@ public class TGCGame : Game
     CustomModel _modeloAuto;
     WorldObject _objetoAutoJugador;
     private FollowCamera _followCamera;
-    private FreeCamera _camera;
+    private FreeCamera _freeCamera;
     private SpriteBatch _spriteBatch;
     private Matrix _world;
     private KeyboardState _previousKeyboardState;
     private bool _mouseCaptured = true;
-    private Matrix _projection;
+    private bool _useFreeCamera;
+    private Camera _cameraInUse;
 
     /// <summary>
     ///     Constructor del juego.
@@ -60,8 +61,6 @@ public class TGCGame : Game
         Content.RootDirectory = "Content";
         IsFixedTimeStep = true;
         Window.AllowUserResizing = true;
-        Window.ClientSizeChanged += OnClientSizeChanged;
-        _camera = new FreeCamera(new Vector3(110f, 10f, 110f), new Vector3(0f, 0f, 0f));
     }
 
     /// <summary>
@@ -73,29 +72,15 @@ public class TGCGame : Game
         // La logica de inicializacion que no depende del contenido se recomienda poner en este metodo.
         IsMouseVisible = false;
         _graphics.ApplyChanges();
-        _projection = Matrix.CreatePerspectiveFieldOfView(
-            MathHelper.PiOver4,
-            GraphicsDevice.Viewport.AspectRatio,
-            0.1f,
-            4000f
-        );
-        // Apago el backface culling.
-        // Esto se hace por un problema en el diseno del modelo del logo de la materia.
-        // Una vez que empiecen su juego, esto no es mas necesario y lo pueden sacar.
         var rasterizerState = new RasterizerState();
         rasterizerState.CullMode = CullMode.None;
         GraphicsDevice.RasterizerState = rasterizerState;
-        // Seria hasta aca.
-        // _followCamera = new FollowCamera(GraphicsDevice.Viewport.AspectRatio);
-        // Configuramos nuestras matrices de la escena.
- 
+        _freeCamera = new FreeCamera(new Vector3(110f, 10f, 110f), new Vector3(0f, 0f, 0f), GraphicsDevice);
+        Window.ClientSizeChanged += _freeCamera.OnClientSizeChanged;
+        _followCamera = new FollowCamera(GraphicsDevice);
+        Window.ClientSizeChanged += _followCamera.OnClientSizeChanged;
+        _cameraInUse = _followCamera;
         base.Initialize();
-    }
-
-    private void OnClientSizeChanged(object sender, EventArgs e)
-    {
-        _projection = Matrix.CreatePerspectiveFieldOfView(
-            MathHelper.PiOver4, GraphicsDevice.Viewport.AspectRatio, 0.1f, 1000f);
     }
 
     /// <summary>
@@ -107,8 +92,6 @@ public class TGCGame : Game
     {
         // Aca es donde deberiamos cargar todos los contenido necesarios antes de iniciar el juego.
         _spriteBatch = new SpriteBatch(GraphicsDevice);
-
-        // Cargo el modelo del logo.  //Modularizarlo aparte
         AddObjtsToTile(_singleTile, ContentFolder3D + "road-tiles/road-square", ContentFolderEffects + "BasicShader",
             Color.DarkGreen);
         AddObjtsToTile(_singleTile, ContentFolder3D + "road-tiles/road-straight", ContentFolderEffects + "BasicShader",
@@ -124,6 +107,7 @@ public class TGCGame : Game
         _modeloAuto = new CustomModel(Content.Load<Model>(ContentFolder3D + "car-kit/sedan-sports"),
             Content.Load<Effect>(ContentFolderEffects + "BasicShader"), Color.DarkRed);
         float gap = 1200f;
+        
         for (int i = 0; i < 100; i++)
         {
             //Modularizarlo aparte y que cada tile por separado tenga su propia cordenada relativa a esa
@@ -150,22 +134,19 @@ public class TGCGame : Game
             AddObjtsToWorldTile(_singleTileObjs, _singleTile[5], new Vector3(2f),
                 _singleTileParentCoord + new Vector3(-460f, 10f, -400f - i * gap), 0);
         }
-
         _objetoAutoJugador = new WorldObject(_modeloAuto, Matrix.Identity, Vector3.Zero, Vector3.Zero);
         base.LoadContent();
     }
 
     //Para agregar los CustomModel a los elem de la tile
-    public void AddObjtsToTile(List<CustomModel> Tile, string ContentFolder3DRoot, string ContentFolderEffectsRoot,
-        Color color)
+    public void AddObjtsToTile(List<CustomModel> Tile, string ContentFolder3DRoot, string ContentFolderEffectsRoot, Color color)
     {
         Tile.Add(new CustomModel(Content.Load<Model>(ContentFolder3DRoot),
             Content.Load<Effect>(ContentFolderEffectsRoot), color));
     }
 
     //Para agregar Todos los elementos a la tile y que se vean al mundo
-    public void AddObjtsToWorldTile(List<WorldObject> Tile, CustomModel Model, Vector3 Scale, Vector3 Coord,
-        float RotationY)
+    public void AddObjtsToWorldTile(List<WorldObject> Tile, CustomModel Model, Vector3 Scale, Vector3 Coord, float RotationY)
     {
         Tile.Add(new WorldObject(Model,
             Matrix.CreateScale(Scale) * Matrix.CreateRotationY(RotationY) * Matrix.CreateTranslation(Coord),
@@ -183,27 +164,38 @@ public class TGCGame : Game
         var keyboardState = Keyboard.GetState();
         if (keyboardState.IsKeyDown(Keys.Escape))
         {
-            //Salgo del juego.
             Exit();
         }
-
         if (keyboardState.IsKeyDown(Keys.M) && _previousKeyboardState.IsKeyUp(Keys.M))
         {
             _mouseCaptured = !_mouseCaptured;
             IsMouseVisible = !_mouseCaptured;
         }
 
-        _previousKeyboardState = keyboardState;
         for (var i = 0; i < _singleTileObjs.Count; i++)
         {
             _singleTileObjs[i].Update(gameTime);
         }
 
+        if (keyboardState.IsKeyDown(Keys.F) && _previousKeyboardState.IsKeyUp(Keys.F))
+        {
+            _useFreeCamera = !_useFreeCamera;
+        }
+        if (_useFreeCamera)
+        {
+            _cameraInUse = _freeCamera;
+            _freeCamera.Update(gameTime, _mouseCaptured);
+        }
+        else
+        {
+            _cameraInUse = _followCamera;
+            _followCamera.Update(gameTime, _objetoAutoJugador.GetCurrentWorld(gameTime));
+        }
         // _objetoBase.Update(gameTime);
         // _objetoRoadStraight.Update(gameTime);
         //_objetoAutoJugador.Update(gameTime);
-        _camera.Update(gameTime, _mouseCaptured);
-        //_followCamera.Update(gameTime, _objetoAutoJugador.GetCurrentWorld(gameTime));
+        
+        _previousKeyboardState = keyboardState;
         base.Update(gameTime);
     }
 
@@ -213,12 +205,12 @@ public class TGCGame : Game
         GraphicsDevice.Clear(Color.CornflowerBlue);
         for (var i = 0; i < _singleTileObjs.Count; i++)
         {
-            _singleTileObjs[i].DrawOn(gameTime, _camera, _projection);
+            _singleTileObjs[i].DrawOn(gameTime, _cameraInUse, _cameraInUse.GetProjection());
         }
 
         // _objetoBase.DrawOn(gameTime, _currentCamera);
         // _objetoRoadStraight.DrawOn(gameTime, _currentCamera);
-        _objetoAutoJugador.DrawOn(gameTime, _camera, _projection);
+        _objetoAutoJugador.DrawOn(gameTime, _cameraInUse, _cameraInUse.GetProjection());
     }
 
     /// <summary>
