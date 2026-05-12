@@ -8,18 +8,27 @@ namespace TGC.MonoGame.TP;
 
 public class FreeCamera : Camera
 {
-    [DllImport("runtimes/linux-x64/native/libSDL2-2.0.so.0", CallingConvention = CallingConvention.Cdecl)]
+#if WINDOWS
+    private const string SDL2 = "SDL2.dll";
+#elif LINUX
+    private const string SDL2 = "libSDL2-2.0.so.0";
+#elif OSX
+    private const string SDL2 = "libSDL2-2.0.0.dylib";
+#else
+    private const string SDL2 = "SDL2";
+#endif
+
+    [DllImport(SDL2, CallingConvention = CallingConvention.Cdecl)]
     private static extern int SDL_SetRelativeMouseMode(int enabled);
 
-    [DllImport("runtimes/linux-x64/native/libSDL2-2.0.so.0", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport(SDL2, CallingConvention = CallingConvention.Cdecl)]
     private static extern int SDL_GetRelativeMouseMode();
 
-    [DllImport("runtimes/linux-x64/native/libSDL2-2.0.so.0", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport(SDL2, CallingConvention = CallingConvention.Cdecl)]
     private static extern IntPtr SDL_GetError();
 
-    [DllImport("runtimes/linux-x64/native/libSDL2-2.0.so.0", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport(SDL2, CallingConvention = CallingConvention.Cdecl)]
     private static extern int SDL_GetRelativeMouseState(out int x, out int y);
-
     private const float DefaultSpeed = 100f;
     private const float DefaultMouseSensitivity = 0.2f;
 
@@ -53,7 +62,7 @@ public class FreeCamera : Camera
             4000f
         );
     }
-    
+
     public void OnClientSizeChanged(object sender, EventArgs e)
     {
         _projection = Matrix.CreatePerspectiveFieldOfView(
