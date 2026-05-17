@@ -9,35 +9,37 @@ using System.Collections.Generic;
 namespace TGC.MonoGame.TP.Zero;
 
 
-public class Tile : Game {
-    List<CustomModel> _singleTile = new List<CustomModel>();
-    List<WorldObject> _singleTileObjs = new List<WorldObject>();
-    Vector3 _singleTileParentCoord;
+public class Tile
+{
+    private readonly List<WorldObject> _objects;
 
-    public void SetUpCoord(Vector3 Coord){
-        Vector3 _singleTileParentCoord = Coord;
+    public Tile()
+    {
+        _objects = new List<WorldObject>();
     }
 
+    public void AddObject(WorldObject obj)
+    {
+        _objects.Add(obj);
+    }
 
-    //Para agregar los CustomModel a los elem de la tile
-    public void AddObjtsToTile(List<CustomModel>Tile,string ContentFolder3DRoot,string ContentFolderEffectsRoot,Color color ){
-        Tile.Add(new CustomModel(
-            Content.Load<Model>(ContentFolder3DRoot),
-            Content.Load<Effect>(ContentFolderEffectsRoot),
-            color
-            )
-        );
+    public void Update(GameTime gameTime)
+    {
+        foreach (var obj in _objects)
+        {
+            obj.Update(gameTime);
+        }
     }
-        //Para agregar Todos los elementos a la tile y que se vean al mundo
-    public void AddObjtsToWorldTile(List<WorldObject>Tile,CustomModel Model,Vector3 Scale,Vector3 Coord,float RotationY){
-        Tile.Add( new WorldObject(
-            Model,
-            Matrix.CreateScale(Scale) * Matrix.CreateRotationY(RotationY) * Matrix.CreateTranslation(Coord),
-            Vector3.Zero,
-            Vector3.Zero
-        )
-        );
+
+    public void Draw(GameTime gameTime, Camera camera)
+    {
+        foreach (var obj in _objects)
+        {
+            obj.DrawOn(
+                gameTime,
+                camera,
+                camera.GetProjection()
+            );
+        }
     }
-    
 }
-
