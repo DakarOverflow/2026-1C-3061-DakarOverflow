@@ -45,13 +45,12 @@ public class TGCGame : Game
 
     public TGCGame()
     {
+        // Maneja la configuracion y la administracion del dispositivo grafico.
         _graphics = new GraphicsDeviceManager(this);
 
-        var screenWidth =
-            GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width;
+        var screenWidth = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width;
 
-        var screenHeight =
-            GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height;
+        var screenHeight = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height;
 
         _graphics.PreferredBackBufferWidth = screenWidth / 2;
         _graphics.PreferredBackBufferHeight = screenHeight / 2;
@@ -82,14 +81,11 @@ public class TGCGame : Game
             GraphicsDevice
         );
 
-        _followCamera =
-            new FollowCamera(GraphicsDevice);
+        _followCamera = new FollowCamera(GraphicsDevice);
 
-        Window.ClientSizeChanged +=
-            _freeCamera.OnClientSizeChanged;
+        Window.ClientSizeChanged += _freeCamera.OnClientSizeChanged;
 
-        Window.ClientSizeChanged +=
-            _followCamera.OnClientSizeChanged;
+        Window.ClientSizeChanged += _followCamera.OnClientSizeChanged;
 
         _cameraInUse = _followCamera;
 
@@ -98,8 +94,7 @@ public class TGCGame : Game
 
     protected override void LoadContent()
     {
-        _spriteBatch =
-            new SpriteBatch(GraphicsDevice);
+        _spriteBatch = new SpriteBatch(GraphicsDevice);
 
         // =========================
         // TILE MANAGER
@@ -140,8 +135,7 @@ public class TGCGame : Game
 
     protected override void Update(GameTime gameTime)
     {
-        var keyboardState =
-            Keyboard.GetState();
+        var keyboardState = Keyboard.GetState();
 
         // EXIT
 
@@ -210,9 +204,7 @@ public class TGCGame : Game
 
     protected override void Draw(GameTime gameTime)
     {
-        GraphicsDevice.Clear(
-            Color.CornflowerBlue
-        );
+        GraphicsDevice.Clear(Color.CornflowerBlue);
 
         // =========================
         // DRAW WORLD
