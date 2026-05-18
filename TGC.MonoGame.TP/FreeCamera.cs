@@ -29,7 +29,7 @@ public class FreeCamera : Camera
 
     [DllImport(SDL2, CallingConvention = CallingConvention.Cdecl)]
     private static extern int SDL_GetRelativeMouseState(out int x, out int y);
-    private const float DefaultSpeed = 100f;
+    private const float DefaultSpeed = 1000f;
     private const float DefaultMouseSensitivity = 0.2f;
 
     private Vector3 _position;
