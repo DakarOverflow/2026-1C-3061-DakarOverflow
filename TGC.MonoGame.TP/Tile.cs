@@ -6,86 +6,169 @@ using Microsoft.Xna.Framework.Content;
 namespace TGC.MonoGame.TP;
 
 
-enum TypeTile{
-    Recta1,      
-};
+public enum TileType
+{
+    Recta1
+}
 
-public class Tile{
-    public List<CustomModel> _TileModel = new List<CustomModel>();
-    public List<WorldObject> _TileObjs = new List<WorldObject>();
-    public Vector3 _TileParentCoord;
-    public string Content3DPath;
-    public string ContentEffectsPath; 
-    // ContentManager _content
-    private ContentManager Content;
-    public Tile[] _allTiles;
+public class Tile
+{
+    private readonly ContentManager _content;
 
-    public Vector3 _nextTile;
-    public Tile(string Path3d,string EffectsPath,Vector3 Coord,ContentManager content){
-        this.Content3DPath = Path3d;
-        this.ContentEffectsPath = EffectsPath;
-        this._TileParentCoord = Coord;
-        this.Content = content;
+    private readonly string _content3DPath;
+
+    private readonly string _contentEffectsPath;
+
+    private readonly List<CustomModel> _tileModels;
+
+    private readonly List<WorldObject> _tileObjects;
+
+    public Vector3 Position;
+
+    public Vector3 NextTileOffset;
+
+    public Tile(
+        ContentManager content,
+        string content3DPath,
+        string contentEffectsPath,
+        Vector3 position
+    )
+    {
+        _content = content;
+
+        _content3DPath = content3DPath;
+
+        _contentEffectsPath = contentEffectsPath;
+
+        Position = position;
+
+        _tileModels = new List<CustomModel>();
+
+        _tileObjects = new List<WorldObject>();
     }
 
-    public void UpdateCoord(Vector3 Coord){
-        this._TileParentCoord = Coord;
-    }
-
-    //Para agregar los CustomModel a los elem de la tile
-    public void AddObjtsToTile(string ContentFolder3DRoot,string ContentFolderEffectsRoot,Color color ){
-        _TileModel.Add(new CustomModel(
-            Content.Load<Model>(ContentFolder3DRoot),
-            Content.Load<Effect>(ContentFolderEffectsRoot),color)
+    public void AddModel(
+        string modelPath,
+        string effectPath,
+        Color color
+    )
+    {
+        _tileModels.Add(
+            new CustomModel(
+                _content.Load<Model>(modelPath),
+                _content.Load<Effect>(effectPath),
+                color
+            )
         );
     }
-        //Para agregar Todos los elementos a la tile y que se vean al mundo
-    public void AddObjtsToWorldTile(CustomModel Model,Vector3 Scale,Vector3 Coord,float RotationY){
-        _TileObjs.Add( new WorldObject(
-            Model,
-            Matrix.CreateScale(Scale) * Matrix.CreateRotationY(RotationY) * Matrix.CreateTranslation(Coord),
+
+    public void AddObject(
+        CustomModel model,
+        Vector3 scale,
+        Vector3 offset,
+        float rotationY
+    )
+    {
+        Matrix world =
+            Matrix.CreateScale(scale) *
+            Matrix.CreateRotationY(rotationY) *
+            Matrix.CreateTranslation(Position + offset);
+
+        _tileObjects.Add(
+            new WorldObject(model, world)
+        );
+    }
+
+    public void BuildRecta1()
+    {
+        NextTileOffset =
+            new Vector3(0f, 0f, -1200f);
+
+        AddModel(
+            _content3DPath +
+            "road-tiles/road-square",
+
+            _contentEffectsPath +
+            "BasicShader",
+
+            Color.DarkGreen
+        );
+
+        AddModel(
+            _content3DPath +
+            "road-tiles/road-straight",
+
+            _contentEffectsPath +
+            "BasicShader",
+
+            Color.Gray
+        );
+
+        AddModel(
+            _content3DPath +
+            "buildings/suburban/building-type-c",
+
+            _contentEffectsPath +
+            "BasicShader",
+
+            Color.DarkBlue
+        );
+
+        // PISO
+
+        AddObject(
+            _tileModels[0],
+            new Vector3(12f),
             Vector3.Zero,
-            Vector3.Zero
-        )
+            0f
+        );
+
+        // RUTA
+
+        AddObject(
+            _tileModels[1],
+            new Vector3(12f, 12f, 5f),
+            new Vector3(0f, 10f, 0f),
+            MathHelper.PiOver2
+        );
+
+        // EDIFICIOS
+
+        AddObject(
+            _tileModels[2],
+            new Vector3(2f),
+            new Vector3(460f, 10f, 0f),
+            0f
+        );
+
+        AddObject(
+            _tileModels[2],
+            new Vector3(2f),
+            new Vector3(-460f, 10f, 0f),
+            0f
         );
     }
-    public Tile SetUpTileRecto1()    {
-        this._nextTile = new Vector3(0f,0f,1200f);
 
-        AddObjtsToTile(Content3DPath + "road-tiles/road-square", ContentEffectsPath + "BasicShader",
-            Color.DarkGreen);
-        AddObjtsToTile(Content3DPath + "road-tiles/road-straight", ContentEffectsPath + "BasicShader",
-            Color.Gray);
-        AddObjtsToTile(Content3DPath + "buildings/suburban/building-type-c",
-            ContentEffectsPath + "BasicShader", Color.DarkBlue);
-        AddObjtsToTile(Content3DPath + "buildings/suburban/building-type-k",
-            ContentEffectsPath + "BasicShader", Color.DarkBlue);
-        AddObjtsToTile(Content3DPath + "buildings/suburban/building-type-f",
-            ContentEffectsPath + "BasicShader", Color.DarkBlue);
-        AddObjtsToTile(Content3DPath + "buildings/suburban/building-type-k",
-            ContentEffectsPath + "BasicShader", Color.DarkBlue);
+    public void Update(GameTime gameTime)
+    {
+        foreach (var obj in _tileObjects)
+        {
+            obj.Update(gameTime);
+        }
+    }
 
-        //Piso y Autopista 
-        AddObjtsToWorldTile(_TileModel[0], new Vector3(12f),_TileParentCoord, 0);
-        AddObjtsToWorldTile( _TileModel[1], new Vector3(12f, 12f, 5f),
-        _TileParentCoord + new Vector3(0f, 10f, 0f), MathHelper.Pi / 2f);
-        //Edificios 
-        AddObjtsToWorldTile( _TileModel[2], new Vector3(2f),
-            _TileParentCoord + new Vector3(460f, 10f, 0f), 0);
-        AddObjtsToWorldTile( _TileModel[2], new Vector3(2f),
-            _TileParentCoord + new Vector3(-460f, 10f, 0f), 0);
-        AddObjtsToWorldTile( _TileModel[3], new Vector3(2f),
-            _TileParentCoord + new Vector3(460f, 10f, 500f ), 0);
-        AddObjtsToWorldTile( _TileModel[3], new Vector3(2f),
-            _TileParentCoord + new Vector3(-460f, 10f, 500f ), 0);
-        AddObjtsToWorldTile( _TileModel[4], new Vector3(2f),
-            _TileParentCoord + new Vector3(460f, 10f, 200f ), 0);
-        AddObjtsToWorldTile( _TileModel[4], new Vector3(2f),
-            _TileParentCoord + new Vector3(-460f, 10f, 200f ), 0);
-        AddObjtsToWorldTile( _TileModel[5], new Vector3(2f),
-            _TileParentCoord + new Vector3(460f, 10f, -400f ), 0);
-        AddObjtsToWorldTile( _TileModel[5], new Vector3(2f),
-                _TileParentCoord + new Vector3(-460f, 10f, -400f ), 0);
-        return this;
+    public void Draw(
+        GameTime gameTime,
+        Camera camera
+    )
+    {
+        foreach (var obj in _tileObjects)
+        {
+            obj.DrawOn(
+                gameTime,
+                camera,
+                camera.GetProjection()
+            );
+        }
     }
 }
