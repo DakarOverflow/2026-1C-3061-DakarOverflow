@@ -6,6 +6,13 @@ using Microsoft.Xna.Framework.Input;
 
 namespace TGC.MonoGame.TP;
 
+public enum VehicleType
+{
+    Light,
+    Medium,
+    Heavy
+}
+
 public class Vehicle
 {
     private readonly CustomModel _model;
@@ -14,27 +21,23 @@ public class Vehicle
     public float RotationY;
     private const float ModelRotationOffset = MathHelper.Pi;
 
-    // MOVIMIENTO
+    // Stats
+    private readonly VehicleStats _stats;
 
-    private float _speed;
-
-    private const float MaxSpeed = 1500f;
-
-    private const float MinSpeed = -400f;
-
-    private const float Acceleration = 400f;
-
-    private const float BrakeForce = 700f;
-
+    public float _speed;
     private const float Friction = 150f;
 
-    private const float TurnSpeed = 2.5f;
+    public VehicleType Type { get; }
 
-    public Vehicle(CustomModel model, Vector3 initialPosition)
+    public Vehicle(CustomModel model, Vector3 initialPosition, VehicleStats stats, VehicleType type)
     {
         _model = model;
 
         Position = initialPosition;
+
+        _stats = stats;
+
+        Type = type;
 
         RotationY = 0f;
 
@@ -53,8 +56,8 @@ public class Vehicle
 
         if (keyboard.IsKeyDown(Keys.W))
         {
-            if (_speed < 0f) _speed += BrakeForce * deltaTime;
-            else _speed += Acceleration * deltaTime;
+            if (_speed < 0f) _speed += _stats.BrakeForce * deltaTime;
+            else _speed += _stats.Acceleration * deltaTime;
         }
         else
         {
@@ -70,14 +73,14 @@ public class Vehicle
 
         if (keyboard.IsKeyDown(Keys.S))
         {
-            _speed -= BrakeForce * deltaTime;
+            _speed -= _stats.BrakeForce * deltaTime;
         }
 
         // =========================
         // LIMITES VELOCIDAD
         // =========================
 
-        _speed = MathHelper.Clamp(_speed, MinSpeed, MaxSpeed);
+        _speed = MathHelper.Clamp(_speed, _stats.MinSpeed, _stats.MaxSpeed);
 
         // =========================
         // GIRAR
@@ -89,12 +92,12 @@ public class Vehicle
 
             if (keyboard.IsKeyDown(Keys.A))
             {
-                RotationY += TurnSpeed * steeringDirection * deltaTime;
+                RotationY += _stats.TurnSpeed * steeringDirection * deltaTime;
             }
 
             if (keyboard.IsKeyDown(Keys.D))
             {
-                RotationY -= TurnSpeed * steeringDirection * deltaTime;
+                RotationY -= _stats.TurnSpeed * steeringDirection * deltaTime;
             }
         }
 

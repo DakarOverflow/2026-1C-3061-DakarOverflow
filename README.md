@@ -22,7 +22,31 @@ Los recursos usados se almacenan utilizando [Git LFS](https://git-lfs.github.com
 
 TGC, Tgcito  |  Apellido, Nombre
 ------------ | -------------
+|            |  Blanco Larrosa, Agustin Mateo |
+|            |  Cutri, Lautaro |
+|            |  Groell, Fabienne |
+|            |  Manini, Valentín |
+|            |  Zarate, Juan Cruz |
 | <img src="https://github.com/tgc-utn/tgc-utn.github.io/blob/main/images/robotgc.png" height="500"> | <img src="https://github.com/tgc-utn/tgc-utn.github.io/blob/main/images/trofeotp.png" height="500"> |
+
+## Controles
+
+[w] -> Aceleración del Vehículo
+
+[s] -> Freno/Reversa del Vehículo
+
+[a/d] -> Giro a izquierda/derecha del Vehículo
+
+[f] -> Toggle Cámara libre
+
+[m] -> Toggle mouse
+
+[1] -> Cambiar a Vehículo Ligero
+
+[2] -> Cambiar a Vehículo Mediano
+
+[3] -> Cambiar a Vehículo Pesado
+
 
 ## Capturas
 
