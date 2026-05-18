@@ -21,7 +21,7 @@ public class TileManager
 
     private readonly List<Tile> _tiles;
 
-    private const int TileCount = 100;
+    private const int TileCount = 200;
 
     public TileManager(
         ContentManager content,
@@ -51,7 +51,9 @@ public class TileManager
         Vector3 currentPosition =
             new Vector3(0f, -50f, 0f);
 
-        Random random = new Random();
+        Random rnd = new Random();
+        
+
 
         for (int i = 0; i < TileCount; i++)
         {
@@ -63,9 +65,13 @@ public class TileManager
             );
 
             // después acá irá el random real
-
-            tile.BuildRecta1();
-
+            if (tile.tileName[rnd.Next(0, tile.tileName.Length)] == "Recta1"){
+                tile.BuildRecta1();   
+            }
+            if (tile.tileName[rnd.Next(0, tile.tileName.Length)] == "Recta2"){
+                tile.BuildRecta2(); 
+            }
+        
             _tiles.Add(tile);
 
             currentPosition +=

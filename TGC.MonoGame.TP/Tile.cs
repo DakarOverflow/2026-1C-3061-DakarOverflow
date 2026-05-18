@@ -27,6 +27,9 @@ public class Tile
 
     public Vector3 NextTileOffset;
 
+    public string[] tileName ={"Recta1","Recta2"};
+
+
     public Tile(
         ContentManager content,
         string content3DPath,
@@ -148,6 +151,89 @@ public class Tile
             0f
         );
     }
+    public void BuildRecta2()
+    {
+         NextTileOffset =
+            new Vector3(0f, 0f, -1200f);
+        
+        AddModel(_content3DPath + "road-tiles/road-square", _contentEffectsPath + "BasicShader",
+            Color.DarkGreen);
+        AddModel(_content3DPath + "road-tiles/road-straight", _contentEffectsPath + "BasicShader",
+            Color.Gray);
+        AddModel(_content3DPath + "buildings/suburban/building-type-c",
+            _contentEffectsPath + "BasicShader", Color.DarkBlue);
+        AddModel(_content3DPath + "buildings/suburban/building-type-k",
+            _contentEffectsPath + "BasicShader", Color.DarkBlue);
+        AddModel(_content3DPath + "buildings/suburban/building-type-f",
+            _contentEffectsPath + "BasicShader", Color.DarkBlue);
+        AddModel(_content3DPath + "buildings/suburban/building-type-k",
+            _contentEffectsPath + "BasicShader", Color.DarkBlue);
+
+        //Piso y Autopista 
+        AddObject(_tileModels[0], 
+            new Vector3(12f),
+            Vector3.Zero,
+            0f
+        );
+
+        AddObject(
+             _tileModels[1], 
+             new Vector3(12f, 12f, 5f),
+            new Vector3(0f, 10f, 0f),
+            MathHelper.Pi / 2f
+        );
+        //Edificios 
+        AddObject( 
+            _tileModels[2], 
+            new Vector3(2f),
+            new Vector3(460f, 10f, 0f), 0
+        );
+        AddObject(
+            _tileModels[2], 
+            new Vector3(2f),
+            new Vector3(-460f, 10f, 0f), 0 
+        );
+
+        AddObject( 
+            _tileModels[3], 
+            new Vector3(2f), 
+            new Vector3(460f, 10f, 500f ), 
+            0
+        );
+        AddObject(
+             _tileModels[3], 
+             new Vector3(2f),
+             new Vector3(-460f, 10f, 500f ), 
+             0
+        );
+
+        AddObject(
+             _tileModels[4], 
+             new Vector3(2f),
+             new Vector3(460f, 10f, 200f ),
+              0
+        );
+        AddObject( _tileModels[4],
+            new Vector3(2f),
+            new Vector3(-460f, 10f, 200f ),
+            0
+        );
+        AddObject( 
+            _tileModels[5], 
+            new Vector3(2f),
+             new Vector3(460f, 10f, -400f ), 
+             0
+        );
+        AddObject( _tileModels[5],
+            new Vector3(2f),
+            new Vector3(-460f, 10f, -400f ),
+            0
+        );
+
+    }
+
+
+
 
     public void Update(GameTime gameTime)
     {
