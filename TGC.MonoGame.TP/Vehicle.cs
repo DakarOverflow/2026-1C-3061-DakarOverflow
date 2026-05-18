@@ -24,7 +24,7 @@ public class Vehicle
     // Stats
     private readonly VehicleStats _stats;
 
-    private float _speed;
+    public float _speed;
     private const float Friction = 150f;
 
     public VehicleType Type { get; }

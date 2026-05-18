@@ -273,13 +273,16 @@ public class TGCGame : Game
 
     private void ChangeVehicle(Vehicle newVehicle)
     {
-        // conservar posicion y rotacion
+        // conservar posicion, rotacion y velocidad
 
         newVehicle.Position =
             _playerVehicle.Position;
 
         newVehicle.RotationY =
             _playerVehicle.RotationY;
+
+        newVehicle._speed = 
+            _playerVehicle._speed;
 
         _playerVehicle = newVehicle;
     }
