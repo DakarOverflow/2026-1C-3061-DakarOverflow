@@ -23,12 +23,12 @@ namespace TGC.MonoGame.TP
 
         // Valor de Combustible, Salud o Puntos que otorga el coleccionable
         public float EffectValue { get; private set; }
-        
-        // Volumen para la Detección de Colisiones, el enunciado permite usar BoudingBox para los coleccionables.
-        public BoundingBox Collider { get; private set; }
 
         private CustomModel _model;
         private Matrix _world;
+
+        // --- PREPARACIÓN PARA COLISIONES ---
+        // TODO: definir atributo
 
         // Constructor
         public Collectible(CollectibleType type, CustomModel model, Vector3 initialPosition, float effectValue)
@@ -42,12 +42,8 @@ namespace TGC.MonoGame.TP
             // Matriz de mundo inicial
             _world = Matrix.CreateTranslation(Position);
             
-            // BoundingBox inicial alrededor de la posición del coleccionable.
-            // TODO: Ajustar el tamaño del BoundingBox al tamaño real de los modelos 3D.
-            Collider = new BoundingBox(
-                Position - new Vector3(10f, 10f, 10f), 
-                Position + new Vector3(10f, 10f, 10f)
-            );
+            // --- PREPARACIÓN PARA COLISIONES ---
+            // Inicializar el atributo de colisiones.
         }
 
         // Update actualizar el estado del coleccionable
@@ -68,8 +64,9 @@ namespace TGC.MonoGame.TP
             _model.Draw(_world, view, projection);
         }
 
+        // --- PREPARACIÓN PARA COLISIONES ---
         // Método que se llamará al detectar una colisión entre el auto y el coleccionable
-        // TODO: Definir si lo llama TGCGame o TileManager
+        // TODO: Definir quien llama a este método
         public void PickUp(Vehicle player)
         {
             if (!IsActive) return;
@@ -81,17 +78,17 @@ namespace TGC.MonoGame.TP
             {
                 case CollectibleType.FuelTank:
                     // Restaura combustible
-                    // player.AddFuel(EffectValue); 
+                    player.AddFuel(EffectValue); 
                     break;
                 
                 case CollectibleType.Wrench:
-                    // Restaura puntos de daño
-                    // player.RepairDamage(EffectValue);
+                    // Restaura puntos de salud
+                    player.RepairDamage(EffectValue);
                     break;
                 
                 case CollectibleType.Coin:
-                    // Incrementa puntaje (puedes castearlo a int si tu puntaje es entero)
-                    // player.AddScore((int)EffectValue);
+                    // Incrementa puntaje, se trabaja en numeros enteros.
+                    player.AddScore((int)EffectValue);
                     break;
             }
         }
