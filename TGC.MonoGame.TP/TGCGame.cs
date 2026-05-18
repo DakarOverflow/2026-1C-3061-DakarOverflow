@@ -43,6 +43,10 @@ public class TGCGame : Game
     // PLAYER
     private Vehicle _playerVehicle;
 
+    private Vehicle _lightVehicle;
+    private Vehicle _mediumVehicle;
+    private Vehicle _heavyVehicle;
+
     public TGCGame()
     {
         // Maneja la configuracion y la administracion del dispositivo grafico.
@@ -113,7 +117,19 @@ public class TGCGame : Game
         // PLAYER
         // =========================
 
-        var carModel = new CustomModel(
+        var lightModel = new CustomModel(
+            Content.Load<Model>(
+                ContentFolder3D +
+                "car-kit/race"
+            ),
+            Content.Load<Effect>(
+                ContentFolderEffects +
+                "BasicShader"
+            ),
+            Color.Red
+        );
+
+        var mediumModel = new CustomModel(
             Content.Load<Model>(
                 ContentFolder3D +
                 "car-kit/sedan-sports"
@@ -122,13 +138,44 @@ public class TGCGame : Game
                 ContentFolderEffects +
                 "BasicShader"
             ),
-            Color.DarkRed
+            Color.DarkOrange
         );
 
-        _playerVehicle = new Vehicle(
-            carModel,
-            new Vector3(0f, 0f, 0f)
+        var heavyModel = new CustomModel(
+            Content.Load<Model>(
+                ContentFolder3D +
+                "car-kit/delivery"
+            ),
+            Content.Load<Effect>(
+                ContentFolderEffects +
+                "BasicShader"
+            ),
+            Color.DarkOliveGreen
         );
+
+        _lightVehicle = new Vehicle(
+            lightModel,
+            Vector3.Zero,
+            VehiclePresets.Light,
+            VehicleType.Light
+        );
+
+        _mediumVehicle = new Vehicle(
+            mediumModel,
+            Vector3.Zero,
+            VehiclePresets.Medium,
+            VehicleType.Medium
+        );
+
+        _heavyVehicle = new Vehicle(
+            heavyModel,
+            Vector3.Zero,
+            VehiclePresets.Heavy,
+            VehicleType.Heavy
+        );
+
+        // Vehículo inicial:
+        _playerVehicle = _mediumVehicle;
 
         base.LoadContent();
     }
@@ -160,6 +207,28 @@ public class TGCGame : Game
             _previousKeyboardState.IsKeyUp(Keys.F))
         {
             _useFreeCamera = !_useFreeCamera;
+        }
+
+        // =========================
+        // CHANGE VEHICLE
+        // =========================
+
+        if (keyboardState.IsKeyDown(Keys.D1) &&
+            _previousKeyboardState.IsKeyUp(Keys.D1))
+        {
+            ChangeVehicle(_lightVehicle);
+        }
+
+        if (keyboardState.IsKeyDown(Keys.D2) &&
+            _previousKeyboardState.IsKeyUp(Keys.D2))
+        {
+            ChangeVehicle(_mediumVehicle);
+        }
+
+        if (keyboardState.IsKeyDown(Keys.D3) &&
+            _previousKeyboardState.IsKeyUp(Keys.D3))
+        {
+            ChangeVehicle(_heavyVehicle);
         }
 
         // =========================
@@ -200,6 +269,19 @@ public class TGCGame : Game
         _previousKeyboardState = keyboardState;
 
         base.Update(gameTime);
+    }
+
+    private void ChangeVehicle(Vehicle newVehicle)
+    {
+        // conservar posicion y rotacion
+
+        newVehicle.Position =
+            _playerVehicle.Position;
+
+        newVehicle.RotationY =
+            _playerVehicle.RotationY;
+
+        _playerVehicle = newVehicle;
     }
 
     protected override void Draw(GameTime gameTime)
