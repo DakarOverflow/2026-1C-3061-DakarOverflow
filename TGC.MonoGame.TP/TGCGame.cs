@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework.Input;
 using TGC.MonoGame.TP.Zero;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace TGC.MonoGame.TP;
 
@@ -28,11 +29,12 @@ public class TGCGame : Game
 
     // CustomModel _modeloRoadStraight;
     // WorldObject _objetoRoadStraight;
-    List<CustomModel> _singleTile = new List<CustomModel>();
-    List<WorldObject> _singleTileObjs = new List<WorldObject>();
-    Vector3 _singleTileParentCoord = new Vector3(0f, -50f, 0f);
-    public Tile[] _allTiles;
-    public Tile _recto;
+    // List<CustomModel> _singleTile = new List<CustomModel>();
+    // List<WorldObject> _singleTileObjs = new List<WorldObject>();
+    // Vector3 _singleTileParentCoord = new Vector3(0f, -50f, 0f);
+    const int cantTiles = 100; //200
+    public Tile[] _allTiles = new Tile[cantTiles];
+
     CustomModel _modeloAuto;
     WorldObject _objetoAutoJugador;
     private FollowCamera _followCamera;
@@ -81,6 +83,7 @@ public class TGCGame : Game
         Window.ClientSizeChanged += _followCamera.OnClientSizeChanged;
         _cameraInUse = _followCamera;
         base.Initialize();
+
     }
 
     /// <summary>
@@ -91,67 +94,33 @@ public class TGCGame : Game
     protected override void LoadContent()
     {
         // Aca es donde deberiamos cargar todos los contenido necesarios antes de iniciar el juego.
+        //Inicializar todos los tipos de tiles
+        _allTiles = InitRecorrido(_allTiles);
+
         _spriteBatch = new SpriteBatch(GraphicsDevice);
-        AddObjtsToTile(_singleTile, ContentFolder3D + "road-tiles/road-square", ContentFolderEffects + "BasicShader",
-            Color.DarkGreen);
-        AddObjtsToTile(_singleTile, ContentFolder3D + "road-tiles/road-straight", ContentFolderEffects + "BasicShader",
-            Color.Gray);
-        AddObjtsToTile(_singleTile, ContentFolder3D + "buildings/suburban/building-type-c",
-            ContentFolderEffects + "BasicShader", Color.DarkBlue);
-        AddObjtsToTile(_singleTile, ContentFolder3D + "buildings/suburban/building-type-k",
-            ContentFolderEffects + "BasicShader", Color.DarkBlue);
-        AddObjtsToTile(_singleTile, ContentFolder3D + "buildings/suburban/building-type-f",
-            ContentFolderEffects + "BasicShader", Color.DarkBlue);
-        AddObjtsToTile(_singleTile, ContentFolder3D + "buildings/suburban/building-type-k",
-            ContentFolderEffects + "BasicShader", Color.DarkBlue);
+
         _modeloAuto = new CustomModel(Content.Load<Model>(ContentFolder3D + "car-kit/sedan-sports"),
             Content.Load<Effect>(ContentFolderEffects + "BasicShader"), Color.DarkRed);
-        float gap = 1200f;
-        
-        for (int i = 0; i < 100; i++)
-        {
-            //Modularizarlo aparte y que cada tile por separado tenga su propia cordenada relativa a esa
-            //Piso y Autopista 
-            AddObjtsToWorldTile(_singleTileObjs, _singleTile[0], new Vector3(12f),
-                _singleTileParentCoord - new Vector3(0, 0f, i * gap), 0);
-            AddObjtsToWorldTile(_singleTileObjs, _singleTile[1], new Vector3(12f, 12f, 5f),
-                _singleTileParentCoord + new Vector3(0f, 10f, 0f - i * gap), MathHelper.Pi / 2f);
-            //Edificios 
-            AddObjtsToWorldTile(_singleTileObjs, _singleTile[2], new Vector3(2f),
-                _singleTileParentCoord + new Vector3(460f, 10f, 0f - i * gap), 0);
-            AddObjtsToWorldTile(_singleTileObjs, _singleTile[2], new Vector3(2f),
-                _singleTileParentCoord + new Vector3(-460f, 10f, 0f - i * gap), 0);
-            AddObjtsToWorldTile(_singleTileObjs, _singleTile[3], new Vector3(2f),
-                _singleTileParentCoord + new Vector3(460f, 10f, 500f - i * gap), 0);
-            AddObjtsToWorldTile(_singleTileObjs, _singleTile[3], new Vector3(2f),
-                _singleTileParentCoord + new Vector3(-460f, 10f, 500f - i * gap), 0);
-            AddObjtsToWorldTile(_singleTileObjs, _singleTile[4], new Vector3(2f),
-                _singleTileParentCoord + new Vector3(460f, 10f, 200f - i * gap), 0);
-            AddObjtsToWorldTile(_singleTileObjs, _singleTile[4], new Vector3(2f),
-                _singleTileParentCoord + new Vector3(-460f, 10f, 200f - i * gap), 0);
-            AddObjtsToWorldTile(_singleTileObjs, _singleTile[5], new Vector3(2f),
-                _singleTileParentCoord + new Vector3(460f, 10f, -400f - i * gap), 0);
-            AddObjtsToWorldTile(_singleTileObjs, _singleTile[5], new Vector3(2f),
-                _singleTileParentCoord + new Vector3(-460f, 10f, -400f - i * gap), 0);
-        }
+
         _objetoAutoJugador = new WorldObject(_modeloAuto, Matrix.Identity, Vector3.Zero, Vector3.Zero);
         base.LoadContent();
     }
 
-    //Para agregar los CustomModel a los elem de la tile
-    public void AddObjtsToTile(List<CustomModel> Tile, string ContentFolder3DRoot, string ContentFolderEffectsRoot, Color color)
-    {
-        Tile.Add(new CustomModel(Content.Load<Model>(ContentFolder3DRoot),
-            Content.Load<Effect>(ContentFolderEffectsRoot), color));
-    }
-
-    //Para agregar Todos los elementos a la tile y que se vean al mundo
-    public void AddObjtsToWorldTile(List<WorldObject> Tile, CustomModel Model, Vector3 Scale, Vector3 Coord, float RotationY)
-    {
-        Tile.Add(new WorldObject(Model,
-            Matrix.CreateScale(Scale) * Matrix.CreateRotationY(RotationY) * Matrix.CreateTranslation(Coord),
-            Vector3.Zero, Vector3.Zero));
-    }
+    public Tile[]  InitRecorrido(Tile[] allTiles){
+        string [] Tramos = {"recto1"};
+        Vector3 _relativePosc = new Vector3(0f,0f,0f);
+        Random rnd = new Random();
+        for (int i = 0; i < allTiles.Length; i++){
+            if(i > 0){
+                _relativePosc =  allTiles[i-1]._nextTile + allTiles[i-1]._TileParentCoord;
+            }
+            if (Tramos[rnd.Next(0, Tramos.Length)] == "recto1"){
+               allTiles[i] = new Tile(ContentFolder3D,ContentFolderEffects,
+                _relativePosc,Content).SetUpTileRecto1();
+            }
+        } 
+        return allTiles;
+    }    
 
     /// <summary>
     ///     Se llama en cada frame.
@@ -171,12 +140,11 @@ public class TGCGame : Game
             _mouseCaptured = !_mouseCaptured;
             IsMouseVisible = !_mouseCaptured;
         }
-
-        for (var i = 0; i < _singleTileObjs.Count; i++)
-        {
-            _singleTileObjs[i].Update(gameTime);
+        for (var j = 0; j < _allTiles.Length; j++){
+            for (var i = 0; i < _allTiles[j]._TileObjs.Count; i++){
+                _allTiles[j]._TileObjs[i].Update(gameTime);
+            }
         }
-
         if (keyboardState.IsKeyDown(Keys.F) && _previousKeyboardState.IsKeyUp(Keys.F))
         {
             _useFreeCamera = !_useFreeCamera;
@@ -191,6 +159,8 @@ public class TGCGame : Game
             _cameraInUse = _followCamera;
             _followCamera.Update(gameTime, _objetoAutoJugador.GetCurrentWorld(gameTime));
         }
+
+  
         // _objetoBase.Update(gameTime);
         // _objetoRoadStraight.Update(gameTime);
         //_objetoAutoJugador.Update(gameTime);
@@ -203,9 +173,10 @@ public class TGCGame : Game
     {
         // Aca deberiamos poner toda la logia de renderizado del juego.
         GraphicsDevice.Clear(Color.CornflowerBlue);
-        for (var i = 0; i < _singleTileObjs.Count; i++)
-        {
-            _singleTileObjs[i].DrawOn(gameTime, _cameraInUse, _cameraInUse.GetProjection());
+        for (int j = 0; j < _allTiles.Length; j++){
+            for (var i = 0; i < _allTiles[j]._TileObjs.Count; i++){
+                _allTiles[j]._TileObjs[i].DrawOn(gameTime, _cameraInUse, _cameraInUse.GetProjection());
+            }     
         }
 
         // _objetoBase.DrawOn(gameTime, _currentCamera);
