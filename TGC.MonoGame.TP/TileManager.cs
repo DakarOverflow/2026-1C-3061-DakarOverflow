@@ -19,9 +19,9 @@ public class TileManager
 
     private readonly string _contentEffectsPath;
 
-    private readonly List<Tile> _tiles;
-
     private const int TileCount = 200;
+    private readonly Tile [] _tiles;
+
 
     public TileManager(
         ContentManager content,
@@ -38,7 +38,7 @@ public class TileManager
 
         _contentEffectsPath = contentEffectsPath;
 
-        _tiles = new List<Tile>();
+        _tiles = new Tile [TileCount];
     }
 
     public void Load()
@@ -55,7 +55,7 @@ public class TileManager
         
 
 
-        for (int i = 0; i < TileCount; i++)
+        for (int i = 0; i < _tiles.Length; i++)
         {
             Tile tile = new Tile(
                 _content,
@@ -72,7 +72,7 @@ public class TileManager
                 tile.BuildRecta2(); 
             }
         
-            _tiles.Add(tile);
+            _tiles[i] = tile;
 
             currentPosition +=
                 tile.NextTileOffset;
