@@ -11,9 +11,10 @@ public static class VehiclePresets
     public static VehicleStats Light =
         new VehicleStats()
         {
+            MaxAcceleration = 700f,
+            AccelerationRate = 8f,
             MaxSpeed = 2000f,
             MinSpeed = -1000f,
-            Acceleration = 700f,
             BrakeForce = 1000f,
             TurnSpeed = 2.5f,
             MaxHealth = 50f,
@@ -24,9 +25,10 @@ public static class VehiclePresets
     public static VehicleStats Medium =
         new VehicleStats()
         {
+            MaxAcceleration = 400f,
+            AccelerationRate = 5f,
             MaxSpeed = 1500f,
             MinSpeed = -750f,
-            Acceleration = 400f,
             BrakeForce = 700f,
             TurnSpeed = 2f,
             MaxHealth = 100f,
@@ -37,11 +39,12 @@ public static class VehiclePresets
     public static VehicleStats Heavy =
         new VehicleStats()
         {
+            MaxAcceleration = 250f,
+            AccelerationRate = 3f,
             MaxSpeed = 1000f,
             MinSpeed = -500f,
-            Acceleration = 250f,
             BrakeForce = 550f,
-            TurnSpeed = 1.25f,
+            TurnSpeed = 1.75f,
             MaxHealth = 250f,
             FuelCapacity = 220f,
             FuelConsumption = 0.4f

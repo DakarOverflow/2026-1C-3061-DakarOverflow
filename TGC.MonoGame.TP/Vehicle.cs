@@ -20,12 +20,12 @@ public class Vehicle
     public Vector3 Position;
     public float RotationY;
     private const float ModelRotationOffset = MathHelper.Pi;
-    
+
     // Stats según tipo de vehículo
     private readonly VehicleStats _stats;
 
     public float _speed;
-    private const float Friction = 150f;
+    private float _currentAcceleration;
 
     // Tipo de vehículo
     public VehicleType Type { get; }
@@ -47,6 +47,7 @@ public class Vehicle
         Type = type;
         RotationY = 0f;
         _speed = 0f;
+        _currentAcceleration = 0f;
 
         // Se inicializan los medidores en su máximo en base a los stats del tipo de vehículo seleccionado.
         CurrentFuel = _stats.FuelCapacity;
@@ -71,25 +72,15 @@ public class Vehicle
         // Consumo de combustible progresivo
         CurrentFuel -= _stats.FuelConsumption * deltaTime;
 
+
         // =========================
-        // ACELERAR
+        // ACELERAR / FRENAR
         // =========================
 
-        // TODO: El enunciado dice "El auto del jugador acelerará automáticamente, dejando solo a control del jugador el giro y el freno". Es decir, el auto debe acelerar automáticamnete.
-        // TODO: BORRAR EL USO DE LA TECLA W PARA ACELERAR
-
-        if (keyboard.IsKeyDown(Keys.W))
-        {
-            if (_speed < 0f) _speed += _stats.BrakeForce * deltaTime;
-            else _speed += _stats.Acceleration * deltaTime;
-        }
-        else
-        {
-            // Desaceleracion natural
-            if (_speed > 0f) _speed -= Friction * deltaTime;
-            else if (_speed < 0f) _speed += Friction * deltaTime;
-            else if (_speed == 0f) _speed = 0;
-        }
+        // acelera más al comienzo pero acelera menos cuando ya tiene velocidad
+        float normalizedSpeed = Math.Abs(_speed) / _stats.MaxSpeed;
+        float accelFactor = MathHelper.Clamp(1f - normalizedSpeed, 0f, 1f);
+        float lerpFactor = MathHelper.Clamp(_stats.AccelerationRate * deltaTime, 0f, 1f);
 
         // =========================
         // FRENAR
@@ -97,7 +88,26 @@ public class Vehicle
 
         if (keyboard.IsKeyDown(Keys.S))
         {
+            // contemplada lógica para baja suave de la aceleración al frenar
+            _currentAcceleration = MathHelper.Lerp(
+                _currentAcceleration,
+                0f,
+               lerpFactor
+            );
+
             _speed -= _stats.BrakeForce * deltaTime;
+        }
+        else
+        {
+            float targetAcceleration = _stats.MaxAcceleration * accelFactor;
+
+            _currentAcceleration = MathHelper.Lerp(
+                _currentAcceleration,
+                targetAcceleration,
+                lerpFactor
+            );
+
+            _speed += _currentAcceleration * deltaTime;
         }
 
         // =========================
@@ -110,18 +120,28 @@ public class Vehicle
         // GIRAR
         // =========================
 
-        if (_speed > 5f)
+        // Gira menos mientras más velocidad tiene el vehículo
+        float speedFactor = Math.Abs(_speed) / _stats.MaxSpeed;
+        float turnMultiplier = MathHelper.Lerp(
+            1f,
+            0.4f,
+            speedFactor
+        );
+
+        float currentTurnSpeed = _stats.TurnSpeed * turnMultiplier;
+
+        if (Math.Abs(_speed) > 5f)
         {
             float steeringDirection = _speed >= 0f ? 1f : -1f;
 
             if (keyboard.IsKeyDown(Keys.A))
             {
-                RotationY += _stats.TurnSpeed * steeringDirection * deltaTime;
+                RotationY += currentTurnSpeed * steeringDirection * deltaTime;
             }
 
             if (keyboard.IsKeyDown(Keys.D))
             {
-                RotationY -= _stats.TurnSpeed * steeringDirection * deltaTime;
+                RotationY -= currentTurnSpeed * steeringDirection * deltaTime;
             }
         }
 
@@ -139,7 +159,7 @@ public class Vehicle
     // ==========================================
     // MÉTODOS PARA INTERACTUAR CON COLECCIONABLES
     // ==========================================
-    
+
     // Agrega combustible al tanque del vehiculo. Si llega al maximo no se agrega mas.
     public void AddFuel(float amount)
     {
