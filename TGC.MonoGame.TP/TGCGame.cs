@@ -2,10 +2,10 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using TGC.MonoGame.TP.Zero;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.Xna.Framework.Content;
 
 namespace TGC.MonoGame.TP;
 
@@ -16,15 +16,6 @@ namespace TGC.MonoGame.TP;
 /// </summary>
 public class TGCGame : Game
 {
-    // CONTANTES
-    public const string ContentFolder3D = "Models/";
-    public const string ContentFolderEffects = "Effects/";
-    public const string ContentFolderMusic = "Music/";
-    public const string ContentFolderSounds = "Sounds/";
-    public const string ContentFolderSpriteFonts = "SpriteFonts/";
-    public const string ContentFolderTextures = "Textures/";
-
-    // GRAFICAS
     private readonly GraphicsDeviceManager _graphics;
     private SpriteBatch _spriteBatch;
 
@@ -38,8 +29,6 @@ public class TGCGame : Game
     // TECLADO
     private KeyboardState _previousKeyboardState;
 
-    // MUNDO
-    private TileManager _tileManager;
 
     // PLAYER
     private Vehicle _playerVehicle;
@@ -49,6 +38,7 @@ public class TGCGame : Game
     private Vehicle _mediumVehicle;
     private Vehicle _heavyVehicle;
 
+    private Road _road;
     // COLECCIONABLES
     private List<Collectible> _collectibles = new List<Collectible>();
 
@@ -98,6 +88,9 @@ public class TGCGame : Game
 
         _cameraInUse = _followCamera;
 
+        Services.AddService<GraphicsDeviceManager>(_graphics);
+        Services.AddService<ContentManager>(Content);
+
         base.Initialize();
     }
 
@@ -105,18 +98,9 @@ public class TGCGame : Game
     {
         _spriteBatch = new SpriteBatch(GraphicsDevice);
 
-        // =========================
-        // TILE MANAGER
-        // =========================
 
-        _tileManager = new TileManager(
-            Content,
-            GraphicsDevice,
-            ContentFolder3D,
-            ContentFolderEffects
-        );
+        _road = new Road(new TileRecta(Content, new Vector3(0f, -50f, 0f)));
 
-        _tileManager.Load();
 
         // =========================
         // PLAYER
@@ -124,11 +108,11 @@ public class TGCGame : Game
 
         var lightModel = new CustomModel(
             Content.Load<Model>(
-                ContentFolder3D +
+                AssetPaths.ContentFolder3D +
                 "car-kit/race"
             ),
             Content.Load<Effect>(
-                ContentFolderEffects +
+                AssetPaths.ContentFolderEffects +
                 "BasicShader"
             ),
             Color.Red
@@ -136,11 +120,11 @@ public class TGCGame : Game
 
         var mediumModel = new CustomModel(
             Content.Load<Model>(
-                ContentFolder3D +
+                AssetPaths.ContentFolder3D +
                 "car-kit/sedan-sports"
             ),
             Content.Load<Effect>(
-                ContentFolderEffects +
+                AssetPaths.ContentFolderEffects +
                 "BasicShader"
             ),
             Color.DarkOrange
@@ -148,11 +132,11 @@ public class TGCGame : Game
 
         var heavyModel = new CustomModel(
             Content.Load<Model>(
-                ContentFolder3D +
+                AssetPaths.ContentFolder3D +
                 "car-kit/delivery"
             ),
             Content.Load<Effect>(
-                ContentFolderEffects +
+                AssetPaths.ContentFolderEffects +
                 "BasicShader"
             ),
             Color.DarkOliveGreen
@@ -188,11 +172,11 @@ public class TGCGame : Game
 
         var fuelTankModel = new CustomModel(
             Content.Load<Model>(
-                ContentFolder3D +
+                AssetPaths.ContentFolder3D +
                 "car-kit/box" // TODO: Cambiar por el modelo real
             ),
             Content.Load<Effect>(
-                ContentFolderEffects +
+                AssetPaths.ContentFolderEffects +
                 "BasicShader"
             ),
             Color.Red
@@ -200,11 +184,11 @@ public class TGCGame : Game
 
         var wrenchModel = new CustomModel(
             Content.Load<Model>(
-                ContentFolder3D +
+                AssetPaths.ContentFolder3D +
                 "car-kit/debris-bolt" // TODO: Cambiar por el modelo real
             ),
             Content.Load<Effect>(
-                ContentFolderEffects +
+                AssetPaths.ContentFolderEffects +
                 "BasicShader"
             ),
             Color.Gray
@@ -212,11 +196,11 @@ public class TGCGame : Game
 
         var coinModel = new CustomModel(
             Content.Load<Model>(
-                ContentFolder3D +
+                AssetPaths.ContentFolder3D +
                 "car-kit/debris-nut" // TODO: Cambiar por el modelo real
             ),
             Content.Load<Effect>(
-                ContentFolderEffects +
+                AssetPaths.ContentFolderEffects +
                 "BasicShader"
             ),
             Color.Gold
@@ -296,7 +280,7 @@ public class TGCGame : Game
         // UPDATE WORLD
         // =========================
 
-        _tileManager.Update(gameTime);
+        _road.UpdateFor(_playerVehicle,gameTime);
 
         // =========================
         // UPDATE CAMERA
@@ -350,7 +334,7 @@ public class TGCGame : Game
         // DRAW WORLD
         // =========================
 
-        _tileManager.Draw(
+        _road.Draw(
             gameTime,
             _cameraInUse
         );
