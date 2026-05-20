@@ -2,7 +2,6 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using TGC.MonoGame.TP.Zero;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,28 +17,30 @@ namespace TGC.MonoGame.TP;
 public class TGCGame : Game
 {
     private readonly GraphicsDeviceManager _graphics;
-
     private SpriteBatch _spriteBatch;
 
     // CAMARAS
     private FreeCamera _freeCamera;
     private FollowCamera _followCamera;
     private Camera _cameraInUse;
-
     private bool _useFreeCamera;
     private bool _mouseCaptured = true;
 
+    // TECLADO
     private KeyboardState _previousKeyboardState;
 
 
     // PLAYER
     private Vehicle _playerVehicle;
 
+    // VEHICULOS
     private Vehicle _lightVehicle;
     private Vehicle _mediumVehicle;
     private Vehicle _heavyVehicle;
 
     private Road _road;
+    // COLECCIONABLES
+    private List<Collectible> _collectibles = new List<Collectible>();
 
     public TGCGame()
     {
@@ -164,6 +165,56 @@ public class TGCGame : Game
 
         // Vehículo inicial:
         _playerVehicle = _mediumVehicle;
+
+        // =========================
+        // COLECCIONABLES
+        // =========================
+
+        var fuelTankModel = new CustomModel(
+            Content.Load<Model>(
+                AssetPaths.ContentFolder3D +
+                "car-kit/box" // TODO: Cambiar por el modelo real
+            ),
+            Content.Load<Effect>(
+                AssetPaths.ContentFolderEffects +
+                "BasicShader"
+            ),
+            Color.Red
+        );
+
+        var wrenchModel = new CustomModel(
+            Content.Load<Model>(
+                AssetPaths.ContentFolder3D +
+                "car-kit/debris-bolt" // TODO: Cambiar por el modelo real
+            ),
+            Content.Load<Effect>(
+                AssetPaths.ContentFolderEffects +
+                "BasicShader"
+            ),
+            Color.Gray
+        );
+
+        var coinModel = new CustomModel(
+            Content.Load<Model>(
+                AssetPaths.ContentFolder3D +
+                "car-kit/debris-nut" // TODO: Cambiar por el modelo real
+            ),
+            Content.Load<Effect>(
+                AssetPaths.ContentFolderEffects +
+                "BasicShader"
+            ),
+            Color.Gold
+        );
+
+        // Para instanciar los coleccionables se indica el tipo, el modelo, la posicion y el valor que otorga.
+        _collectibles.Add(new Collectible(
+            CollectibleType.FuelTank, fuelTankModel, new Vector3(-150f, 0f, -500f), 100f));
+
+        _collectibles.Add(new Collectible(
+            CollectibleType.Wrench, wrenchModel, new Vector3(0f, 0f, -500f), 50f));
+
+        _collectibles.Add(new Collectible(
+            CollectibleType.Coin, coinModel, new Vector3(150f, 0f, -500f), 10f));
 
         base.LoadContent();
     }
@@ -296,6 +347,15 @@ public class TGCGame : Game
             gameTime,
             _cameraInUse
         );
+
+        // =========================
+        // DRAW COLLECTIBLES
+        // =========================
+
+        foreach (var collectible in _collectibles)
+        {
+            collectible.Draw(_cameraInUse.GetView(), _cameraInUse.GetProjection());
+        }
 
         base.Draw(gameTime);
     }

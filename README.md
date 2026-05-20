@@ -31,15 +31,13 @@ TGC, Tgcito  |  Apellido, Nombre
 
 ## Controles
 
-[w] -> Aceleración del Vehículo
+[S] -> Freno/Reversa del Vehículo
 
-[s] -> Freno/Reversa del Vehículo
+[A/D] -> Giro a izquierda/derecha del Vehículo
 
-[a/d] -> Giro a izquierda/derecha del Vehículo
+[F] -> Toggle Cámara libre
 
-[f] -> Toggle Cámara libre
-
-[m] -> Toggle mouse
+[M] -> Toggle mouse
 
 [1] -> Cambiar a Vehículo Ligero
 

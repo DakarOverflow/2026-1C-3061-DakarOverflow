@@ -15,57 +15,72 @@ public enum VehicleType
 
 public class Vehicle
 {
+    // Atributos
     private readonly CustomModel _model;
-
     public Vector3 Position;
     public float RotationY;
     private const float ModelRotationOffset = MathHelper.Pi;
 
-    // Stats
+    // Stats según tipo de vehículo
     private readonly VehicleStats _stats;
 
     public float _speed;
-    private const float Friction = 150f;
+    private float _currentAcceleration;
 
+    // Tipo de vehículo
     public VehicleType Type { get; }
 
+    // Combustible, salud y puntaje
+    public float CurrentFuel { get; private set; }
+    public float CurrentHealth { get; private set; }
+    public int Score { get; private set; }
+
+    // --- PREPARACIÓN PARA COLISIONES ---
+    // TODO: definir atributo
+
+    // Constructor
     public Vehicle(CustomModel model, Vector3 initialPosition, VehicleStats stats, VehicleType type)
     {
         _model = model;
-
         Position = initialPosition;
-
         _stats = stats;
-
         Type = type;
-
         RotationY = 0f;
-
         _speed = 0f;
+        _currentAcceleration = 0f;
+
+        // Se inicializan los medidores en su máximo en base a los stats del tipo de vehículo seleccionado.
+        CurrentFuel = _stats.FuelCapacity;
+        CurrentHealth = _stats.MaxHealth;
+        Score = 0;
+
+        // --- PREPARACIÓN PARA COLISIONES ---
+        // Inicializar el atributo de colisiones.
     }
 
     public void Update(GameTime gameTime)
     {
         float deltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
-
         KeyboardState keyboard = Keyboard.GetState();
 
+        // Si el auto se queda sin nafta o salud, el auto no debería poder seguir
+        if (CurrentFuel <= 0 || CurrentHealth <= 0)
+        {
+            _speed = 0;
+            return; // TODO: Manejar Game Over en TGCGame
+        }
+        // Consumo de combustible progresivo
+        CurrentFuel -= _stats.FuelConsumption * deltaTime;
+
+
         // =========================
-        // ACELERAR
+        // ACELERAR / FRENAR
         // =========================
 
-        if (keyboard.IsKeyDown(Keys.W))
-        {
-            if (_speed < 0f) _speed += _stats.BrakeForce * deltaTime;
-            else _speed += _stats.Acceleration * deltaTime;
-        }
-        else
-        {
-            // desaceleracion natural
-            if (_speed > 0f) _speed -= Friction * deltaTime;
-            else if (_speed < 0f) _speed += Friction * deltaTime;
-            else if (_speed == 0f) _speed = 0;
-        }
+        // acelera más al comienzo pero acelera menos cuando ya tiene velocidad
+        float normalizedSpeed = Math.Abs(_speed) / _stats.MaxSpeed;
+        float accelFactor = MathHelper.Clamp(1f - normalizedSpeed, 0f, 1f);
+        float lerpFactor = MathHelper.Clamp(_stats.AccelerationRate * deltaTime, 0f, 1f);
 
         // =========================
         // FRENAR
@@ -73,7 +88,26 @@ public class Vehicle
 
         if (keyboard.IsKeyDown(Keys.S))
         {
+            // contemplada lógica para baja suave de la aceleración al frenar
+            _currentAcceleration = MathHelper.Lerp(
+                _currentAcceleration,
+                0f,
+               lerpFactor
+            );
+
             _speed -= _stats.BrakeForce * deltaTime;
+        }
+        else
+        {
+            float targetAcceleration = _stats.MaxAcceleration * accelFactor;
+
+            _currentAcceleration = MathHelper.Lerp(
+                _currentAcceleration,
+                targetAcceleration,
+                lerpFactor
+            );
+
+            _speed += _currentAcceleration * deltaTime;
         }
 
         // =========================
@@ -86,18 +120,28 @@ public class Vehicle
         // GIRAR
         // =========================
 
-        if (_speed > 5f)
+        // Gira menos mientras más velocidad tiene el vehículo
+        float speedFactor = Math.Abs(_speed) / _stats.MaxSpeed;
+        float turnMultiplier = MathHelper.Lerp(
+            1f,
+            0.4f,
+            speedFactor
+        );
+
+        float currentTurnSpeed = _stats.TurnSpeed * turnMultiplier;
+
+        if (Math.Abs(_speed) > 5f)
         {
             float steeringDirection = _speed >= 0f ? 1f : -1f;
 
             if (keyboard.IsKeyDown(Keys.A))
             {
-                RotationY += _stats.TurnSpeed * steeringDirection * deltaTime;
+                RotationY += currentTurnSpeed * steeringDirection * deltaTime;
             }
 
             if (keyboard.IsKeyDown(Keys.D))
             {
-                RotationY -= _stats.TurnSpeed * steeringDirection * deltaTime;
+                RotationY -= currentTurnSpeed * steeringDirection * deltaTime;
             }
         }
 
@@ -106,24 +150,51 @@ public class Vehicle
         // =========================
 
         Vector3 forward = Vector3.Transform(Vector3.Forward, Matrix.CreateRotationY(RotationY));
-
         Position += forward * _speed * deltaTime;
+
+        // --- PREPARACIÓN PARA COLISIONES ---
+        // Actualizar el atributo de colisiones respecto a la posicion del vehiculo
     }
 
+    // ==========================================
+    // MÉTODOS PARA INTERACTUAR CON COLECCIONABLES
+    // ==========================================
+
+    // Agrega combustible al tanque del vehiculo. Si llega al maximo no se agrega mas.
+    public void AddFuel(float amount)
+    {
+        CurrentFuel += amount;
+        if (CurrentFuel > _stats.FuelCapacity) CurrentFuel = _stats.FuelCapacity;
+    }
+
+    // Repara el vehiculo sumandole puntos de salud. Si llega al maximo de salud no se suma mas.
+    public void RepairDamage(float amount)
+    {
+        CurrentHealth += amount;
+        if (CurrentHealth > _stats.MaxHealth) CurrentHealth = _stats.MaxHealth;
+    }
+
+    // Suma puntos al puntaje del jugador en formato entero
+    public void AddScore(float amount)
+    {
+        Score += (int)amount;
+    }
+
+    // ==========================================
+    // MÉTODOS PARA DIBUJAR EL VEHÍCULO
+    // ==========================================
     public Matrix GetWorld()
     {
         return
             Matrix.CreateRotationY(RotationY) *
             Matrix.CreateTranslation(Position);
     }
-
     public Matrix GetVisualWorld()
     {
         return
             Matrix.CreateRotationY(RotationY + ModelRotationOffset) *
             Matrix.CreateTranslation(Position);
     }
-
     public void Draw(GameTime gameTime, Camera camera)
     {
         _model.Draw(

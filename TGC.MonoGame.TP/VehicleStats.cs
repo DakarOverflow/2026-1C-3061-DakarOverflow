@@ -10,9 +10,10 @@ namespace TGC.MonoGame.TP;
 // Dataclass
 public class VehicleStats
 {
+    public float MaxAcceleration;
+    public float AccelerationRate;
     public float MaxSpeed;
     public float MinSpeed;
-    public float Acceleration;
     public float BrakeForce;
     public float TurnSpeed;
 
