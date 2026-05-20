@@ -1,10 +1,11 @@
-using System;
+﻿using System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using TGC.MonoGame.TP.Zero;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace TGC.MonoGame.TP;
 
@@ -15,6 +16,7 @@ namespace TGC.MonoGame.TP;
 /// </summary>
 public class TGCGame : Game
 {
+    // CONTANTES
     public const string ContentFolder3D = "Models/";
     public const string ContentFolderEffects = "Effects/";
     public const string ContentFolderMusic = "Music/";
@@ -22,196 +24,360 @@ public class TGCGame : Game
     public const string ContentFolderSpriteFonts = "SpriteFonts/";
     public const string ContentFolderTextures = "Textures/";
 
+    // GRAFICAS
     private readonly GraphicsDeviceManager _graphics;
-
-    // CustomModel _modeloBase;
-    // WorldObject _objetoBase;
-
-    // CustomModel _modeloRoadStraight;
-    // WorldObject _objetoRoadStraight;
-
-
-    
-    List<CustomModel> _singleTile = new List<CustomModel>();
-    List<WorldObject> _singleTileObjs = new List<WorldObject>();
-    Vector3 _singleTileParentCoord =  new Vector3(0f, -50f, 0f);
-
-    public Tile [] _allTiles;
-    public Tile _recto;
-
-    
-    CustomModel _modeloAuto;
-    WorldObject _objetoAutoJugador;
-
-    FollowCamera _currentCamera;
-
     private SpriteBatch _spriteBatch;
 
-    /// <summary>
-    ///     Constructor del juego.
-    /// </summary>
+    // CAMARAS
+    private FreeCamera _freeCamera;
+    private FollowCamera _followCamera;
+    private Camera _cameraInUse;
+    private bool _useFreeCamera;
+    private bool _mouseCaptured = true;
+
+    // TECLADO
+    private KeyboardState _previousKeyboardState;
+
+    // MUNDO
+    private TileManager _tileManager;
+
+    // PLAYER
+    private Vehicle _playerVehicle;
+
+    // VEHICULOS
+    private Vehicle _lightVehicle;
+    private Vehicle _mediumVehicle;
+    private Vehicle _heavyVehicle;
+
+    // COLECCIONABLES
+    private List<Collectible> _collectibles = new List<Collectible>();
+
     public TGCGame()
     {
         // Maneja la configuracion y la administracion del dispositivo grafico.
         _graphics = new GraphicsDeviceManager(this);
 
-        _graphics.PreferredBackBufferWidth = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width - 100;
-        _graphics.PreferredBackBufferHeight = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height - 100;
+        var screenWidth = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width;
 
-        // Para que el juego sea pantalla completa se puede usar Graphics IsFullScreen.
-        // Carpeta raiz donde va a estar toda la Media.
+        var screenHeight = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height;
+
+        _graphics.PreferredBackBufferWidth = screenWidth / 2;
+        _graphics.PreferredBackBufferHeight = screenHeight / 2;
+
+        _graphics.IsFullScreen = false;
+
         Content.RootDirectory = "Content";
-        // Hace que el mouse sea visible.
-        IsMouseVisible = true;
+
+        IsFixedTimeStep = true;
+
+        Window.AllowUserResizing = true;
     }
 
-    /// <summary>
-    ///     Se llama una sola vez, al principio cuando se ejecuta el ejemplo.
-    ///     Escribir aqui el codigo de inicializacion: el procesamiento que podemos pre calcular para nuestro juego.
-    /// </summary>
     protected override void Initialize()
     {
-        // La logica de inicializacion que no depende del contenido se recomienda poner en este metodo.
+        IsMouseVisible = false;
 
-        // Apago el backface culling.
-        // Esto se hace por un problema en el diseno del modelo del logo de la materia.
-        // Una vez que empiecen su juego, esto no es mas necesario y lo pueden sacar.
-        var rasterizerState = new RasterizerState();
-        rasterizerState.CullMode = CullMode.None;
-        GraphicsDevice.RasterizerState = rasterizerState;
-        // Seria hasta aca.
+        _graphics.ApplyChanges();
 
-        _currentCamera = new FollowCamera(GraphicsDevice.Viewport.AspectRatio);
-        // Configuramos nuestras matrices de la escena.
+        GraphicsDevice.RasterizerState = new RasterizerState()
+        {
+            CullMode = CullMode.None
+        };
+
+        _freeCamera = new FreeCamera(
+            new Vector3(110f, 10f, 110f),
+            Vector3.Zero,
+            GraphicsDevice
+        );
+
+        _followCamera = new FollowCamera(GraphicsDevice);
+
+        Window.ClientSizeChanged += _freeCamera.OnClientSizeChanged;
+
+        Window.ClientSizeChanged += _followCamera.OnClientSizeChanged;
+
+        _cameraInUse = _followCamera;
 
         base.Initialize();
     }
 
-    /// <summary>
-    ///     Se llama una sola vez, al principio cuando se ejecuta el ejemplo, despues de Initialize.
-    ///     Escribir aqui el codigo de inicializacion: cargar modelos, texturas, estructuras de optimizacion, el procesamiento
-    ///     que podemos pre calcular para nuestro juego.
-    /// </summary>
     protected override void LoadContent()
     {
-   
-
-        // Aca es donde deberiamos cargar todos los contenido necesarios antes de iniciar el juego.
         _spriteBatch = new SpriteBatch(GraphicsDevice);
 
-        // Cargo el modelo del logo.  //Modularizarlo aparte
-        AddObjtsToTile(_singleTile,ContentFolder3D + "road-tiles/road-square",ContentFolderEffects + "BasicShader",Color.DarkGreen);
-        AddObjtsToTile(_singleTile,ContentFolder3D + "road-tiles/road-straight",ContentFolderEffects + "BasicShader", Color.Gray);
-        AddObjtsToTile(_singleTile,ContentFolder3D + "buildings/suburban/building-type-c",ContentFolderEffects + "BasicShader", Color.DarkBlue);
-        AddObjtsToTile(_singleTile,ContentFolder3D + "buildings/suburban/building-type-k",ContentFolderEffects + "BasicShader", Color.DarkBlue);
-        AddObjtsToTile(_singleTile,ContentFolder3D + "buildings/suburban/building-type-f",ContentFolderEffects + "BasicShader", Color.DarkBlue);
-        AddObjtsToTile(_singleTile,ContentFolder3D + "buildings/suburban/building-type-k",ContentFolderEffects + "BasicShader", Color.DarkBlue);
+        // =========================
+        // TILE MANAGER
+        // =========================
 
-        _modeloAuto = new CustomModel(
-            Content.Load<Model>(ContentFolder3D + "car-kit/sedan-sports"),
-            Content.Load<Effect>(ContentFolderEffects + "BasicShader"),
-            Color.DarkRed
+        _tileManager = new TileManager(
+            Content,
+            GraphicsDevice,
+            ContentFolder3D,
+            ContentFolderEffects
         );
 
+        _tileManager.Load();
 
-        float gap =1200f;
-        for (int i = 0; i < 100; i++){  //Modularizarlo aparte y que cada tile por separado tenga su propia cordenada relativa a esa
-            //Piso y Autopista 
-            AddObjtsToWorldTile(_singleTileObjs,_singleTile[0],new Vector3(12f),_singleTileParentCoord-new Vector3(0,0f,i*gap),0);
-            AddObjtsToWorldTile(_singleTileObjs,_singleTile[1],new Vector3(12f, 12f, 5f),_singleTileParentCoord + new Vector3(0f,10f,0f-i*gap),
-            MathHelper.Pi / 2f);
-            //Edificios 
-            AddObjtsToWorldTile(_singleTileObjs,_singleTile[2],new Vector3(2f),_singleTileParentCoord + new Vector3(460f,10f,0f-i*gap) ,0);
-            AddObjtsToWorldTile(_singleTileObjs,_singleTile[2],new Vector3(2f),_singleTileParentCoord + new Vector3(-460f,10f,0f-i*gap),0);
-            AddObjtsToWorldTile(_singleTileObjs,_singleTile[3],new Vector3(2f),_singleTileParentCoord + new Vector3(460f,10f,500f-i*gap),0);
-            AddObjtsToWorldTile(_singleTileObjs,_singleTile[3],new Vector3(2f),_singleTileParentCoord + new Vector3(-460f,10f,500f-i*gap),0);
+        // =========================
+        // PLAYER
+        // =========================
 
-            AddObjtsToWorldTile(_singleTileObjs,_singleTile[4],new Vector3(2f),_singleTileParentCoord + new Vector3(460f,10f,200f-i*gap),0);
-            AddObjtsToWorldTile(_singleTileObjs,_singleTile[4],new Vector3(2f),_singleTileParentCoord + new Vector3(-460f,10f,200f-i*gap),0);
+        var lightModel = new CustomModel(
+            Content.Load<Model>(
+                ContentFolder3D +
+                "car-kit/race"
+            ),
+            Content.Load<Effect>(
+                ContentFolderEffects +
+                "BasicShader"
+            ),
+            Color.Red
+        );
 
-            AddObjtsToWorldTile(_singleTileObjs,_singleTile[5],new Vector3(2f),_singleTileParentCoord + new Vector3(460f,10f,-400f-i*gap),0);
-            AddObjtsToWorldTile(_singleTileObjs,_singleTile[5],new Vector3(2f),_singleTileParentCoord + new Vector3(-460f,10f,-400f-i*gap),0);
-        }
+        var mediumModel = new CustomModel(
+            Content.Load<Model>(
+                ContentFolder3D +
+                "car-kit/sedan-sports"
+            ),
+            Content.Load<Effect>(
+                ContentFolderEffects +
+                "BasicShader"
+            ),
+            Color.DarkOrange
+        );
 
-        _objetoAutoJugador = new WorldObject(
-            _modeloAuto,
-            Matrix.Identity,
+        var heavyModel = new CustomModel(
+            Content.Load<Model>(
+                ContentFolder3D +
+                "car-kit/delivery"
+            ),
+            Content.Load<Effect>(
+                ContentFolderEffects +
+                "BasicShader"
+            ),
+            Color.DarkOliveGreen
+        );
+
+        _lightVehicle = new Vehicle(
+            lightModel,
             Vector3.Zero,
-            Vector3.Zero
+            VehiclePresets.Light,
+            VehicleType.Light
         );
 
-   
+        _mediumVehicle = new Vehicle(
+            mediumModel,
+            Vector3.Zero,
+            VehiclePresets.Medium,
+            VehicleType.Medium
+        );
+
+        _heavyVehicle = new Vehicle(
+            heavyModel,
+            Vector3.Zero,
+            VehiclePresets.Heavy,
+            VehicleType.Heavy
+        );
+
+        // Vehículo inicial:
+        _playerVehicle = _mediumVehicle;
+
+        // =========================
+        // COLECCIONABLES
+        // =========================
+
+        var fuelTankModel = new CustomModel(
+            Content.Load<Model>(
+                ContentFolder3D +
+                "car-kit/box" // TODO: Cambiar por el modelo real
+            ),
+            Content.Load<Effect>(
+                ContentFolderEffects +
+                "BasicShader"
+            ),
+            Color.Red
+        );
+
+        var wrenchModel = new CustomModel(
+            Content.Load<Model>(
+                ContentFolder3D +
+                "car-kit/debris-bolt" // TODO: Cambiar por el modelo real
+            ),
+            Content.Load<Effect>(
+                ContentFolderEffects +
+                "BasicShader"
+            ),
+            Color.Gray
+        );
+
+        var coinModel = new CustomModel(
+            Content.Load<Model>(
+                ContentFolder3D +
+                "car-kit/debris-nut" // TODO: Cambiar por el modelo real
+            ),
+            Content.Load<Effect>(
+                ContentFolderEffects +
+                "BasicShader"
+            ),
+            Color.Gold
+        );
+
+        // Para instanciar los coleccionables se indica el tipo, el modelo, la posicion y el valor que otorga.
+        _collectibles.Add(new Collectible(
+            CollectibleType.FuelTank, fuelTankModel, new Vector3(-150f, 0f, -500f), 100f));
+
+        _collectibles.Add(new Collectible(
+            CollectibleType.Wrench, wrenchModel, new Vector3(0f, 0f, -500f), 50f));
+
+        _collectibles.Add(new Collectible(
+            CollectibleType.Coin, coinModel, new Vector3(150f, 0f, -500f), 10f));
+
         base.LoadContent();
     }
-    //Para agregar los CustomModel a los elem de la tile
-      public void AddObjtsToTile(List<CustomModel>Tile,string ContentFolder3DRoot,string ContentFolderEffectsRoot,Color color ){
-        Tile.Add(new CustomModel(
-            Content.Load<Model>(ContentFolder3DRoot),
-            Content.Load<Effect>(ContentFolderEffectsRoot),
-            color
-            )
-        );
-    }
-        //Para agregar Todos los elementos a la tile y que se vean al mundo
-     public void AddObjtsToWorldTile(List<WorldObject>Tile,CustomModel Model,Vector3 Scale,Vector3 Coord,float RotationY){
-        Tile.Add( new WorldObject(
-            Model,
-            Matrix.CreateScale(Scale) * Matrix.CreateRotationY(RotationY) * Matrix.CreateTranslation(Coord),
-            Vector3.Zero,
-            Vector3.Zero
-        )
-        );
-    }
 
-    /// <summary>
-    ///     Se llama en cada frame.
-    ///     Se debe escribir toda la logica de computo del modelo, asi como tambien verificar entradas del usuario y reacciones
-    ///     ante ellas.
-    /// </summary>
     protected override void Update(GameTime gameTime)
     {
-        // Aca deberiamos poner toda la loBace de actualizacion 
-        if (Keyboard.GetState().IsKeyDown(Keys.Escape)){
-            //Salgo del juego.
+        var keyboardState = Keyboard.GetState();
+
+        // EXIT
+
+        if (keyboardState.IsKeyDown(Keys.Escape))
+        {
             Exit();
         }
 
-          for (var i = 0; i < _singleTileObjs.Count; i++){
-            _singleTileObjs[i].Update(gameTime);
+        // TOGGLE MOUSE
+
+        if (keyboardState.IsKeyDown(Keys.M) &&
+            _previousKeyboardState.IsKeyUp(Keys.M))
+        {
+            _mouseCaptured = !_mouseCaptured;
+
+            IsMouseVisible = !_mouseCaptured;
         }
 
-        // _objetoBase.Update(gameTime);
-        // _objetoRoadStraight.Update(gameTime);
-        _objetoAutoJugador.Update(gameTime);
+        // TOGGLE CAMERA
 
-        _currentCamera.Update(gameTime, _objetoAutoJugador.GetCurrentWorld(gameTime));
+        if (keyboardState.IsKeyDown(Keys.F) &&
+            _previousKeyboardState.IsKeyUp(Keys.F))
+        {
+            _useFreeCamera = !_useFreeCamera;
+        }
+
+        // =========================
+        // CHANGE VEHICLE
+        // =========================
+
+        if (keyboardState.IsKeyDown(Keys.D1) &&
+            _previousKeyboardState.IsKeyUp(Keys.D1))
+        {
+            ChangeVehicle(_lightVehicle);
+        }
+
+        if (keyboardState.IsKeyDown(Keys.D2) &&
+            _previousKeyboardState.IsKeyUp(Keys.D2))
+        {
+            ChangeVehicle(_mediumVehicle);
+        }
+
+        if (keyboardState.IsKeyDown(Keys.D3) &&
+            _previousKeyboardState.IsKeyUp(Keys.D3))
+        {
+            ChangeVehicle(_heavyVehicle);
+        }
+
+        // =========================
+        // UPDATE PLAYER
+        // =========================
+
+        _playerVehicle.Update(gameTime);
+
+        // =========================
+        // UPDATE WORLD
+        // =========================
+
+        _tileManager.Update(gameTime);
+
+        // =========================
+        // UPDATE CAMERA
+        // =========================
+
+        if (_useFreeCamera)
+        {
+            _cameraInUse = _freeCamera;
+
+            _freeCamera.Update(
+                gameTime,
+                _mouseCaptured
+            );
+        }
+        else
+        {
+            _cameraInUse = _followCamera;
+
+            _followCamera.Update(
+                gameTime,
+                _playerVehicle.GetWorld()
+            );
+        }
+
+        _previousKeyboardState = keyboardState;
 
         base.Update(gameTime);
     }
 
-    protected override void Draw(GameTime gameTime)
+    private void ChangeVehicle(Vehicle newVehicle)
     {
-        // Aca deberiamos poner toda la logia de renderizado del juego.
-        
-        GraphicsDevice.Clear(Color.CornflowerBlue);
-            
-            
-        for (var i = 0; i < _singleTileObjs.Count; i++){
-            _singleTileObjs[i].DrawOn(gameTime, _currentCamera);
-        }
-        
+        // conservar posicion, rotacion y velocidad
 
-        // _objetoBase.DrawOn(gameTime, _currentCamera);
-        // _objetoRoadStraight.DrawOn(gameTime, _currentCamera);
-        _objetoAutoJugador.DrawOn(gameTime, _currentCamera);
+        newVehicle.Position =
+            _playerVehicle.Position;
+
+        newVehicle.RotationY =
+            _playerVehicle.RotationY;
+
+        newVehicle._speed = 
+            _playerVehicle._speed;
+
+        _playerVehicle = newVehicle;
     }
 
-    /// <summary>
-    ///     Libero los recursos que se cargaron en el juego.
-    /// </summary>
+    protected override void Draw(GameTime gameTime)
+    {
+        GraphicsDevice.Clear(Color.CornflowerBlue);
+
+        // =========================
+        // DRAW WORLD
+        // =========================
+
+        _tileManager.Draw(
+            gameTime,
+            _cameraInUse
+        );
+
+        // =========================
+        // DRAW PLAYER
+        // =========================
+
+        _playerVehicle.Draw(
+            gameTime,
+            _cameraInUse
+        );
+
+        // =========================
+        // DRAW COLLECTIBLES
+        // =========================
+
+        foreach (var collectible in _collectibles)
+        {
+            collectible.Draw(_cameraInUse.GetView(), _cameraInUse.GetProjection());
+        }
+
+        base.Draw(gameTime);
+    }
+
     protected override void UnloadContent()
     {
-        // Libero los recursos.
         Content.Unload();
 
         base.UnloadContent();

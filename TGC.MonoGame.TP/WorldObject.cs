@@ -9,38 +9,45 @@ namespace TGC.MonoGame.TP;
 public class WorldObject
 {
     private readonly CustomModel _model;
-    private readonly Matrix _initial_world;
-    private Vector3 _offset;
-    private Vector3 _rotation;
 
+    private Matrix _world;
 
-    public WorldObject(CustomModel model, Matrix initial_world, Vector3 initial_offset, Vector3 initial_rotation)
+    public WorldObject(
+        CustomModel model,
+        Matrix world
+    )
     {
         _model = model;
-        _initial_world = initial_world;
-        _offset = initial_offset;
-        _rotation = initial_rotation;
+        _world = world;
     }
 
-    public Matrix GetCurrentWorld(GameTime gameTime)
+    public virtual void Update(GameTime gameTime)
     {
-        return Matrix.CreateFromQuaternion(Quaternion.CreateFromYawPitchRoll(_rotation.X, _rotation.Y, _rotation.Z)) * Matrix.CreateTranslation(_offset) * _initial_world;
     }
 
-    public void Update(GameTime gameTime)
+    public virtual void Draw(
+        GameTime gameTime,
+        Matrix view,
+        Matrix projection
+    )
     {
-        //TODO: Implementar para cada caso particular
+        _model.Draw(
+            _world,
+            view,
+            projection
+        );
     }
 
-    public void Draw(GameTime gameTime, Matrix view, Matrix projection)
-    {   
-        _model.Draw(this.GetCurrentWorld(gameTime), view, projection);
-    }
-
-    public void DrawOn(GameTime gameTime, CameraI camera)
+    public void DrawOn(
+        GameTime gameTime,
+        Camera camera,
+        Matrix projection
+    )
     {
-        this.Draw(gameTime, camera.GetView(), camera.GetProjection());
+        Draw(
+            gameTime,
+            camera.GetView(),
+            projection
+        );
     }
-
-
 }
