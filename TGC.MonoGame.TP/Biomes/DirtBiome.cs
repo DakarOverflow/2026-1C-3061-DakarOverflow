@@ -1,6 +1,7 @@
 using System;
 using ImGuiNET;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Content;
 
 namespace TGC.MonoGame.TP;
 
@@ -11,7 +12,7 @@ public class DirtBiome : Biome
     private const float PROBABILIDAD_PASE_A_NIEVE = 0.1f;
     private const float PROBABILIDAD_PASE_A_ASFALTO = 0.15f;
 
-    public DirtBiome(Random randomGenerator)
+    public DirtBiome(ContentManager content, Random randomGenerator) : base(content)
     {
         _randomGenerator = randomGenerator;
         if(_randomGenerator == null)
@@ -19,32 +20,33 @@ public class DirtBiome : Biome
             _randomGenerator = new Random();   
         }
     }
-    public Biome GetNextBiome(GameMode gameMode)
+    public override Biome GetNextBiome(GameMode gameMode)
     {
         if(gameMode.BiomeType == BiomeType.RANDOM)
         {
             float rand = this._randomGenerator.Next();
             if(rand < PROBABILIDAD_PASE_A_NIEVE)
             {
-                return new SnowBiome(_randomGenerator);
+                return new SnowBiome(_content, _randomGenerator);
             }else if(rand < PROBABILIDAD_PASE_A_NIEVE + PROBABILIDAD_PASE_A_ASFALTO)
             {
-                return new AsphaltBiome(_randomGenerator);
+                return new AsphaltBiome(_content, _randomGenerator);
             }
         }
         return this; // Si el bioma es constante o no se alcanza la probabilidad requerida para el cambio, continuamos en el bioma actual
     }
 
-    public CustomModel getLeftCurveModel()
+    public override Tile GenerateNewTileOf(TileType type, Vector3 position)
     {
-        return null;
-    }
-    public CustomModel getRightCurveModel()
-    {
-        return null;
-    }
-    public CustomModel getStraightModel()
-    {
-        return null;
+        //FIXME: Implementar los diferentes tiles por tipo y bioma
+
+        if(type == TileType.STRAIGHT_LINE)
+        {
+            return new TileRecta(_content, position);
+        }
+        else
+        {
+            return new TileCurvaDerecha(_content, position);
+        }
     }
 }

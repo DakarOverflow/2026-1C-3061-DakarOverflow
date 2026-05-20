@@ -1,11 +1,16 @@
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Content;
 
 namespace TGC.MonoGame.TP;
 
-public interface Biome
+public abstract class Biome
 {
-    Biome GetNextBiome(GameMode gameMode);
-    CustomModel getLeftCurveModel();
-    CustomModel getRightCurveModel();
-    CustomModel getStraightModel();
+    protected ContentManager _content;
+    public Biome(ContentManager content)
+    {
+        _content = content;   
+    }
+
+    public abstract Biome GetNextBiome(GameMode gameMode);
+    public abstract Tile GenerateNewTileOf(TileType type, Vector3 position);
 }
