@@ -8,7 +8,9 @@ namespace TGC.MonoGame.TP;
 
 public enum TileType
 {
-    Recta1
+    Recta1,
+    Recta2,
+    CurvaDer1
 }
 
 public class Tile
@@ -27,7 +29,7 @@ public class Tile
 
     public Vector3 NextTileOffset;
 
-    public string[] tileName ={"Recta1","Recta2"};
+    public string[] tileName ={"Recta2","CurvaDer1"};//"Recta1","Recta2",
 
 
     public Tile(
@@ -82,6 +84,7 @@ public class Tile
         );
     }
 
+#region CAMINOS
     public void BuildRecta1()
     {
         NextTileOffset =
@@ -121,7 +124,7 @@ public class Tile
 
         AddObject(
             _tileModels[0],
-            new Vector3(12f),
+            new Vector3(12f,1f,12f),
             Vector3.Zero,
             0f
         );
@@ -171,7 +174,7 @@ public class Tile
 
         //Piso y Autopista 
         AddObject(_tileModels[0], 
-            new Vector3(12f),
+            new Vector3(16f,1f,16f),
             Vector3.Zero,
             0f
         );
@@ -232,7 +235,90 @@ public class Tile
 
     }
 
+   public void BuildCurvaDer1()
+    {
+         NextTileOffset =
+            new Vector3(1200f, 0, -1200f); //            new Vector3(1200f, 0f, -500f);
+        
+        AddModel(_content3DPath + "road-tiles/road-square", _contentEffectsPath + "BasicShader",
+            Color.DarkGreen);
+        AddModel(_content3DPath + "road-tiles/road-curve", _contentEffectsPath + "BasicShader",
+            Color.Gray);
 
+        AddModel(_content3DPath + "buildings/suburban/building-type-s",
+            _contentEffectsPath + "BasicShader", Color.DarkBlue);
+        AddModel(_content3DPath + "buildings/suburban/building-type-u",
+            _contentEffectsPath + "BasicShader", Color.DarkBlue);
+        AddModel(_content3DPath + "buildings/suburban/building-type-d",
+            _contentEffectsPath + "BasicShader", Color.DarkBlue);
+        AddModel(_content3DPath + "buildings/suburban/building-type-a",
+            _contentEffectsPath + "BasicShader", Color.DarkBlue);
+
+        //Piso y Autopista 
+        AddObject(_tileModels[0], 
+            new Vector3(12f),
+            Vector3.Zero,
+            0f
+        );
+
+        AddObject(
+            _tileModels[1], 
+            new Vector3(5f),
+            new Vector3(380f, 25f, 0f),
+            MathHelper.PiOver2
+        );
+        //Edificios 
+        AddObject( 
+            _tileModels[2], 
+            new Vector3(2f),
+            new Vector3(322f, 10f, 450f), MathHelper.Pi
+        );
+        // AddObject(
+        //     _tileModels[2], 
+        //     new Vector3(2f),
+        //     new Vector3(-460f, 10f, 0f), 0 
+        // );
+
+        // AddObject( 
+        //     _tileModels[3], 
+        //     new Vector3(2f), 
+        //     new Vector3(460f, 10f, 500f ), 
+        //     0
+        // );
+        // AddObject(
+        //      _tileModels[3], 
+        //      new Vector3(2f),
+        //      new Vector3(-460f, 10f, 500f ), 
+        //      0
+        // );
+
+        // AddObject(
+        //      _tileModels[4], 
+        //      new Vector3(2f),
+        //      new Vector3(460f, 10f, 200f ),
+        //       0
+        // );
+        // AddObject( _tileModels[4],
+        //     new Vector3(2f),
+        //     new Vector3(-460f, 10f, 200f ),
+        //     0
+        // );
+        // AddObject( 
+        //     _tileModels[5], 
+        //     new Vector3(2f),
+        //      new Vector3(460f, 10f, -400f ), 
+        //      0
+        // );
+        // AddObject( _tileModels[5],
+        //     new Vector3(2f),
+        //     new Vector3(-460f, 10f, -400f ),
+        //     0
+        // );
+
+    }
+
+
+    #endregion CAMINOS
 
 
     public void Update(GameTime gameTime)

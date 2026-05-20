@@ -65,13 +65,16 @@ public class TileManager
             );
 
             // después acá irá el random real
+            //Fijarse para cambiarlo por algo más prolijo 
             if (tile.tileName[rnd.Next(0, tile.tileName.Length)] == "Recta1"){
                 tile.BuildRecta1();   
             }
             if (tile.tileName[rnd.Next(0, tile.tileName.Length)] == "Recta2"){
                 tile.BuildRecta2(); 
             }
-        
+            if (tile.tileName[rnd.Next(0, tile.tileName.Length)] == "CurvaDer1"){
+                tile.BuildCurvaDer1(); 
+            }
             _tiles[i] = tile;
 
             currentPosition +=
