@@ -24,7 +24,7 @@ public class DirtBiome : Biome
     {
         if(gameMode.BiomeType == BiomeType.RANDOM)
         {
-            float rand = this._randomGenerator.Next();
+            float rand = (float) this._randomGenerator.NextDouble();
             if(rand < PROBABILIDAD_PASE_A_NIEVE)
             {
                 return new SnowBiome(_content, _randomGenerator);

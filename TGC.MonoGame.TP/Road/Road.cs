@@ -74,7 +74,7 @@ public class Road
             }
         } 
 
-        float randomNumber = _randomGenerator.Next();
+        float randomNumber = (float) _randomGenerator.NextDouble();
 
         if(randomNumber < rightCurveChance)
         {

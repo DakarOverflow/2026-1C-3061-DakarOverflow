@@ -10,7 +10,7 @@ public class TileCurvaDerecha : Tile
 {
     public override TileType GetTileType()
     {
-        return TileType.STRAIGHT_LINE;
+        return TileType.RIGHT_CURVE;
     }
 
 
