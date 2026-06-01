@@ -6,15 +6,15 @@ using Microsoft.Xna.Framework.Content;
 
 namespace TGC.MonoGame.TP;
 
-public class TileRecta : Tile
+public class TileRecta2 : Tile
 {
     public override TileType GetTileType()
     {
-        return TileType.STRAIGHT_LINE;
+        return TileType.STRAIGHT_LINE2;
     }
 
 
-    public TileRecta(
+    public TileRecta2(
         ContentManager content,
         Vector3 position,
         float rotation
@@ -22,7 +22,6 @@ public class TileRecta : Tile
     {
         NextTileOffset = new Vector3(0f, 0f, -1200f);
         NextTileRotation = 0f;
-
         AddModel(
             AssetPaths.ContentFolder3D +
             "road-tiles/road-square",
@@ -59,7 +58,7 @@ public class TileRecta : Tile
             _tileModels[0],
             new Vector3(12f),
             Vector3.Zero,
-            rotation
+           rotation + MathHelper.PiOver2
         );
 
         // RUTA
@@ -68,23 +67,23 @@ public class TileRecta : Tile
             _tileModels[1],
             new Vector3(12f, 12f, 5f),
             new Vector3(0f, 10f, 0f),
-            rotation + MathHelper.PiOver2
+           rotation + MathHelper.PiOver2 
         );
 
         // EDIFICIOS
 
-        AddObject(
-            _tileModels[2],
-            new Vector3(2f),
-            new Vector3(460f, 10f, 0f),
-            rotation
-        );
+        // AddObject(
+        //     _tileModels[2],
+        //     new Vector3(2f),
+        //     new Vector3(460f, 10f, 0f),
+        //     0f
+        // );
 
-        AddObject(
-            _tileModels[2],
-            new Vector3(2f),
-            new Vector3(-460f, 10f, 0f),
-            rotation
-        );
+        // AddObject(
+        //     _tileModels[2],
+        //     new Vector3(2f),
+        //     new Vector3(-460f, 10f, 0f),
+        //     0f
+        // );
     }
 }

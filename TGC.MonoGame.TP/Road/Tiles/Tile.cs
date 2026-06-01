@@ -18,7 +18,10 @@ public abstract class Tile
 
     public Vector3 NextTileOffset;
 
-    public string[] tileName ={"Recta1","Recta2"};
+    public float NextTileRotation;
+
+
+    // public string[] tileName ={"Recta1","Recta2"};
 
     public abstract TileType GetTileType();
 
@@ -26,12 +29,13 @@ public abstract class Tile
 
     public Tile GenerateNextOfType(TileType type)
     {
-        return this.biome.GenerateNewTileOf(type, this.Position + this.NextTileOffset);
+        return this.biome.GenerateNewTileOf(type, this.Position + this.NextTileOffset,this.NextTileRotation);
     }
 
     public Tile(
         ContentManager content,
-        Vector3 position
+        Vector3 position,
+        float rotation
     )
     {
         Position = position;

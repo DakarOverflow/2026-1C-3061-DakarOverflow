@@ -99,7 +99,7 @@ public class TGCGame : Game
         _spriteBatch = new SpriteBatch(GraphicsDevice);
 
 
-        _road = new Road(new TileRecta(Content, new Vector3(0f, -50f, 0f)));
+        _road = new Road(new TileRecta(Content, new Vector3(0f, -50f, 0f),0f));
 
 
         // =========================

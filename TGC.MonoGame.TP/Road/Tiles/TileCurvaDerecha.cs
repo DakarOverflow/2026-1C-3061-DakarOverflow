@@ -16,11 +16,14 @@ public class TileCurvaDerecha : Tile
 
     public TileCurvaDerecha(
         ContentManager content,
-        Vector3 position
-    ) : base(content, position)
+        Vector3 position,
+        float rotation
+    ) : base(content, position,rotation)
     {
        NextTileOffset =
             new Vector3(1200f, 0, -1200f); //            new Vector3(1200f, 0f, -500f);
+
+        NextTileRotation = MathHelper.PiOver2;
 
         AddModel(AssetPaths.ContentFolder3D + "road-tiles/road-square", AssetPaths.ContentFolderEffects + "BasicShader",
             Color.DarkGreen);
@@ -47,13 +50,13 @@ public class TileCurvaDerecha : Tile
             _tileModels[1], 
             new Vector3(5f),
             new Vector3(380f, 25f, 0f),
-            MathHelper.PiOver2
+            rotation +MathHelper.PiOver2
         );
         //Edificios 
         AddObject( 
             _tileModels[2], 
             new Vector3(2f),
-            new Vector3(322f, 10f, 450f), MathHelper.Pi
+            new Vector3(322f, 10f, 450f), rotation + MathHelper.Pi
         );
     }
 }

@@ -12,5 +12,5 @@ public abstract class Biome
     }
 
     public abstract Biome GetNextBiome(GameMode gameMode);
-    public abstract Tile GenerateNewTileOf(TileType type, Vector3 position);
+    public abstract Tile GenerateNewTileOf(TileType type, Vector3 position,float Rotation);
 }
