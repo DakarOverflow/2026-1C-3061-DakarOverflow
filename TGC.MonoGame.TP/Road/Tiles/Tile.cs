@@ -24,6 +24,7 @@ public abstract class Tile
     // public string[] tileName ={"Recta1","Recta2"};
 
     public abstract TileType GetTileType();
+    public abstract TileType GetTileTypeMeta();
 
     protected Biome biome;
 

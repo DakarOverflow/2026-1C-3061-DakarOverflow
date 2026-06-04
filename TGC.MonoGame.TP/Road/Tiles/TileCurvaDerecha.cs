@@ -12,7 +12,10 @@ public class TileCurvaDerecha : Tile
     {
         return TileType.RIGHT_CURVE;
     }
-
+    public override TileType GetTileTypeMeta()
+    {
+        return TileType.CURVE;
+    }
 
     public TileCurvaDerecha(
         ContentManager content,
@@ -21,7 +24,7 @@ public class TileCurvaDerecha : Tile
     ) : base(content, position,rotation)
     {
        NextTileOffset =
-            new Vector3(1200f, 0, -1200f); //            new Vector3(1200f, 0f, -500f);
+            new Vector3(1200f, 0, -250); //            new Vector3(1200f, 0f, -500f);
 
         NextTileRotation = MathHelper.PiOver2;
 

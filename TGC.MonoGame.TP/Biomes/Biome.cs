@@ -12,5 +12,15 @@ public abstract class Biome
     }
 
     public abstract Biome GetNextBiome(GameMode gameMode);
-    public abstract Tile GenerateNewTileOf(TileType type, Vector3 position,float Rotation);
+    public Tile GenerateNewTileOf(TileType type, Vector3 position,float rotation){    
+        if(type == TileType.STRAIGHT_LINE)
+        {
+            return new TileRecta(_content, position,rotation);
+        }
+        if(type == TileType.RIGHT_CURVE){
+            return new TileCurvaDerecha(_content, position,rotation);
+        }else{
+            return new TileRecta2(_content, position,rotation);
+        } 
+    }
 }

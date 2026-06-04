@@ -53,40 +53,31 @@ public class Road
 
     private TileType GetNextTileType()
     {
-        float rightCurveChance = 0.2f;
-        float leftCurveChance = 0.2f;
+        // float rightCurveChance = 0.2f;
+        // float leftCurveChance = 0.2f;
 
 
         List<Tile> lastTwo = this._tiles.TakeLast(2).ToList<Tile>();
 
-        if(lastTwo.Count == 2)
-        {
-            if(lastTwo[0].GetTileType() == lastTwo[1].GetTileType())
-            {
-                if(lastTwo[0].GetTileType() == TileType.RIGHT_CURVE)
-                {
-                    rightCurveChance = 0f;
-                }
-                else if (lastTwo[0].GetTileType() == TileType.LEFT_CURVE)
-                {
-                    leftCurveChance = 0f;
-                }
-            }
-        } 
+        TileType newTileNum;
+        Random rnd = new Random();
 
-        float randomNumber = (float) _randomGenerator.NextDouble();
+       do{
+        //2 porque los 2 primeros no van
+        newTileNum = (TileType) rnd.Next(2, System.Enum.GetValues(typeof(TileType)).Length); 
+    
+       } while (TypeTileCheack(lastTwo,newTileNum));
+        
+        return newTileNum;
 
-        if(randomNumber < rightCurveChance)
-        {
-            return TileType.RIGHT_CURVE;
-        } else if(randomNumber < rightCurveChance + leftCurveChance)
-        {
-            return TileType.LEFT_CURVE;
-        }
-        else
-        {
-            return TileType.STRAIGHT_LINE;
-        }
+    } 
+
+    private bool TypeTileCheack(List<Tile> lastTwo,TileType tileActual){
+        if(lastTwo.Count < 2) return false;
+    
+        // if(lastTwo[0].GetTileType() == lastTwo[1].GetTileType()) return true;
+        if(lastTwo[1].GetTileTypeMeta() == TileType.CURVE && tileActual== TileType.RIGHT_CURVE) return true;
+        return false;
     }
 
     private Tile GetLastlyGeneratedTyle()

@@ -12,7 +12,10 @@ public class TileRecta : Tile
     {
         return TileType.STRAIGHT_LINE;
     }
-
+    public override TileType GetTileTypeMeta()
+    {
+        return TileType.STRAIGHT;
+    }
 
     public TileRecta(
         ContentManager content,

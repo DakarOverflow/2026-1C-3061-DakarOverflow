@@ -36,17 +36,4 @@ public class AsphaltBiome : Biome
         return this; // Si el bioma es constante o no se alcanza la probabilidad requerida para el cambio, continuamos en el bioma actual
     }
 
-    public override Tile GenerateNewTileOf(TileType type, Vector3 position,float rotation)
-    {
-        //FIXME: Implementar los diferentes tiles por tipo y bioma
-        if(type == TileType.STRAIGHT_LINE)
-        {
-            return new TileRecta(_content, position,rotation);
-        }
-        if(type == TileType.RIGHT_CURVE){
-            return new TileCurvaDerecha(_content, position,rotation);
-        }else{
-            return new TileRecta2(_content, position,rotation);
-        }
-    }
 }   
