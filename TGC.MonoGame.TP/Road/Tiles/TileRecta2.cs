@@ -52,7 +52,7 @@ public class TileRecta2 : Tile
             AssetPaths.ContentFolderEffects +
             "BasicShader",
 
-            Color.DarkBlue
+            Color.DarkKhaki
         );
 
         // PISO
@@ -75,18 +75,21 @@ public class TileRecta2 : Tile
 
         // EDIFICIOS
 
-        // AddObject(
-        //     _tileModels[2],
-        //     new Vector3(2f),
-        //     new Vector3(460f, 10f, 0f),
-        //     0f
-        // );
 
-        // AddObject(
-        //     _tileModels[2],
-        //     new Vector3(2f),
-        //     new Vector3(-460f, 10f, 0f),
-        //     0f
-        // );
+        for (int i = 0; i <3; i++){
+            AddObject(
+                _tileModels[2],
+                new Vector3(2f),
+                new Vector3(460f, 10f, i *300),
+                rotation
+            );
+
+            AddObject(
+                _tileModels[2],
+                new Vector3(2f),
+                new Vector3(-460f, 10f, i*300),
+                rotation
+            );
+        }
     }
 }

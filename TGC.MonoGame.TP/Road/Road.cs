@@ -76,7 +76,7 @@ public class Road
         if(lastTwo.Count < 2) return false;
     
         // if(lastTwo[0].GetTileType() == lastTwo[1].GetTileType()) return true;
-        if(lastTwo[1].GetTileTypeMeta() == TileType.CURVE && tileActual== TileType.RIGHT_CURVE) return true;
+        if(lastTwo[1].GetTileTypeMeta() == TileType.CURVE && (tileActual== TileType.RIGHT_CURVE || tileActual== TileType.LEFT_CURVE )) return true;
         return false;
     }
 

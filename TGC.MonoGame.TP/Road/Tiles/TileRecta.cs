@@ -53,7 +53,7 @@ public class TileRecta : Tile
             AssetPaths.ContentFolderEffects +
             "BasicShader",
 
-            Color.DarkBlue
+            Color.DarkCyan
         );
 
         // PISO

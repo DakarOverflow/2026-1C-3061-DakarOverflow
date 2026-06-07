@@ -19,6 +19,9 @@ public abstract class Biome
         }
         if(type == TileType.RIGHT_CURVE){
             return new TileCurvaDerecha(_content, position,rotation);
+        }
+        if (type == TileType.LEFT_CURVE){
+            return new TileCurvaIzquierda(_content, position,rotation);
         }else{
             return new TileRecta2(_content, position,rotation);
         } 
