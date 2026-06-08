@@ -6,20 +6,20 @@ using Microsoft.Xna.Framework.Content;
 
 namespace TGC.MonoGame.TP;
 
-public abstract class Recta : Tile
+public abstract class CurvaIzquierda : Tile
 {
-    public Recta(
+    public CurvaIzquierda(
         Vector3 position,
         float rotation
     ) : base(position, rotation) {}
     
     public override TileType GetTileType()
     {
-        return TileType.STRAIGHT_LINE;
+        return TileType.LEFT_CURVE;
     }
 
     public override float GetRotationOffsetForNextTile()
     {
-        return 0f;
+        return -MathHelper.PiOver2;
     }
 }

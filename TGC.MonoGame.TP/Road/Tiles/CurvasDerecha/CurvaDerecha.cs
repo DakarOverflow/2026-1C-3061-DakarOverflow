@@ -17,4 +17,9 @@ public abstract class CurvaDerecha : Tile
     {
         return TileType.RIGHT_CURVE;
     }
+
+    public override float GetRotationOffsetForNextTile()
+    {
+        return MathHelper.PiOver2;
+    }
 }

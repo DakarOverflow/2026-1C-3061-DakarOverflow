@@ -20,6 +20,8 @@ public abstract class Tile
 
     public abstract TileType GetTileType();
 
+    public abstract float GetRotationOffsetForNextTile();
+
     protected Biome biome;
 
     public Tile GenerateNextOfType(TileType type)
@@ -55,6 +57,7 @@ public abstract class Tile
         Position = position;
         _tileObjects = new List<WorldObject>();
         biome = new AsphaltBiome(null);
+        NextTileRotation = rotation + this.GetRotationOffsetForNextTile();
     }
 
     public void AddObject(

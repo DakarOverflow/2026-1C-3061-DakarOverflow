@@ -37,8 +37,7 @@ public class RectaAsfalto : Recta, IAssetLoader
         float rotation
     ) : base(position,rotation)
     {
-        NextTileOffset = new Vector3(0f, 0f, -1200f);
-        NextTileRotation = 0f;
+        NextTileOffset = Vector3.Transform(new Vector3(0f, 0f, -1200f), Matrix.CreateRotationY(rotation));
 
         // PISO
 
