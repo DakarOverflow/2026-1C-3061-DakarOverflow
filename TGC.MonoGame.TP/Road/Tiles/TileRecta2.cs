@@ -80,14 +80,14 @@ public class TileRecta2 : Tile
             AddObject(
                 _tileModels[2],
                 new Vector3(2f),
-                new Vector3(460f, 10f, i *300),
+                Vector3.Transform(new Vector3(460f, 10f, i *300),Matrix.CreateRotationY(rotation)),
                 rotation
             );
 
             AddObject(
                 _tileModels[2],
                 new Vector3(2f),
-                new Vector3(-460f, 10f, i*300),
+                Vector3.Transform(new Vector3(-460f, 10f, i*300),Matrix.CreateRotationY(rotation)),
                 rotation
             );
         }
