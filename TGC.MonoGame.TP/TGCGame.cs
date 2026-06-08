@@ -98,8 +98,11 @@ public class TGCGame : Game
     {
         _spriteBatch = new SpriteBatch(GraphicsDevice);
 
+        //Debe ejecuitarse antes del new Road()
+        Tile.LoadModels(Content);
 
-        _road = new Road(new TileRecta(Content, new Vector3(0f, -50f, 0f),0f));
+
+        _road = new Road(new RectaAsfalto(new Vector3(0f, -50f, 0f),0f));
 
 
         // =========================

@@ -7,12 +7,10 @@ namespace TGC.MonoGame.TP;
 
 public class DirtBiome : Biome
 {
-    private Random _randomGenerator;
-
     private const float PROBABILIDAD_PASE_A_NIEVE = 0.1f;
     private const float PROBABILIDAD_PASE_A_ASFALTO = 0.15f;
 
-    public DirtBiome(ContentManager content, Random randomGenerator) : base(content)
+    public DirtBiome(Random randomGenerator)
     {
         _randomGenerator = randomGenerator;
         if(_randomGenerator == null)
@@ -27,10 +25,10 @@ public class DirtBiome : Biome
             float rand = (float) this._randomGenerator.NextDouble();
             if(rand < PROBABILIDAD_PASE_A_NIEVE)
             {
-                return new SnowBiome(_content, _randomGenerator);
+                return new SnowBiome(_randomGenerator);
             }else if(rand < PROBABILIDAD_PASE_A_NIEVE + PROBABILIDAD_PASE_A_ASFALTO)
             {
-                return new AsphaltBiome(_content, _randomGenerator);
+                return new AsphaltBiome(_randomGenerator);
             }
         }
         return this; // Si el bioma es constante o no se alcanza la probabilidad requerida para el cambio, continuamos en el bioma actual
@@ -43,12 +41,10 @@ public class DirtBiome : Biome
 
         if(type == TileType.STRAIGHT_LINE)
         {
-            return new TileRecta(_content, position,rotation);
+            return new RectaAsfalto(position,rotation);
         }
-        if(type == TileType.RIGHT_CURVE){
-            return new TileCurvaDerecha(_content, position,rotation);
-        }else{
-            return new TileRecta2(_content, position,rotation);
+        else{
+            return new CurvaDerechaAsfalto(position,rotation);
         }
     }
 }

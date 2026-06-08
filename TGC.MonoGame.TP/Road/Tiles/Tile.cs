@@ -3,15 +3,13 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework.Content;
+using System.Reflection;
+using System.Linq;
 
 namespace TGC.MonoGame.TP;
 
 public abstract class Tile
 {
-
-    protected ContentManager _content;
-    protected readonly List<CustomModel> _tileModels;
-
     protected readonly List<WorldObject> _tileObjects;
 
     public Vector3 Position;
@@ -19,9 +17,6 @@ public abstract class Tile
     public Vector3 NextTileOffset;
 
     public float NextTileRotation;
-
-
-    // public string[] tileName ={"Recta1","Recta2"};
 
     public abstract TileType GetTileType();
 
@@ -32,37 +27,34 @@ public abstract class Tile
         return this.biome.GenerateNewTileOf(type, this.Position + this.NextTileOffset,this.NextTileRotation);
     }
 
+    public static void LoadModels(ContentManager content)
+    {
+        Assembly currentAssembly = Assembly.GetExecutingAssembly();
+        
+        var concreteTileTypes = currentAssembly.GetTypes()
+            .Where(t => 
+                t.IsSubclassOf(typeof(Tile))
+                && !t.IsAbstract               
+                && t.IsClass
+                && typeof(IAssetLoader).IsAssignableFrom(t)
+            );
+
+        //No, esto no lo hizo una IA! Parece mágia pero es simple. Uso reflection para buscar todas las subclases instanciables de Tile, que por ser iomplementar la interfac IAssetLoader tienen que implementar el método estatico LoadLocalModels utilizado para cargar una única vez los modelos a memoria y optimizar el espacio 
+        foreach(Type type in concreteTileTypes)
+        {
+            MethodInfo modelLoader = type.GetMethod("LoadLocalModels");
+            modelLoader.Invoke(null, new object[] {content});
+        }
+    }
+
     public Tile(
-        ContentManager content,
         Vector3 position,
         float rotation
     )
     {
         Position = position;
-
-        _content = content;
-
-        _tileModels = new List<CustomModel>();
-
         _tileObjects = new List<WorldObject>();
-
-        biome = new AsphaltBiome(content, null);
-    }
-
-    public void AddModel(
-        string modelPath,
-        string effectPath,
-        Color color
-    )
-    {
-        //FIXME: Long parameter list
-        _tileModels.Add(
-            new CustomModel(
-                _content.Load<Model>(modelPath),
-                _content.Load<Effect>(effectPath),
-                color
-            )
-        );
+        biome = new AsphaltBiome(null);
     }
 
     public void AddObject(
