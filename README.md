@@ -39,6 +39,8 @@ TGC, Tgcito  |  Apellido, Nombre
 
 [M] -> Toggle mouse
 
+[H] -> Toggle Hitboxes
+
 [1] -> Cambiar a Vehículo Ligero
 
 [2] -> Cambiar a Vehículo Mediano

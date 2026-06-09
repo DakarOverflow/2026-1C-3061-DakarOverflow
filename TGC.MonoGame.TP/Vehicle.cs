@@ -35,8 +35,11 @@ public class Vehicle
     public float CurrentHealth { get; private set; }
     public int Score { get; private set; }
 
-    // --- PREPARACIÓN PARA COLISIONES ---
-    // TODO: definir atributo
+    // Colisiones
+    public BoundingBox BoundingBox { get; private set; }
+
+    private readonly Vector3 _boundingBoxHalfSize = new Vector3(100f, 50f, 100f);
+    private readonly Vector3 _boundingBoxOffset = new Vector3(0f, 40f, 0f);
 
     // Constructor
     public Vehicle(CustomModel model, Vector3 initialPosition, VehicleStats stats, VehicleType type)
@@ -92,7 +95,7 @@ public class Vehicle
             _currentAcceleration = MathHelper.Lerp(
                 _currentAcceleration,
                 0f,
-               lerpFactor
+                lerpFactor
             );
 
             _speed -= _stats.BrakeForce * deltaTime;
@@ -152,8 +155,8 @@ public class Vehicle
         Vector3 forward = Vector3.Transform(Vector3.Forward, Matrix.CreateRotationY(RotationY));
         Position += forward * _speed * deltaTime;
 
-        // --- PREPARACIÓN PARA COLISIONES ---
-        // Actualizar el atributo de colisiones respecto a la posicion del vehiculo
+        // Colisiones
+        UpdateBoundingBox();
     }
 
     // ==========================================
@@ -180,6 +183,27 @@ public class Vehicle
         Score += (int)amount;
     }
 
+    // ==========================================
+    // MÉTODOS PARA LAS COLISIONES DEL VEHÍCULO
+    // ==========================================
+    private void UpdateBoundingBox()
+    {
+        BoundingBox = new BoundingBox(Position - _boundingBoxHalfSize + _boundingBoxOffset
+            , Position + _boundingBoxHalfSize + _boundingBoxOffset);
+    }
+
+    public void TakeDamage(float damage)
+    {
+        CurrentHealth -= damage;
+        if(CurrentHealth < damage) CurrentHealth = 0;
+    }
+
+    public void CollisionImpact(float damage, float speedMultiplier)
+    {
+        TakeDamage(damage);
+
+        speedMultiplier *= speedMultiplier;
+    }
     // ==========================================
     // MÉTODOS PARA DIBUJAR EL VEHÍCULO
     // ==========================================

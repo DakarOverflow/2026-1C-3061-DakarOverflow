@@ -18,6 +18,9 @@ public class TGCGame : Game
 {
     private readonly GraphicsDeviceManager _graphics;
     private SpriteBatch _spriteBatch;
+    // SHADDER PARA DEBUGUEAR
+    private Effect _debugEffect;
+    private bool _showHitboxes = false;
 
     // CAMARAS
     private FreeCamera _freeCamera;
@@ -98,6 +101,8 @@ public class TGCGame : Game
     {
         _spriteBatch = new SpriteBatch(GraphicsDevice);
 
+        _debugEffect = Content.Load<Effect>(AssetPaths.ContentFolderEffects + "BasicShader");
+
         //Debe ejecuitarse antes del new Road()
         Tile.LoadModels(Content);
 
@@ -107,7 +112,7 @@ public class TGCGame : Game
                 null,
                 new GameMode(BiomeType.RANDOM)
             ).GenerateNewTileOf(
-                TileType.STRAIGHT_LINE, 
+                TileType.STRAIGHT_LINE,
                 new Vector3(0f, -50f, 0f),
                 0f
             )
@@ -252,6 +257,13 @@ public class TGCGame : Game
             IsMouseVisible = !_mouseCaptured;
         }
 
+        // TOGGLE HITBOXES
+        if (keyboardState.IsKeyDown(Keys.H) && 
+            _previousKeyboardState.IsKeyUp(Keys.H))
+        {
+            _showHitboxes = !_showHitboxes;
+        }
+
         // TOGGLE CAMERA
 
         if (keyboardState.IsKeyDown(Keys.F) &&
@@ -292,7 +304,7 @@ public class TGCGame : Game
         // UPDATE WORLD
         // =========================
 
-        _road.UpdateFor(_playerVehicle,gameTime);
+        _road.UpdateFor(_playerVehicle, gameTime);
 
         // =========================
         // UPDATE CAMERA
@@ -326,14 +338,11 @@ public class TGCGame : Game
     {
         // conservar posicion, rotacion y velocidad
 
-        newVehicle.Position =
-            _playerVehicle.Position;
+        newVehicle.Position = _playerVehicle.Position;
 
-        newVehicle.RotationY =
-            _playerVehicle.RotationY;
+        newVehicle.RotationY = _playerVehicle.RotationY;
 
-        newVehicle._speed = 
-            _playerVehicle._speed;
+        newVehicle._speed = 0;
 
         _playerVehicle = newVehicle;
     }
@@ -369,7 +378,57 @@ public class TGCGame : Game
             collectible.Draw(_cameraInUse.GetView(), _cameraInUse.GetProjection());
         }
 
+        // =========================
+        // DRAW HITBOXES
+        // =========================
+        if(_showHitboxes)
+        {
+            DrawBoundingBox(_playerVehicle.BoundingBox, _cameraInUse, Color.Red);
+
+            // si se agregan más hitboxes acá va su dibujado
+        }
+
         base.Draw(gameTime);
+    }
+
+    private void DrawBoundingBox(BoundingBox box, Camera camera, Color color)
+    {
+        Vector3[] corners = box.GetCorners();
+
+        VertexPositionColor[] vertices =
+        {
+        // cara inferior
+        new(corners[0], color), new(corners[1], color),
+        new(corners[1], color), new(corners[2], color),
+        new(corners[2], color), new(corners[3], color),
+        new(corners[3], color), new(corners[0], color),
+
+        // cara superior
+        new(corners[4], color), new(corners[5], color),
+        new(corners[5], color), new(corners[6], color),
+        new(corners[6], color), new(corners[7], color),
+        new(corners[7], color), new(corners[4], color),
+
+        // uniones
+        new(corners[0], color), new(corners[4], color),
+        new(corners[1], color), new(corners[5], color),
+        new(corners[2], color), new(corners[6], color),
+        new(corners[3], color), new(corners[7], color),
+    };
+
+        _debugEffect.Parameters["World"].SetValue(Matrix.Identity);
+        _debugEffect.Parameters["View"].SetValue(camera.GetView());
+        _debugEffect.Parameters["Projection"].SetValue(camera.GetProjection());
+        _debugEffect.Parameters["DiffuseColor"].SetValue(color.ToVector3());
+
+        _debugEffect.CurrentTechnique = _debugEffect.Techniques["DebugLineDrawing"];
+
+        foreach (EffectPass pass in _debugEffect.CurrentTechnique.Passes)
+        {
+            pass.Apply();
+
+            GraphicsDevice.DrawUserPrimitives(PrimitiveType.LineList, vertices, 0, vertices.Length / 2);
+        }
     }
 
     protected override void UnloadContent()
