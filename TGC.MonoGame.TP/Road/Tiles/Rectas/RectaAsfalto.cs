@@ -53,7 +53,7 @@ public class RectaAsfalto : Recta, IAssetLoader
         AddObject(
             modelMap.GetValueOrDefault("road-tiles/road-straight", null),
             new Vector3(12f, 12f, 5f),
-            new Vector3(0f, 10f, 0f),
+            new Vector3(0f, 12f, 5f),
             rotation + MathHelper.PiOver2
         );
 

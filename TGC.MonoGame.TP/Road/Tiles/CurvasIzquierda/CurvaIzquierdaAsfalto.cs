@@ -38,9 +38,7 @@ public class CurvaIzquierdaAsfalto : CurvaIzquierda, IAssetLoader
         float rotation
     ) : base(position,rotation)
     {
-        NextTileOffset = Vector3.Transform(new Vector3(0f, 0f, -1200f), Matrix.CreateRotationY(rotation));
-
-        NextTileRotation = MathHelper.PiOver2;
+        NextTileOffset = Vector3.Transform(new Vector3(-1200f, 0f, 0f), Matrix.CreateRotationY(rotation));
 
         //Piso y Autopista 
         AddObject(modelMap.GetValueOrDefault("road-tiles/road-square", null), 
@@ -52,7 +50,7 @@ public class CurvaIzquierdaAsfalto : CurvaIzquierda, IAssetLoader
         AddObject(
             modelMap.GetValueOrDefault("road-tiles/road-curve", null), 
             new Vector3(5f),
-            new Vector3(380f, 25f, 0f),
+            new Vector3(-130f, 20f, 250f),
             rotation //Rotar 2pi = rotar 0
         );
         //Edificios 

@@ -12,6 +12,7 @@ public class Road
 {
     private const float SQUARED_GENERATION_DISTANCE = 4000000f; //Generation distance: 2000
 
+    private int _generalDirection = 0;
     private Queue<Tile> _tiles;
 
     private Random _randomGenerator;
@@ -57,30 +58,24 @@ public class Road
         float leftCurveChance = 0.2f;
 
 
-        List<Tile> lastTwo = this._tiles.TakeLast(2).ToList<Tile>();
-
-        if(lastTwo.Count == 2)
+        if(_generalDirection >= 1)
         {
-            if(lastTwo[0].GetTileType() == lastTwo[1].GetTileType())
-            {
-                if(lastTwo[0].GetTileType() == TileType.RIGHT_CURVE)
-                {
-                    rightCurveChance = 0f;
-                }
-                else if (lastTwo[0].GetTileType() == TileType.LEFT_CURVE)
-                {
-                    leftCurveChance = 0f;
-                }
-            }
-        } 
+            rightCurveChance = 0f;
+        }
+        else if(_generalDirection <= -1)
+        {
+            leftCurveChance = 0f;
+        }
 
         float randomNumber = (float) _randomGenerator.NextDouble();
 
         if(randomNumber < rightCurveChance)
         {
+            _generalDirection++;
             return TileType.RIGHT_CURVE;
         } else if(randomNumber < rightCurveChance + leftCurveChance)
         {
+            _generalDirection--;
             return TileType.LEFT_CURVE;
         }
         else

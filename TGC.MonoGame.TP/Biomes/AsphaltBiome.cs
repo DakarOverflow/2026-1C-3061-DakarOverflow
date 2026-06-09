@@ -41,8 +41,14 @@ public class AsphaltBiome : Biome
         {
             return new RectaAsfalto(position,rotation);
         }
-        else{
+        else if(type == TileType.LEFT_CURVE)
+        {
+            return new CurvaIzquierdaAsfalto(position,rotation);
+        }
+        else if(type == TileType.RIGHT_CURVE)
+        {
             return new CurvaDerechaAsfalto(position,rotation);
         }
+        throw new ArgumentException("Tipo de tile no válido para el bioma de asfalto");
     }
 }   

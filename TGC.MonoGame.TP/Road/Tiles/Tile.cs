@@ -69,8 +69,9 @@ public abstract class Tile
     {
         Matrix world =
             Matrix.CreateScale(scale) *
+            Matrix.CreateTranslation(offset) *
             Matrix.CreateRotationY(rotationY) *
-            Matrix.CreateTranslation(Position + offset);
+            Matrix.CreateTranslation(Position);
 
         _tileObjects.Add(
             new WorldObject(model, world)

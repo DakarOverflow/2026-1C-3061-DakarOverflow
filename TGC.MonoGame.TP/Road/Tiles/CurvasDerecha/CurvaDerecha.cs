@@ -20,6 +20,6 @@ public abstract class CurvaDerecha : Tile
 
     public override float GetRotationOffsetForNextTile()
     {
-        return MathHelper.PiOver2;
+        return -MathHelper.PiOver2;
     }
 }
