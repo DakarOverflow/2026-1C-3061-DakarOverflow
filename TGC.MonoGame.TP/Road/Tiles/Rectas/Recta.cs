@@ -10,8 +10,9 @@ public abstract class Recta : Tile
 {
     public Recta(
         Vector3 position,
-        float rotation
-    ) : base(position, rotation) {}
+        float rotation, 
+        Biome biome
+    ) : base(position, rotation, biome) {}
     
     public override TileType GetTileType()
     {

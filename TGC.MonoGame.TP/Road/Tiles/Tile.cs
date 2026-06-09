@@ -51,12 +51,13 @@ public abstract class Tile
 
     public Tile(
         Vector3 position,
-        float rotation
+        float rotation,
+        Biome biome
     )
     {
         Position = position;
         _tileObjects = new List<WorldObject>();
-        biome = new AsphaltBiome(null);
+        this.biome = biome;
         NextTileRotation = rotation + this.GetRotationOffsetForNextTile();
     }
 

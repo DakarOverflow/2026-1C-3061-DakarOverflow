@@ -10,46 +10,36 @@ public class DirtBiome : Biome
     private const float PROBABILIDAD_PASE_A_NIEVE = 0.1f;
     private const float PROBABILIDAD_PASE_A_ASFALTO = 0.15f;
 
-    public DirtBiome(Random randomGenerator)
+    public DirtBiome(Random randomGenerator, GameMode gameMode) : base(randomGenerator, gameMode){}
+    public override Biome GetNextBiome()
     {
-        _randomGenerator = randomGenerator;
-        if(_randomGenerator == null)
-        {
-            _randomGenerator = new Random();   
-        }
-    }
-    public override Biome GetNextBiome(GameMode gameMode)
-    {
-        if(gameMode.BiomeType == BiomeType.RANDOM)
+        if(_gameMode.BiomeType == BiomeType.RANDOM)
         {
             float rand = (float) this._randomGenerator.NextDouble();
             if(rand < PROBABILIDAD_PASE_A_NIEVE)
             {
-                return new SnowBiome(_randomGenerator);
+                return new SnowBiome(_randomGenerator, _gameMode);
             }else if(rand < PROBABILIDAD_PASE_A_NIEVE + PROBABILIDAD_PASE_A_ASFALTO)
             {
-                return new AsphaltBiome(_randomGenerator);
+                return new AsphaltBiome(_randomGenerator, _gameMode);
             }
         }
         return this; // Si el bioma es constante o no se alcanza la probabilidad requerida para el cambio, continuamos en el bioma actual
     }
 
-    public override Tile GenerateNewTileOf(TileType type, Vector3 position,float rotation)
+    protected override Tile GenerateNewTileForCurrentBiomeOf(TileType type, Vector3 position,float rotation)
     {
-        //FIXME: Implementar los diferentes tiles por tipo y bioma
-
-
         if(type == TileType.STRAIGHT_LINE)
         {
-            return new RectaAsfalto(position,rotation);
+            return new RectaTierra(position,rotation, this);
         }
         else if(type == TileType.LEFT_CURVE)
         {
-            return new CurvaIzquierdaAsfalto(position,rotation);
+            return new CurvaIzquierdaTierra(position,rotation, this);
         }
         else if(type == TileType.RIGHT_CURVE)
         {
-            return new CurvaDerechaAsfalto(position,rotation);
+            return new CurvaDerechaTierra(position,rotation, this);
         }
         throw new ArgumentException("Tipo de tile no válido para el bioma de tierra");
     }

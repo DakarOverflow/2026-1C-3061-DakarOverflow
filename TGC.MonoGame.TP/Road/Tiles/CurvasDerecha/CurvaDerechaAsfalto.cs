@@ -28,15 +28,16 @@ public class CurvaDerechaAsfalto : CurvaDerecha, IAssetLoader
 
     public static void LoadLocalModels(ContentManager content)
     {
-        CurvaDerechaAsfalto.LoadModel(content, "road-tiles/road-square", AssetPaths.ContentFolder3D + "road-tiles/road-square", AssetPaths.ContentFolderEffects + "BasicShader", Color.DarkGreen);
-        CurvaDerechaAsfalto.LoadModel(content, "road-tiles/road-curve", AssetPaths.ContentFolder3D + "road-tiles/road-curve", AssetPaths.ContentFolderEffects + "BasicShader", Color.Gray);
+        CurvaDerechaAsfalto.LoadModel(content, "road-tiles/road-square", AssetPaths.ContentFolder3D + "road-tiles/road-square", AssetPaths.ContentFolderEffects + "BasicShader", Color.Gray);
+        CurvaDerechaAsfalto.LoadModel(content, "road-tiles/road-curve", AssetPaths.ContentFolder3D + "road-tiles/road-curve", AssetPaths.ContentFolderEffects + "BasicShader", Color.Black);
         CurvaDerechaAsfalto.LoadModel(content, "buildings/suburban/building-type-s", AssetPaths.ContentFolder3D + "buildings/suburban/building-type-s", AssetPaths.ContentFolderEffects + "BasicShader", Color.DarkBlue);
     }
 
     public CurvaDerechaAsfalto(
         Vector3 position,
-        float rotation
-    ) : base(position,rotation)
+        float rotation,
+        Biome biome
+    ) : base(position,rotation, biome)
     {
         NextTileOffset = Vector3.Transform(new Vector3(1200f, 0f, 0f), Matrix.CreateRotationY(rotation));
         

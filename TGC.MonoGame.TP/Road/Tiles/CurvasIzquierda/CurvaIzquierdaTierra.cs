@@ -7,13 +7,13 @@ using BepuPhysics;
 
 namespace TGC.MonoGame.TP;
 
-public class CurvaIzquierdaAsfalto : CurvaIzquierda, IAssetLoader
+public class CurvaIzquierdaTierra : CurvaIzquierda, IAssetLoader
 {
     protected static Dictionary<String, CustomModel> modelMap = new Dictionary<String, CustomModel>() {};
     
     private static void LoadModel(ContentManager content, string key, string path, string effect, Color color)
     {
-        CurvaIzquierdaAsfalto.modelMap.Add(key, new CustomModel(
+        CurvaIzquierdaTierra.modelMap.Add(key, new CustomModel(
             content.Load<Model>(path),
             content.Load<Effect>(effect),
             color
@@ -23,17 +23,17 @@ public class CurvaIzquierdaAsfalto : CurvaIzquierda, IAssetLoader
     private static void LoadModel(ContentManager content, string path, string effect, Color color)
     {
         //Genera el modelo utilizando el path del mismo como key para el diccionario interno
-        CurvaIzquierdaAsfalto.LoadModel(content, path, path, effect, color);
+        CurvaIzquierdaTierra.LoadModel(content, path, path, effect, color);
     }
 
     public static void LoadLocalModels(ContentManager content)
     {
-        CurvaIzquierdaAsfalto.LoadModel(content, "road-tiles/road-square", AssetPaths.ContentFolder3D + "road-tiles/road-square", AssetPaths.ContentFolderEffects + "BasicShader", Color.Gray);
-        CurvaIzquierdaAsfalto.LoadModel(content, "road-tiles/road-curve", AssetPaths.ContentFolder3D + "road-tiles/road-curve", AssetPaths.ContentFolderEffects + "BasicShader", Color.Black);
-        CurvaIzquierdaAsfalto.LoadModel(content, "buildings/suburban/building-type-s", AssetPaths.ContentFolder3D + "buildings/suburban/building-type-s", AssetPaths.ContentFolderEffects + "BasicShader", Color.DarkBlue);
+        CurvaIzquierdaTierra.LoadModel(content, "road-tiles/road-square", AssetPaths.ContentFolder3D + "road-tiles/road-square", AssetPaths.ContentFolderEffects + "BasicShader", Color.DarkGreen);
+        CurvaIzquierdaTierra.LoadModel(content, "road-tiles/road-curve", AssetPaths.ContentFolder3D + "road-tiles/road-curve", AssetPaths.ContentFolderEffects + "BasicShader", Color.Chocolate);
+        CurvaIzquierdaTierra.LoadModel(content, "buildings/suburban/building-type-s", AssetPaths.ContentFolder3D + "buildings/suburban/building-type-s", AssetPaths.ContentFolderEffects + "BasicShader", Color.LightCoral);
     }
 
-    public CurvaIzquierdaAsfalto(
+    public CurvaIzquierdaTierra(
         Vector3 position,
         float rotation,
         Biome biome

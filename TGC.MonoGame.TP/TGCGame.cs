@@ -101,8 +101,17 @@ public class TGCGame : Game
         //Debe ejecuitarse antes del new Road()
         Tile.LoadModels(Content);
 
-
-        _road = new Road(new RectaAsfalto(new Vector3(0f, -50f, 0f),0f));
+        //Genero la calle a partir del bioma para permitir que el primer bioma también sea aleatorio
+        _road = new Road(
+            new AsphaltBiome(
+                null,
+                new GameMode(BiomeType.RANDOM)
+            ).GenerateNewTileOf(
+                TileType.STRAIGHT_LINE, 
+                new Vector3(0f, -50f, 0f),
+                0f
+            )
+        );
 
 
         // =========================

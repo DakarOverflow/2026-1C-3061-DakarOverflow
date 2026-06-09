@@ -6,13 +6,13 @@ using Microsoft.Xna.Framework.Content;
 
 namespace TGC.MonoGame.TP;
 
-public class RectaAsfalto : Recta, IAssetLoader
+public class RectaTierra : Recta, IAssetLoader
 {
     protected static Dictionary<String, CustomModel> modelMap = new Dictionary<String, CustomModel>() {};
     
     private static void LoadModel(ContentManager content, string key, string path, string effect, Color color)
     {
-        RectaAsfalto.modelMap.Add(key, new CustomModel(
+        RectaTierra.modelMap.Add(key, new CustomModel(
             content.Load<Model>(path),
             content.Load<Effect>(effect),
             color
@@ -22,19 +22,19 @@ public class RectaAsfalto : Recta, IAssetLoader
     private static void LoadModel(ContentManager content, string path, string effect, Color color)
     {
         //Genera el modelo utilizando el path del mismo como key para el diccionario interno
-        RectaAsfalto.LoadModel(content, path, path, effect, color);
+        RectaTierra.LoadModel(content, path, path, effect, color);
     }   
 
     public static void LoadLocalModels(ContentManager content)
     {
-        RectaAsfalto.LoadModel(content, "road-tiles/road-square", AssetPaths.ContentFolder3D + "road-tiles/road-square", AssetPaths.ContentFolderEffects + "BasicShader", Color.Gray);
-        RectaAsfalto.LoadModel(content, "road-tiles/road-straight", AssetPaths.ContentFolder3D + "road-tiles/road-straight",  AssetPaths.ContentFolderEffects + "BasicShader", Color.Black);
-        RectaAsfalto.LoadModel(content, "buildings/suburban/building-type-c", AssetPaths.ContentFolder3D + "buildings/suburban/building-type-c", AssetPaths.ContentFolderEffects + "BasicShader", Color.DarkBlue);        
+        RectaTierra.LoadModel(content, "road-tiles/road-square", AssetPaths.ContentFolder3D + "road-tiles/road-square", AssetPaths.ContentFolderEffects + "BasicShader", Color.DarkGreen);
+        RectaTierra.LoadModel(content, "road-tiles/road-straight", AssetPaths.ContentFolder3D + "road-tiles/road-straight",  AssetPaths.ContentFolderEffects + "BasicShader", Color.Chocolate);
+        RectaTierra.LoadModel(content, "buildings/suburban/building-type-c", AssetPaths.ContentFolder3D + "buildings/suburban/building-type-c", AssetPaths.ContentFolderEffects + "BasicShader", Color.LightCoral);        
     }
 
-    public RectaAsfalto(
+    public RectaTierra(
         Vector3 position,
-        float rotation, 
+        float rotation,
         Biome biome
     ) : base(position,rotation, biome)
     {

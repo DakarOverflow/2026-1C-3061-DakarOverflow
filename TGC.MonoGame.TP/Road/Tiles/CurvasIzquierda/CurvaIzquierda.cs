@@ -10,8 +10,9 @@ public abstract class CurvaIzquierda : Tile
 {
     public CurvaIzquierda(
         Vector3 position,
-        float rotation
-    ) : base(position, rotation) {}
+        float rotation,
+        Biome biome
+    ) : base(position, rotation, biome) {}
     
     public override TileType GetTileType()
     {
