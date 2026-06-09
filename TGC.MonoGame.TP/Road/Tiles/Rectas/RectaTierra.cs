@@ -73,5 +73,19 @@ public class RectaTierra : Recta, IAssetLoader
             new Vector3(-460f, 10f, 0f),
             rotation
         );
+
+
+        if(biome.ShouldSpawnCollectibleOfType(CollectibleType.Coin))
+        {
+            AddObject(Collectible.CreateCollectibleOfType(CollectibleType.Coin, this.Position + new Vector3(0f, 0f, -600f), 10f));
+        }
+        if(biome.ShouldSpawnCollectibleOfType(CollectibleType.FuelTank))
+        {
+            AddObject(Collectible.CreateCollectibleOfType(CollectibleType.FuelTank, this.Position + new Vector3(0f, 0f, -600f), 100f));
+        }
+        if(biome.ShouldSpawnCollectibleOfType(CollectibleType.Wrench))
+        {
+            AddObject(Collectible.CreateCollectibleOfType(CollectibleType.Wrench, this.Position + new Vector3(0f, 0f, -600f), 50f));
+        }
     }
 }

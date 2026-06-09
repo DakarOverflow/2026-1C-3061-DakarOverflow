@@ -55,10 +55,23 @@ public class CurvaDerechaAsfalto : CurvaDerecha, IAssetLoader
             rotation + MathHelper.PiOver2
         );
         //Edificios 
-        AddObject( 
+        AddObject(
             modelMap.GetValueOrDefault("buildings/suburban/building-type-s", null), 
             new Vector3(2f),
             new Vector3(322f, 10f, 450f), rotation + MathHelper.Pi
         );
+
+        if(biome.ShouldSpawnCollectibleOfType(CollectibleType.Coin))
+        {
+            AddObject(Collectible.CreateCollectibleOfType(CollectibleType.Coin, this.Position + new Vector3(0f, 0f, -600f), 10f));
+        }
+        if(biome.ShouldSpawnCollectibleOfType(CollectibleType.FuelTank))
+        {
+            AddObject(Collectible.CreateCollectibleOfType(CollectibleType.FuelTank, this.Position + new Vector3(0f, 0f, -600f), 100f));
+        }
+        if(biome.ShouldSpawnCollectibleOfType(CollectibleType.Wrench))
+        {
+            AddObject(Collectible.CreateCollectibleOfType(CollectibleType.Wrench, this.Position + new Vector3(0f, 0f, -600f), 50f));
+        }
     }
 }

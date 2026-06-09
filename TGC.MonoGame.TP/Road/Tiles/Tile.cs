@@ -79,6 +79,11 @@ public abstract class Tile
         );
     }
 
+    public void AddObject(WorldObject obj)
+    {
+        _tileObjects.Add(obj);
+    }
+
     public void Update(GameTime gameTime)
     {
         foreach (var obj in _tileObjects)
