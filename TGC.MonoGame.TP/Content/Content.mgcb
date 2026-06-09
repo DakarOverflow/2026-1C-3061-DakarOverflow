@@ -3102,3 +3102,12 @@
 /processorParam:TextureFormat=Compressed
 /build:Models/tgc-logo/tgc-logo.fbx
 
+#begin SpriteFonts/CascadiaCode/CascadiaCodePL.ttf
+/copy:SpriteFonts/CascadiaCode/CascadiaCodePL.ttf
+
+#begin SpriteFonts/CascadiaCode/CascadiaMonoPL.ttf
+/copy:SpriteFonts/CascadiaCode/CascadiaMonoPL.ttf
+
+#begin SpriteFonts/CascadiaCode/README.md
+/copy:SpriteFonts/CascadiaCode/README.md
+

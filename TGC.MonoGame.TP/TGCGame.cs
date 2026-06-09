@@ -42,6 +42,16 @@ public class TGCGame : Game
     // COLECCIONABLES
     private List<Collectible> _collectibles = new List<Collectible>();
 
+    public SpriteFont font;
+    public SpriteBatch spriteBatch;
+
+    public enum Scene
+{
+   Menu,
+   Road
+}
+Scene _sceneNum = Scene.Menu;
+
     public TGCGame()
     {
         // Maneja la configuracion y la administracion del dispositivo grafico.
@@ -97,6 +107,9 @@ public class TGCGame : Game
     protected override void LoadContent()
     {
         _spriteBatch = new SpriteBatch(GraphicsDevice);
+        // Fuente
+        font = Content.Load<SpriteFont>(AssetPaths.ContentFolderSpriteFonts +"CascadiaCode/CascadiaCodePL");
+        spriteBatch = new SpriteBatch(GraphicsDevice);
 
         //Debe ejecuitarse antes del new Road()
         Tile.LoadModels(Content);
@@ -233,6 +246,7 @@ public class TGCGame : Game
 
     protected override void Update(GameTime gameTime)
     {
+     
         var keyboardState = Keyboard.GetState();
 
         // EXIT
@@ -242,6 +256,31 @@ public class TGCGame : Game
             Exit();
         }
 
+        switch (_sceneNum){
+            case  Scene.Menu: 
+
+            if (keyboardState.IsKeyDown(Keys.D1) &&
+                _previousKeyboardState.IsKeyUp(Keys.D1))
+            {
+                ChangeVehicle(_lightVehicle);
+            }
+
+            if (keyboardState.IsKeyDown(Keys.D2) &&
+                _previousKeyboardState.IsKeyUp(Keys.D2))
+            {
+                ChangeVehicle(_mediumVehicle);
+            }
+
+            if (keyboardState.IsKeyDown(Keys.D3) &&
+                _previousKeyboardState.IsKeyUp(Keys.D3))
+            {
+                ChangeVehicle(_heavyVehicle);
+            }
+            if (keyboardState.IsKeyDown(Keys.D1) || keyboardState.IsKeyDown(Keys.D2) || keyboardState.IsKeyDown(Keys.D3)) _sceneNum = Scene.Road ;
+            break;
+
+            default: 
+           
         // TOGGLE MOUSE
 
         if (keyboardState.IsKeyDown(Keys.M) &&
@@ -259,7 +298,6 @@ public class TGCGame : Game
         {
             _useFreeCamera = !_useFreeCamera;
         }
-
         // =========================
         // CHANGE VEHICLE
         // =========================
@@ -320,6 +358,8 @@ public class TGCGame : Game
         _previousKeyboardState = keyboardState;
 
         base.Update(gameTime);
+         break;
+        }
     }
 
     private void ChangeVehicle(Vehicle newVehicle)
@@ -341,7 +381,18 @@ public class TGCGame : Game
     protected override void Draw(GameTime gameTime)
     {
         GraphicsDevice.Clear(Color.CornflowerBlue);
+        //Cambio de esena
+        switch (_sceneNum){
+            case  Scene.Menu: 
+            DrawCenterTextY("MENU",10,10);
+            DrawCenterTextY("Preciona 1, 2 O 3  para empezar",300,2);
+            DrawCenterTextY("1 Para _lightVehicle",400,1);
+            DrawCenterTextY("2 Para _mediumVehicle",450,1);
+            DrawCenterTextY("3 Para _heavyVehicle",500,1);
 
+            break;
+
+            default: 
         // =========================
         // DRAW WORLD
         // =========================
@@ -370,6 +421,15 @@ public class TGCGame : Game
         }
 
         base.Draw(gameTime);
+        // =========================
+        // UI
+        // =========================
+        DrawLeftText("Velocidad: " +string.Format("{0:N2}",_playerVehicle._speed), 10, 1); 
+        DrawLeftText("Nafta: " +Convert.ToString(Math.Round(_playerVehicle.CurrentFuel)), 300, 1);
+        DrawLeftText("Vida: " +Convert.ToString(Math.Round(_playerVehicle.CurrentHealth)), 600, 1); 
+        break; 
+        }
+
     }
 
     protected override void UnloadContent()
@@ -378,4 +438,34 @@ public class TGCGame : Game
 
         base.UnloadContent();
     }
+
+    public void DrawCenterText(string msg, float escala)
+    {
+        var W = GraphicsDevice.Viewport.Width;
+        var H = GraphicsDevice.Viewport.Height;
+        var size = font.MeasureString(msg) * escala;
+        spriteBatch.Begin();
+        spriteBatch.DrawString(font, msg, new Vector2(0, 0), Color.White);
+        spriteBatch.End();
+    }
+    public void DrawLeftText(string msg, float X, float escala)
+    {
+            var W = GraphicsDevice.Viewport.Width;
+            var H = GraphicsDevice.Viewport.Height;
+            var size = font.MeasureString(msg) * escala;
+            spriteBatch.Begin(SpriteSortMode.Deferred, null, null, null, null, null,
+                Matrix.CreateScale(escala) * Matrix.CreateTranslation(X, 0, 0) );
+            spriteBatch.DrawString(font, msg, new Vector2(0, 0), Color.White);
+            spriteBatch.End();
+    }
+    public void DrawCenterTextY(string msg, float Y, float escala)
+        {
+            var W = GraphicsDevice.Viewport.Width;
+            var H = GraphicsDevice.Viewport.Height;
+            var size = font.MeasureString(msg) * escala;
+            spriteBatch.Begin(SpriteSortMode.Deferred, null, null, null, null, null,
+                Matrix.CreateScale(escala) * Matrix.CreateTranslation((W - size.X) / 2, Y, 0));
+            spriteBatch.DrawString(font, msg, new Vector2(0, 0), Color.White);
+            spriteBatch.End();
+        }
 }
