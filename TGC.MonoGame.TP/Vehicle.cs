@@ -1,6 +1,7 @@
 using System;
 using ImGuiNET;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 
@@ -157,6 +158,19 @@ public class Vehicle
 
         // Colisiones
         UpdateBoundingBox();
+    }
+
+    public void UpdateSound(SoundEffectInstance motorSound, SoundEffect breakingEffect)
+    {
+        // Si esta desacelerando reproducimos el sonido del freno
+        if (this._currentAcceleration < 0f && Keyboard.GetState().IsKeyDown(Keys.S))
+        {
+            breakingEffect.Play();
+        }
+
+        //Ajustamos el sonido del motor según la aceleración actual
+        motorSound.Pitch = MathHelper.Lerp(-0.8f, 0.8f, this._currentAcceleration/200f);
+        motorSound.Volume = MathHelper.Clamp(MathHelper.Lerp(0.3f, 0.8f, this._currentAcceleration), 0f, 1f);
     }
 
     // ==========================================

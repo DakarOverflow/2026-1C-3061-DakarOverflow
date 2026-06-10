@@ -6,6 +6,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Xna.Framework.Content;
+using Microsoft.Xna.Framework.Audio;
 
 namespace TGC.MonoGame.TP;
 
@@ -41,6 +42,9 @@ public class TGCGame : Game
     private Vehicle _mediumVehicle;
     private Vehicle _heavyVehicle;
 
+    //Sonidos
+    private SoundEffectInstance _instanciaSonidoMotor;
+    private SoundEffect _sonidoFrenado;
     private Road _road;
     // COLECCIONABLES
     private List<Collectible> _collectibles = new List<Collectible>();
@@ -215,6 +219,13 @@ public class TGCGame : Game
         // Vehículo inicial:
         _playerVehicle = _mediumVehicle;
 
+        var sonidoMotor = Content.Load<SoundEffect>(AssetPaths.ContentFolderSounds + "motor_auto");
+        _instanciaSonidoMotor = sonidoMotor.CreateInstance();
+        _instanciaSonidoMotor.IsLooped = true;
+        _instanciaSonidoMotor.Play();
+
+        _sonidoFrenado = Content.Load<SoundEffect>(AssetPaths.ContentFolderSounds + "auto_frenando");
+
         base.LoadContent();
     }
 
@@ -281,6 +292,7 @@ public class TGCGame : Game
         // =========================
 
         _playerVehicle.Update(gameTime);
+        _playerVehicle.UpdateSound(_instanciaSonidoMotor, _sonidoFrenado);
 
         // =========================
         // UPDATE WORLD
