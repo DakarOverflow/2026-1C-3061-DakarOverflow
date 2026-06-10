@@ -23,4 +23,13 @@ public abstract class CurvaDerecha : Tile
     {
         return -MathHelper.PiOver2;
     }
+
+        public override List<Vector3> GetObstacleSpawnPoints()
+    {
+        return
+        [
+            new Vector3(-150f,0f,100f),
+            new Vector3(-50f,0f,-200f)
+        ];
+    }
 }

@@ -103,6 +103,36 @@ public class TGCGame : Game
 
         _debugEffect = Content.Load<Effect>(AssetPaths.ContentFolderEffects + "BasicShader");
 
+        var trafficConeModel = new CustomModel(
+            Content.Load<Model>(
+                AssetPaths.ContentFolder3D +
+                "road-tiles/construction-cone"
+            ),
+            Content.Load<Effect>(
+                AssetPaths.ContentFolderEffects +
+                "BasicShader"
+            ),
+            Color.DarkOrchid
+        );
+
+        var constructionLightModel = new CustomModel(
+            Content.Load<Model>(
+                AssetPaths.ContentFolder3D +
+                "road-tiles/construction-light"
+            ),
+            Content.Load<Effect>(
+                AssetPaths.ContentFolderEffects +
+                "BasicShader"
+            ),
+            Color.DarkOrchid
+        );
+
+        var obstacleModels = new List<CustomModel>
+        {
+            trafficConeModel,
+            constructionLightModel,
+        };
+
         //Debe ejecuitarse antes del new Road()
         Collectible.LoadLocalModels(Content);
         Tile.LoadModels(Content);
@@ -116,7 +146,8 @@ public class TGCGame : Game
                 TileType.STRAIGHT_LINE,
                 new Vector3(0f, -50f, 0f),
                 0f
-            )
+            ),
+            obstacleModels
         );
 
 
@@ -298,6 +329,29 @@ public class TGCGame : Game
         _playerVehicle = newVehicle;
     }
 
+    private void CheckObstacleCollisions()
+    {
+        foreach (var tile in _road.Tiles)
+        {
+            foreach (var obstacle in tile.Obstacles)
+            {
+                if (!obstacle.IsActive)
+                    continue;
+
+                if (_playerVehicle.BoundingBox
+                    .Intersects(obstacle.BoundingBox))
+                {
+                    _playerVehicle.CollisionImpact(
+                        obstacle.Damage,
+                        obstacle.SpeedMultiplier
+                    );
+
+                    obstacle.Deactivate();
+                }
+            }
+        }
+    }
+
     protected override void Draw(GameTime gameTime)
     {
         GraphicsDevice.Clear(Color.CornflowerBlue);
@@ -340,6 +394,18 @@ public class TGCGame : Game
             foreach (var bb in _road.GetCollectibleHitboxes())
             {
                 DrawBoundingBox(bb, _cameraInUse, Color.Yellow);
+            }
+
+            foreach (var tile in _road.Tiles)
+            {
+                foreach (var obstacle in tile.Obstacles)
+                {
+                    DrawBoundingBox(
+                        obstacle.BoundingBox,
+                        _cameraInUse,
+                        Color.Orange
+                    );
+                }
             }
         }
 
