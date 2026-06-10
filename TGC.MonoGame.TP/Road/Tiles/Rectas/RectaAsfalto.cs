@@ -125,7 +125,7 @@ public class RectaAsfalto : Recta, IAssetLoader
             rotation
         );
 
-        AddObject(
+        AddObstacle(
             modelMap.GetValueOrDefault("buildings/suburban/fence", null),
             new Vector3(6f),
             new Vector3(-460f, 10f, 0f),
