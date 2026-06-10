@@ -23,4 +23,14 @@ public abstract class Recta : Tile
     {
         return 0f;
     }
+
+    public override List<Vector3> GetObstacleSpawnPoints()
+    {
+        return
+        [
+            new Vector3(0f,0f,-300f),
+            new Vector3(100f,0f,0f),
+            new Vector3(-100f,0f,300f)
+        ];
+    }
 }
