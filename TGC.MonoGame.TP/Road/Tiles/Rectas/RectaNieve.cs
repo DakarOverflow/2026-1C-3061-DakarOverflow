@@ -60,18 +60,28 @@ public class RectaNieve : Recta, IAssetLoader
 
         // EDIFICIOS
 
-        AddObject(
+        AddObstacle(
             modelMap.GetValueOrDefault("buildings/suburban/building-type-c", null),
             new Vector3(2f),
             new Vector3(460f, 10f, 0f),
-            rotation
+            rotation,
+            new Vector3(300f, 300f, 300f),
+            new Vector3(0f, 150f, 0f),
+            50f,
+            0f,
+            true
         );
 
-        AddObject(
+        AddObstacle(
             modelMap.GetValueOrDefault("buildings/suburban/building-type-c", null),
             new Vector3(2f),
             new Vector3(-460f, 10f, 0f),
-            rotation
+            rotation,
+            new Vector3(300f, 300f, 300f),
+            new Vector3(0f, 150f, 0f),
+            50f,
+            0f,
+            true
         );
 
         if(biome.ShouldSpawnCollectibleOfType(CollectibleType.Coin))

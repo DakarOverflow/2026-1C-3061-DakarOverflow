@@ -195,7 +195,7 @@ public class Vehicle
     public void TakeDamage(float damage)
     {
         CurrentHealth -= damage;
-        if(CurrentHealth < damage) CurrentHealth = 0;
+        if(CurrentHealth < 0) CurrentHealth = 0;
     }
 
     public void CollisionImpact(float damage, float speedMultiplier)

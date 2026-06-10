@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -116,34 +116,47 @@ Scene _sceneNum = Scene.Menu;
 
         _debugEffect = Content.Load<Effect>(AssetPaths.ContentFolderEffects + "BasicShader");
 
-        var trafficConeModel = new CustomModel(
+        var policeModel = new CustomModel(
             Content.Load<Model>(
                 AssetPaths.ContentFolder3D +
-                "road-tiles/construction-cone"
+                "car-kit/police"
             ),
             Content.Load<Effect>(
                 AssetPaths.ContentFolderEffects +
                 "BasicShader"
             ),
-            Color.DarkOrchid
+            Color.Blue
         );
 
-        var constructionLightModel = new CustomModel(
+        var taxiModel = new CustomModel(
             Content.Load<Model>(
                 AssetPaths.ContentFolder3D +
-                "road-tiles/construction-light"
+                "car-kit/taxi"
             ),
             Content.Load<Effect>(
                 AssetPaths.ContentFolderEffects +
                 "BasicShader"
             ),
-            Color.DarkOrchid
+            Color.Yellow
+        );
+
+        var ambulanceModel = new CustomModel(
+            Content.Load<Model>(
+                AssetPaths.ContentFolder3D +
+                "car-kit/ambulance"
+            ),
+            Content.Load<Effect>(
+                AssetPaths.ContentFolderEffects +
+                "BasicShader"
+            ),
+            Color.White
         );
 
         var obstacleModels = new List<CustomModel>
         {
-            trafficConeModel,
-            constructionLightModel,
+            policeModel,
+            taxiModel,
+            ambulanceModel,
         };
 
         //Debe ejecuitarse antes del new Road()
@@ -319,6 +332,7 @@ Scene _sceneNum = Scene.Menu;
         // =========================
 
         _playerVehicle.Update(gameTime);
+        CheckObstacleCollisions();
 
         // =========================
         // UPDATE WORLD
@@ -381,10 +395,24 @@ Scene _sceneNum = Scene.Menu;
                 if (_playerVehicle.BoundingBox
                     .Intersects(obstacle.BoundingBox))
                 {
-                    _playerVehicle.CollisionImpact(
-                        obstacle.Damage,
-                        obstacle.SpeedMultiplier
-                    );
+                    Vector3 obstacleCenter = (obstacle.BoundingBox.Min + obstacle.BoundingBox.Max) / 2f;
+                    Vector3 vehicleCenter = (_playerVehicle.BoundingBox.Min + _playerVehicle.BoundingBox.Max) / 2f;
+
+                    Vector3 diff = obstacleCenter - vehicleCenter;
+                    Vector3 diffLocal = Vector3.Transform(diff, Matrix.CreateRotationY(-_playerVehicle.RotationY));
+                    
+                    if (obstacle.IsFatalOnFrontalCollision && Math.Abs(diffLocal.Z) > Math.Abs(diffLocal.X))
+                    {
+                        // Choque frontal o trasero con objeto fatal -> termina la partida
+                        _playerVehicle.CollisionImpact(9999f, 0f);
+                    }
+                    else
+                    {
+                        _playerVehicle.CollisionImpact(
+                            obstacle.Damage,
+                            obstacle.SpeedMultiplier
+                        );
+                    }
 
                     obstacle.Deactivate();
                 }
