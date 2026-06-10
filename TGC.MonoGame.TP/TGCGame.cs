@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -17,7 +17,6 @@ namespace TGC.MonoGame.TP;
 public class TGCGame : Game
 {
     private readonly GraphicsDeviceManager _graphics;
-    private SpriteBatch _spriteBatch;
     // SHADDER PARA DEBUGUEAR
     private Effect _debugEffect;
     private bool _showHitboxes = false;
@@ -109,7 +108,6 @@ Scene _sceneNum = Scene.Menu;
 
     protected override void LoadContent()
     {
-        _spriteBatch = new SpriteBatch(GraphicsDevice);
         // Fuente
         font = Content.Load<SpriteFont>(AssetPaths.ContentFolderSpriteFonts + "CascadiaCode/CascadiaCodePL");
         spriteBatch = new SpriteBatch(GraphicsDevice);
@@ -533,7 +531,10 @@ Scene _sceneNum = Scene.Menu;
             var W = GraphicsDevice.Viewport.Width;
             var H = GraphicsDevice.Viewport.Height;
             var size = font.MeasureString(msg) * escala;
-            spriteBatch.Begin(SpriteSortMode.Deferred, null, null, null, null, null,
+            spriteBatch.Begin(SpriteSortMode.Deferred,null, 
+            null, 
+            DepthStencilState.Default,
+            null, null,
                 Matrix.CreateScale(escala) * Matrix.CreateTranslation(X, 0, 0) );
             spriteBatch.DrawString(font, msg, new Vector2(0, 0), Color.White);
             spriteBatch.End();
@@ -543,7 +544,10 @@ Scene _sceneNum = Scene.Menu;
             var W = GraphicsDevice.Viewport.Width;
             var H = GraphicsDevice.Viewport.Height;
             var size = font.MeasureString(msg) * escala;
-            spriteBatch.Begin(SpriteSortMode.Deferred, null, null, null, null, null,
+            spriteBatch.Begin(SpriteSortMode.Deferred,null, 
+            null, 
+            DepthStencilState.Default, 
+            null, null,
                 Matrix.CreateScale(escala) * Matrix.CreateTranslation((W - size.X) / 2, Y, 0));
             spriteBatch.DrawString(font, msg, new Vector2(0, 0), Color.White);
             spriteBatch.End();
