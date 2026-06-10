@@ -92,6 +92,40 @@ public abstract class Tile
         _obstacles.Add(obstacle);
     }
 
+    public void AddObstacle(
+        CustomModel model,
+        Vector3 scale,
+        Vector3 offset,
+        float rotationY,
+        Vector3 hitboxSize,
+        Vector3 hitboxOffset,
+        float damage,
+        float speedMultiplier,
+        bool isFatalOnFrontalCollision = false
+    )
+    {
+        Matrix world =
+            Matrix.CreateScale(scale) *
+            Matrix.CreateTranslation(offset) *
+            Matrix.CreateRotationY(rotationY) *
+            Matrix.CreateTranslation(Position);
+
+        Vector3 finalPos = world.Translation;
+
+        Obstacle obstacle = new Obstacle(
+            model,
+            world,
+            finalPos,
+            hitboxSize,
+            hitboxOffset,
+            damage,
+            speedMultiplier,
+            isFatalOnFrontalCollision
+        );
+
+        AddObstacle(obstacle);
+    }
+
     public virtual List<Vector3> GetObstacleSpawnPoints(){ return null;}
 
     public void AddObject(WorldObject obj)

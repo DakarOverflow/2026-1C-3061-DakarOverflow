@@ -90,9 +90,18 @@ public class Road
 
         CustomModel obstacleModel = GetRandomObstacleModel();
 
-        Matrix world = Matrix.CreateScale(5f) * Matrix.CreateTranslation(worldPoint + new Vector3(0f, 30f, 0f));
+        // Si están en el carril izquierdo (X < 0) apuntan hacia nosotros.
+        // Si están en el derecho, apuntan en nuestra misma dirección.
+        float carRotation = tile.NextTileRotation;
+        if (localPoint.X < 0) 
+        {
+            carRotation += MathHelper.Pi;
+        }
 
-        // tile.AddObstacle(new Obstacle(obstacleModel, world, worldPoint, new Vector3(90f), new Vector3(0f, 90f, 0f), 20f, 0.5f));
+        Matrix world = Matrix.CreateRotationY(carRotation) * Matrix.CreateTranslation(worldPoint);
+
+        // Hitbox similar a la del auto (200x100x200), daño alto (100) y son fatales de frente (true)
+        tile.AddObstacle(new Obstacle(obstacleModel, world, worldPoint, new Vector3(200f, 100f, 200f), new Vector3(0f, 40f, 0f), 100f, 0f, true));
     }
 
     private CustomModel GetRandomObstacleModel()
