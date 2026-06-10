@@ -60,5 +60,18 @@ public class CurvaIzquierdaTierra : CurvaIzquierda, IAssetLoader
             new Vector3(2f),
             new Vector3(322f, 10f, 450f), rotation + MathHelper.Pi
         );
+
+        if(biome.ShouldSpawnCollectibleOfType(CollectibleType.Coin))
+        {
+            AddObject(Collectible.CreateCollectibleOfType(CollectibleType.Coin, this.Position + Vector3.Transform(new Vector3(0f, 50f, -600f), Matrix.CreateRotationY(rotation)), 10f));
+        }
+        if(biome.ShouldSpawnCollectibleOfType(CollectibleType.FuelTank))
+        {
+            AddObject(Collectible.CreateCollectibleOfType(CollectibleType.FuelTank, this.Position + Vector3.Transform(new Vector3(0f, 50f, -600f), Matrix.CreateRotationY(rotation)), 100f));
+        }
+        if(biome.ShouldSpawnCollectibleOfType(CollectibleType.Wrench))
+        {
+            AddObject(Collectible.CreateCollectibleOfType(CollectibleType.Wrench, this.Position + Vector3.Transform(new Vector3(0f, 50f, -600f), Matrix.CreateRotationY(rotation)), 50f));
+        }
     }
 }

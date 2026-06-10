@@ -73,5 +73,18 @@ public class RectaNieve : Recta, IAssetLoader
             new Vector3(-460f, 10f, 0f),
             rotation
         );
+
+        if(biome.ShouldSpawnCollectibleOfType(CollectibleType.Coin))
+        {
+            AddObject(Collectible.CreateCollectibleOfType(CollectibleType.Coin, this.Position + Vector3.Transform(new Vector3(100f, 50f, -100f), Matrix.CreateRotationY(rotation)), 10f));
+        }
+        if(biome.ShouldSpawnCollectibleOfType(CollectibleType.FuelTank))
+        {
+            AddObject(Collectible.CreateCollectibleOfType(CollectibleType.FuelTank, this.Position + Vector3.Transform(new Vector3(0f, 50f, -300f), Matrix.CreateRotationY(rotation)), 100f));
+        }
+        if(biome.ShouldSpawnCollectibleOfType(CollectibleType.Wrench))
+        {
+            AddObject(Collectible.CreateCollectibleOfType(CollectibleType.Wrench, this.Position + Vector3.Transform(new Vector3(-100f, 50f, -550f), Matrix.CreateRotationY(rotation)), 50f));
+        }
     }
 }

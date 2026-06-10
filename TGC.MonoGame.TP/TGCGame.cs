@@ -134,13 +134,14 @@ public class TGCGame : Game
         };
 
         //Debe ejecuitarse antes del new Road()
+        Collectible.LoadLocalModels(Content);
         Tile.LoadModels(Content);
 
         //Genero la calle a partir del bioma para permitir que el primer bioma también sea aleatorio
         _road = new Road(
             new AsphaltBiome(
                 null,
-                new GameMode(BiomeType.RANDOM)
+                new GameMode(BiomeType.RANDOM, GameDifficulty.EASY)
             ).GenerateNewTileOf(
                 TileType.STRAIGHT_LINE,
                 new Vector3(0f, -50f, 0f),
@@ -213,56 +214,6 @@ public class TGCGame : Game
 
         // Vehículo inicial:
         _playerVehicle = _mediumVehicle;
-
-        // =========================
-        // COLECCIONABLES
-        // =========================
-
-        var fuelTankModel = new CustomModel(
-            Content.Load<Model>(
-                AssetPaths.ContentFolder3D +
-                "car-kit/box" // TODO: Cambiar por el modelo real
-            ),
-            Content.Load<Effect>(
-                AssetPaths.ContentFolderEffects +
-                "BasicShader"
-            ),
-            Color.Red
-        );
-
-        var wrenchModel = new CustomModel(
-            Content.Load<Model>(
-                AssetPaths.ContentFolder3D +
-                "car-kit/debris-bolt" // TODO: Cambiar por el modelo real
-            ),
-            Content.Load<Effect>(
-                AssetPaths.ContentFolderEffects +
-                "BasicShader"
-            ),
-            Color.Gray
-        );
-
-        var coinModel = new CustomModel(
-            Content.Load<Model>(
-                AssetPaths.ContentFolder3D +
-                "car-kit/debris-nut" // TODO: Cambiar por el modelo real
-            ),
-            Content.Load<Effect>(
-                AssetPaths.ContentFolderEffects +
-                "BasicShader"
-            ),
-            Color.Gold
-        );
-
-        // Para instanciar los coleccionables se indica el tipo, el modelo, la posicion y el valor que otorga.
-        _collectibles.Add(new Collectible(
-            CollectibleType.FuelTank, fuelTankModel, new Vector3(-150f, 0f, -500f), 100f));
-
-        _collectibles.Add(new Collectible(
-            CollectibleType.Wrench, wrenchModel, new Vector3(0f, 0f, -500f), 50f));
-
-        _collectibles.Add(new Collectible(
-            CollectibleType.Coin, coinModel, new Vector3(150f, 0f, -500f), 10f));
 
         base.LoadContent();
     }
@@ -429,7 +380,7 @@ public class TGCGame : Game
 
         foreach (var collectible in _collectibles)
         {
-            collectible.Draw(_cameraInUse.GetView(), _cameraInUse.GetProjection());
+            collectible.Draw(gameTime, _cameraInUse.GetView(), _cameraInUse.GetProjection());
         }
 
         // =========================
