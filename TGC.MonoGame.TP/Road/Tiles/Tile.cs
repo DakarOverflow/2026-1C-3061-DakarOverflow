@@ -12,6 +12,13 @@ public abstract class Tile
 {
     protected readonly List<WorldObject> _tileObjects;
 
+    protected readonly List<Obstacle> _obstacles;
+
+    public IReadOnlyList<Obstacle> Obstacles
+    {
+        get => _obstacles;
+    }
+
     public Vector3 Position;
 
     public Vector3 NextTileOffset;
@@ -59,6 +66,7 @@ public abstract class Tile
         _tileObjects = new List<WorldObject>();
         this.biome = biome;
         NextTileRotation = rotation + this.GetRotationOffsetForNextTile();
+        _obstacles = new List<Obstacle>();
     }
 
     public void AddObject(
@@ -79,6 +87,13 @@ public abstract class Tile
         );
     }
 
+    public void AddObstacle(Obstacle obstacle)
+    {
+        _obstacles.Add(obstacle);
+    }
+
+    public virtual List<Vector3> GetObstacleSpawnPoints(){ return null;}
+
     public void AddObject(WorldObject obj)
     {
         _tileObjects.Add(obj);
@@ -89,6 +104,11 @@ public abstract class Tile
         foreach (var obj in _tileObjects)
         {
             obj.Update(gameTime);
+        }
+
+        foreach (var obstacle in _obstacles)
+        {
+            obstacle.Update(gameTime);
         }
     }
 
@@ -102,6 +122,15 @@ public abstract class Tile
             obj.DrawOn(
                 gameTime,
                 camera,
+                camera.GetProjection()
+            );
+        }
+
+        foreach (var obstacle in _obstacles)
+        {
+            obstacle.Draw(
+                gameTime,
+                camera.GetView(),
                 camera.GetProjection()
             );
         }
