@@ -3,62 +3,70 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework.Content;
+using System.Reflection;
+using System.Linq;
 
 namespace TGC.MonoGame.TP;
 
 public abstract class Tile
 {
-
-    protected ContentManager _content;
-    protected readonly List<CustomModel> _tileModels;
-
     protected readonly List<WorldObject> _tileObjects;
+
+    protected readonly List<Obstacle> _obstacles;
+
+    public IReadOnlyList<Obstacle> Obstacles
+    {
+        get => _obstacles;
+    }
 
     public Vector3 Position;
 
     public Vector3 NextTileOffset;
 
-    public string[] tileName ={"Recta1","Recta2"};
+    public float NextTileRotation;
 
     public abstract TileType GetTileType();
+
+    public abstract float GetRotationOffsetForNextTile();
 
     protected Biome biome;
 
     public Tile GenerateNextOfType(TileType type)
     {
-        return this.biome.GenerateNewTileOf(type, this.Position + this.NextTileOffset);
+        return this.biome.GenerateNewTileOf(type, this.Position + this.NextTileOffset,this.NextTileRotation);
+    }
+
+    public static void LoadModels(ContentManager content)
+    {
+        Assembly currentAssembly = Assembly.GetExecutingAssembly();
+        
+        var concreteTileTypes = currentAssembly.GetTypes()
+            .Where(t => 
+                t.IsSubclassOf(typeof(Tile))
+                && !t.IsAbstract               
+                && t.IsClass
+                && typeof(IAssetLoader).IsAssignableFrom(t)
+            );
+
+        //No, esto no lo hizo una IA! Parece mágia pero es simple. Uso reflection para buscar todas las subclases instanciables de Tile, que por ser iomplementar la interfac IAssetLoader tienen que implementar el método estatico LoadLocalModels utilizado para cargar una única vez los modelos a memoria y optimizar el espacio 
+        foreach(Type type in concreteTileTypes)
+        {
+            MethodInfo modelLoader = type.GetMethod("LoadLocalModels");
+            modelLoader.Invoke(null, new object[] {content});
+        }
     }
 
     public Tile(
-        ContentManager content,
-        Vector3 position
+        Vector3 position,
+        float rotation,
+        Biome biome
     )
     {
         Position = position;
-
-        _content = content;
-
-        _tileModels = new List<CustomModel>();
-
         _tileObjects = new List<WorldObject>();
-
-        biome = new AsphaltBiome(content, null);
-    }
-
-    public void AddModel(
-        string modelPath,
-        string effectPath,
-        Color color
-    )
-    {
-        //FIXME: Long parameter list
-        _tileModels.Add(
-            new CustomModel(
-                _content.Load<Model>(modelPath),
-                _content.Load<Effect>(effectPath),
-                color
-            )
-        );
+        this.biome = biome;
+        NextTileRotation = rotation + this.GetRotationOffsetForNextTile();
+        _obstacles = new List<Obstacle>();
     }
 
     public void AddObject(
@@ -70,19 +78,61 @@ public abstract class Tile
     {
         Matrix world =
             Matrix.CreateScale(scale) *
+            Matrix.CreateTranslation(offset) *
             Matrix.CreateRotationY(rotationY) *
-            Matrix.CreateTranslation(Position + offset);
+            Matrix.CreateTranslation(Position);
 
         _tileObjects.Add(
             new WorldObject(model, world)
         );
     }
 
+    public void AddObstacle(Obstacle obstacle)
+    {
+        _obstacles.Add(obstacle);
+    }
+
+    public virtual List<Vector3> GetObstacleSpawnPoints(){ return null;}
+
+    public void AddObject(WorldObject obj)
+    {
+        _tileObjects.Add(obj);
+    }
     public void Update(GameTime gameTime)
     {
         foreach (var obj in _tileObjects)
         {
             obj.Update(gameTime);
+        }
+
+        foreach (var obstacle in _obstacles)
+        {
+            obstacle.Update(gameTime);
+        }
+    }
+
+    public void CheckCollisions(Vehicle player)
+    {
+        foreach (var obj in _tileObjects)
+        {
+            if (obj is Collectible collectible && collectible.IsActive)
+            {
+                if (player.BoundingBox.Intersects(collectible.BoundingBox))
+                {
+                    collectible.PickUp(player);
+                }
+            }
+        }
+    }
+
+    public IEnumerable<BoundingBox> GetActiveCollectibleHitboxes()
+    {
+        foreach (var obj in _tileObjects)
+        {
+            if (obj is Collectible collectible && collectible.IsActive)
+            {
+                yield return collectible.BoundingBox;
+            }
         }
     }
 
@@ -96,6 +146,15 @@ public abstract class Tile
             obj.DrawOn(
                 gameTime,
                 camera,
+                camera.GetProjection()
+            );
+        }
+
+        foreach (var obstacle in _obstacles)
+        {
+            obstacle.Draw(
+                gameTime,
+                camera.GetView(),
                 camera.GetProjection()
             );
         }

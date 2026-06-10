@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data;
 using System.Linq;
 using BepuPhysics.CollisionDetection.CollisionTasks;
@@ -12,14 +13,19 @@ public class Road
 {
     private const float SQUARED_GENERATION_DISTANCE = 4000000f; //Generation distance: 2000
 
+    private int _generalDirection = 0;
     private Queue<Tile> _tiles;
+    public IEnumerable<Tile> Tiles{get => _tiles;}
+    
+    private readonly  Random _randomGenerator;
 
-    private Random _randomGenerator;
+    private readonly List<CustomModel> _obstacleModels;
 
-    public Road(Tile firstTile)
+    public Road(Tile firstTile, List<CustomModel> obstacleModels)
     {
         this._tiles = new Queue<Tile>([firstTile]);  
         this._randomGenerator = new Random();      
+        _obstacleModels = obstacleModels;
     }
 
     public virtual void UpdateFor(Vehicle car, GameTime gameTime)
@@ -27,9 +33,21 @@ public class Road
         foreach(Tile tile in this._tiles)
         {
             tile.Update(gameTime);
+            tile.CheckCollisions(car);
         }
 
         this.ExtendRoadIfCarNearEnd(car);
+    }
+
+    public IEnumerable<BoundingBox> GetCollectibleHitboxes()
+    {
+        foreach (Tile tile in this._tiles)
+        {
+            foreach (var bb in tile.GetActiveCollectibleHitboxes())
+            {
+                yield return bb;
+            }
+        }
     }
 
     public virtual void Draw(
@@ -45,10 +63,41 @@ public class Road
 
     private void ExtendRoadIfCarNearEnd(Vehicle car)
     {
-        if(Vector3.DistanceSquared(car.Position, this._tiles.Last<Tile>().Position) < SQUARED_GENERATION_DISTANCE)
+        if (Vector3.DistanceSquared(car.Position, GetLastlyGeneratedTyle().Position) < SQUARED_GENERATION_DISTANCE)
         {
-            this._tiles.Enqueue(GetLastlyGeneratedTyle().GenerateNextOfType(this.GetNextTileType()));
-        }   
+            Tile newTile =
+                GetLastlyGeneratedTyle().GenerateNextOfType(
+                    GetNextTileType()
+                );
+
+            PopulateObstacles(newTile);
+
+            _tiles.Enqueue(newTile);
+        }
+    }
+
+    private void PopulateObstacles(Tile tile)
+    {
+        if (_randomGenerator.NextDouble() > 0.3) return;
+
+        var spawnPoints = tile.GetObstacleSpawnPoints();
+
+        if (spawnPoints == null || spawnPoints.Count == 0) return;
+
+        Vector3 localPoint = spawnPoints[_randomGenerator.Next(spawnPoints.Count)];
+
+        Vector3 worldPoint = tile.Position + Vector3.Transform(localPoint, Matrix.CreateRotationY(tile.NextTileRotation));
+
+        CustomModel obstacleModel = GetRandomObstacleModel();
+
+        Matrix world = Matrix.CreateScale(5f) * Matrix.CreateTranslation(worldPoint + new Vector3(0f, 30f, 0f));
+
+        // tile.AddObstacle(new Obstacle(obstacleModel, world, worldPoint, new Vector3(90f), new Vector3(0f, 90f, 0f), 20f, 0.5f));
+    }
+
+    private CustomModel GetRandomObstacleModel()
+    {
+        return _obstacleModels[_randomGenerator.Next(_obstacleModels.Count)];
     }
 
     private TileType GetNextTileType()
@@ -57,30 +106,24 @@ public class Road
         float leftCurveChance = 0.2f;
 
 
-        List<Tile> lastTwo = this._tiles.TakeLast(2).ToList<Tile>();
-
-        if(lastTwo.Count == 2)
+        if(_generalDirection >= 1)
         {
-            if(lastTwo[0].GetTileType() == lastTwo[1].GetTileType())
-            {
-                if(lastTwo[0].GetTileType() == TileType.RIGHT_CURVE)
-                {
-                    rightCurveChance = 0f;
-                }
-                else if (lastTwo[0].GetTileType() == TileType.LEFT_CURVE)
-                {
-                    leftCurveChance = 0f;
-                }
-            }
-        } 
+            rightCurveChance = 0f;
+        }
+        else if(_generalDirection <= -1)
+        {
+            leftCurveChance = 0f;
+        }
 
         float randomNumber = (float) _randomGenerator.NextDouble();
 
         if(randomNumber < rightCurveChance)
         {
+            _generalDirection++;
             return TileType.RIGHT_CURVE;
         } else if(randomNumber < rightCurveChance + leftCurveChance)
         {
+            _generalDirection--;
             return TileType.LEFT_CURVE;
         }
         else

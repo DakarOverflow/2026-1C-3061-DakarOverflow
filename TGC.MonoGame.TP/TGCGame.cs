@@ -6,6 +6,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Xna.Framework.Content;
+using Microsoft.Xna.Framework.Audio;
 
 namespace TGC.MonoGame.TP;
 
@@ -17,7 +18,9 @@ namespace TGC.MonoGame.TP;
 public class TGCGame : Game
 {
     private readonly GraphicsDeviceManager _graphics;
-    private SpriteBatch _spriteBatch;
+    // SHADDER PARA DEBUGUEAR
+    private Effect _debugEffect;
+    private bool _showHitboxes = false;
 
     // CAMARAS
     private FreeCamera _freeCamera;
@@ -38,9 +41,22 @@ public class TGCGame : Game
     private Vehicle _mediumVehicle;
     private Vehicle _heavyVehicle;
 
+    //Sonidos
+    private SoundEffectInstance _instanciaSonidoMotor;
+    private SoundEffect _sonidoFrenado;
     private Road _road;
     // COLECCIONABLES
     private List<Collectible> _collectibles = new List<Collectible>();
+
+    public SpriteFont font;
+    public SpriteBatch spriteBatch;
+
+    public enum Scene
+{
+   Menu,
+   Road
+}
+Scene _sceneNum = Scene.Menu;
 
     public TGCGame()
     {
@@ -96,10 +112,58 @@ public class TGCGame : Game
 
     protected override void LoadContent()
     {
-        _spriteBatch = new SpriteBatch(GraphicsDevice);
+        // Fuente
+        font = Content.Load<SpriteFont>(AssetPaths.ContentFolderSpriteFonts + "CascadiaCode/CascadiaCodePL");
+        spriteBatch = new SpriteBatch(GraphicsDevice);
 
+        _debugEffect = Content.Load<Effect>(AssetPaths.ContentFolderEffects + "BasicShader");
 
-        _road = new Road(new TileRecta(Content, new Vector3(0f, -50f, 0f)));
+        var trafficConeModel = new CustomModel(
+            Content.Load<Model>(
+                AssetPaths.ContentFolder3D +
+                "road-tiles/construction-cone"
+            ),
+            Content.Load<Effect>(
+                AssetPaths.ContentFolderEffects +
+                "BasicShader"
+            ),
+            Color.DarkOrchid
+        );
+
+        var constructionLightModel = new CustomModel(
+            Content.Load<Model>(
+                AssetPaths.ContentFolder3D +
+                "road-tiles/construction-light"
+            ),
+            Content.Load<Effect>(
+                AssetPaths.ContentFolderEffects +
+                "BasicShader"
+            ),
+            Color.DarkOrchid
+        );
+
+        var obstacleModels = new List<CustomModel>
+        {
+            trafficConeModel,
+            constructionLightModel,
+        };
+
+        //Debe ejecuitarse antes del new Road()
+        Collectible.LoadLocalModels(Content);
+        Tile.LoadModels(Content);
+
+        //Genero la calle a partir del bioma para permitir que el primer bioma también sea aleatorio
+        _road = new Road(
+            new AsphaltBiome(
+                null,
+                new GameMode(BiomeType.RANDOM, GameDifficulty.EASY)
+            ).GenerateNewTileOf(
+                TileType.STRAIGHT_LINE,
+                new Vector3(0f, -50f, 0f),
+                0f
+            ),
+            obstacleModels
+        );
 
 
         // =========================
@@ -166,61 +230,19 @@ public class TGCGame : Game
         // Vehículo inicial:
         _playerVehicle = _mediumVehicle;
 
-        // =========================
-        // COLECCIONABLES
-        // =========================
+        var sonidoMotor = Content.Load<SoundEffect>(AssetPaths.ContentFolderSounds + "motor_auto");
+        _instanciaSonidoMotor = sonidoMotor.CreateInstance();
+        _instanciaSonidoMotor.IsLooped = true;
+        _instanciaSonidoMotor.Play();
 
-        var fuelTankModel = new CustomModel(
-            Content.Load<Model>(
-                AssetPaths.ContentFolder3D +
-                "car-kit/box" // TODO: Cambiar por el modelo real
-            ),
-            Content.Load<Effect>(
-                AssetPaths.ContentFolderEffects +
-                "BasicShader"
-            ),
-            Color.Red
-        );
-
-        var wrenchModel = new CustomModel(
-            Content.Load<Model>(
-                AssetPaths.ContentFolder3D +
-                "car-kit/debris-bolt" // TODO: Cambiar por el modelo real
-            ),
-            Content.Load<Effect>(
-                AssetPaths.ContentFolderEffects +
-                "BasicShader"
-            ),
-            Color.Gray
-        );
-
-        var coinModel = new CustomModel(
-            Content.Load<Model>(
-                AssetPaths.ContentFolder3D +
-                "car-kit/debris-nut" // TODO: Cambiar por el modelo real
-            ),
-            Content.Load<Effect>(
-                AssetPaths.ContentFolderEffects +
-                "BasicShader"
-            ),
-            Color.Gold
-        );
-
-        // Para instanciar los coleccionables se indica el tipo, el modelo, la posicion y el valor que otorga.
-        _collectibles.Add(new Collectible(
-            CollectibleType.FuelTank, fuelTankModel, new Vector3(-150f, 0f, -500f), 100f));
-
-        _collectibles.Add(new Collectible(
-            CollectibleType.Wrench, wrenchModel, new Vector3(0f, 0f, -500f), 50f));
-
-        _collectibles.Add(new Collectible(
-            CollectibleType.Coin, coinModel, new Vector3(150f, 0f, -500f), 10f));
+        _sonidoFrenado = Content.Load<SoundEffect>(AssetPaths.ContentFolderSounds + "auto_frenando");
 
         base.LoadContent();
     }
 
     protected override void Update(GameTime gameTime)
     {
+     
         var keyboardState = Keyboard.GetState();
 
         // EXIT
@@ -230,6 +252,31 @@ public class TGCGame : Game
             Exit();
         }
 
+        switch (_sceneNum){
+            case  Scene.Menu: 
+
+            if (keyboardState.IsKeyDown(Keys.D1) &&
+                _previousKeyboardState.IsKeyUp(Keys.D1))
+            {
+                ChangeVehicle(_lightVehicle);
+            }
+
+            if (keyboardState.IsKeyDown(Keys.D2) &&
+                _previousKeyboardState.IsKeyUp(Keys.D2))
+            {
+                ChangeVehicle(_mediumVehicle);
+            }
+
+            if (keyboardState.IsKeyDown(Keys.D3) &&
+                _previousKeyboardState.IsKeyUp(Keys.D3))
+            {
+                ChangeVehicle(_heavyVehicle);
+            }
+            if (keyboardState.IsKeyDown(Keys.D1) || keyboardState.IsKeyDown(Keys.D2) || keyboardState.IsKeyDown(Keys.D3)) _sceneNum = Scene.Road ;
+            break;
+
+            default: 
+           
         // TOGGLE MOUSE
 
         if (keyboardState.IsKeyDown(Keys.M) &&
@@ -240,6 +287,13 @@ public class TGCGame : Game
             IsMouseVisible = !_mouseCaptured;
         }
 
+        // TOGGLE HITBOXES
+        if (keyboardState.IsKeyDown(Keys.H) && 
+            _previousKeyboardState.IsKeyUp(Keys.H))
+        {
+            _showHitboxes = !_showHitboxes;
+        }
+
         // TOGGLE CAMERA
 
         if (keyboardState.IsKeyDown(Keys.F) &&
@@ -247,7 +301,6 @@ public class TGCGame : Game
         {
             _useFreeCamera = !_useFreeCamera;
         }
-
         // =========================
         // CHANGE VEHICLE
         // =========================
@@ -275,12 +328,13 @@ public class TGCGame : Game
         // =========================
 
         _playerVehicle.Update(gameTime);
+        _playerVehicle.UpdateSound(_instanciaSonidoMotor, _sonidoFrenado);
 
         // =========================
         // UPDATE WORLD
         // =========================
 
-        _road.UpdateFor(_playerVehicle,gameTime);
+        _road.UpdateFor(_playerVehicle, gameTime);
 
         // =========================
         // UPDATE CAMERA
@@ -308,28 +362,61 @@ public class TGCGame : Game
         _previousKeyboardState = keyboardState;
 
         base.Update(gameTime);
+         break;
+        }
     }
 
     private void ChangeVehicle(Vehicle newVehicle)
     {
         // conservar posicion, rotacion y velocidad
 
-        newVehicle.Position =
-            _playerVehicle.Position;
+        newVehicle.Position = _playerVehicle.Position;
 
-        newVehicle.RotationY =
-            _playerVehicle.RotationY;
+        newVehicle.RotationY = _playerVehicle.RotationY;
 
-        newVehicle._speed = 
-            _playerVehicle._speed;
+        newVehicle._speed = 0;
 
         _playerVehicle = newVehicle;
+    }
+
+    private void CheckObstacleCollisions()
+    {
+        foreach (var tile in _road.Tiles)
+        {
+            foreach (var obstacle in tile.Obstacles)
+            {
+                if (!obstacle.IsActive)
+                    continue;
+
+                if (_playerVehicle.BoundingBox
+                    .Intersects(obstacle.BoundingBox))
+                {
+                    _playerVehicle.CollisionImpact(
+                        obstacle.Damage,
+                        obstacle.SpeedMultiplier
+                    );
+
+                    obstacle.Deactivate();
+                }
+            }
+        }
     }
 
     protected override void Draw(GameTime gameTime)
     {
         GraphicsDevice.Clear(Color.CornflowerBlue);
+        //Cambio de esena
+        switch (_sceneNum){
+            case  Scene.Menu: 
+            DrawCenterTextY("MENU",10,10);
+            DrawCenterTextY("Preciona 1, 2 O 3  para empezar",300,2);
+            DrawCenterTextY("1 Para _lightVehicle",400,1);
+            DrawCenterTextY("2 Para _mediumVehicle",450,1);
+            DrawCenterTextY("3 Para _heavyVehicle",500,1);
 
+            break;
+
+            default: 
         // =========================
         // DRAW WORLD
         // =========================
@@ -354,10 +441,85 @@ public class TGCGame : Game
 
         foreach (var collectible in _collectibles)
         {
-            collectible.Draw(_cameraInUse.GetView(), _cameraInUse.GetProjection());
+            collectible.Draw(gameTime, _cameraInUse.GetView(), _cameraInUse.GetProjection());
+        }
+
+        // =========================
+        // DRAW HITBOXES
+        // =========================
+        if(_showHitboxes)
+        {
+            DrawBoundingBox(_playerVehicle.BoundingBox, _cameraInUse, Color.Red);
+
+            // Dibujar las cajas de los coleccionables activos
+            foreach (var bb in _road.GetCollectibleHitboxes())
+            {
+                DrawBoundingBox(bb, _cameraInUse, Color.Yellow);
+            }
+
+            foreach (var tile in _road.Tiles)
+            {
+                foreach (var obstacle in tile.Obstacles)
+                {
+                    DrawBoundingBox(
+                        obstacle.BoundingBox,
+                        _cameraInUse,
+                        Color.Orange
+                    );
+                }
+            }
         }
 
         base.Draw(gameTime);
+        // =========================
+        // UI
+        // =========================
+        DrawLeftText("Velocidad: " +string.Format("{0:N2}",_playerVehicle._speed), 10, 1); 
+        DrawLeftText("Nafta: " +Convert.ToString(Math.Round(_playerVehicle.CurrentFuel)), 300, 1);
+        DrawLeftText("Vida: " +Convert.ToString(Math.Round(_playerVehicle.CurrentHealth)), 600, 1); 
+        break; 
+        }
+
+    }
+
+    private void DrawBoundingBox(BoundingBox box, Camera camera, Color color)
+    {
+        Vector3[] corners = box.GetCorners();
+
+        VertexPositionColor[] vertices =
+        {
+        // cara inferior
+        new(corners[0], color), new(corners[1], color),
+        new(corners[1], color), new(corners[2], color),
+        new(corners[2], color), new(corners[3], color),
+        new(corners[3], color), new(corners[0], color),
+
+        // cara superior
+        new(corners[4], color), new(corners[5], color),
+        new(corners[5], color), new(corners[6], color),
+        new(corners[6], color), new(corners[7], color),
+        new(corners[7], color), new(corners[4], color),
+
+        // uniones
+        new(corners[0], color), new(corners[4], color),
+        new(corners[1], color), new(corners[5], color),
+        new(corners[2], color), new(corners[6], color),
+        new(corners[3], color), new(corners[7], color),
+    };
+
+        _debugEffect.Parameters["World"].SetValue(Matrix.Identity);
+        _debugEffect.Parameters["View"].SetValue(camera.GetView());
+        _debugEffect.Parameters["Projection"].SetValue(camera.GetProjection());
+        _debugEffect.Parameters["DiffuseColor"].SetValue(color.ToVector3());
+
+        _debugEffect.CurrentTechnique = _debugEffect.Techniques["DebugLineDrawing"];
+
+        foreach (EffectPass pass in _debugEffect.CurrentTechnique.Passes)
+        {
+            pass.Apply();
+
+            GraphicsDevice.DrawUserPrimitives(PrimitiveType.LineList, vertices, 0, vertices.Length / 2);
+        }
     }
 
     protected override void UnloadContent()
@@ -366,4 +528,40 @@ public class TGCGame : Game
 
         base.UnloadContent();
     }
+
+    public void DrawCenterText(string msg, float escala)
+    {
+        var W = GraphicsDevice.Viewport.Width;
+        var H = GraphicsDevice.Viewport.Height;
+        var size = font.MeasureString(msg) * escala;
+        spriteBatch.Begin();
+        spriteBatch.DrawString(font, msg, new Vector2(0, 0), Color.White);
+        spriteBatch.End();
+    }
+    public void DrawLeftText(string msg, float X, float escala)
+    {
+            var W = GraphicsDevice.Viewport.Width;
+            var H = GraphicsDevice.Viewport.Height;
+            var size = font.MeasureString(msg) * escala;
+            spriteBatch.Begin(SpriteSortMode.Deferred,null, 
+            null, 
+            DepthStencilState.Default,
+            null, null,
+                Matrix.CreateScale(escala) * Matrix.CreateTranslation(X, 0, 0) );
+            spriteBatch.DrawString(font, msg, new Vector2(0, 0), Color.White);
+            spriteBatch.End();
+    }
+    public void DrawCenterTextY(string msg, float Y, float escala)
+        {
+            var W = GraphicsDevice.Viewport.Width;
+            var H = GraphicsDevice.Viewport.Height;
+            var size = font.MeasureString(msg) * escala;
+            spriteBatch.Begin(SpriteSortMode.Deferred,null, 
+            null, 
+            DepthStencilState.Default, 
+            null, null,
+                Matrix.CreateScale(escala) * Matrix.CreateTranslation((W - size.X) / 2, Y, 0));
+            spriteBatch.DrawString(font, msg, new Vector2(0, 0), Color.White);
+            spriteBatch.End();
+        }
 }
