@@ -34,6 +34,17 @@ public class Road
         this.ExtendRoadIfCarNearEnd(car);
     }
 
+    public IEnumerable<BoundingBox> GetCollectibleHitboxes()
+    {
+        foreach (Tile tile in this._tiles)
+        {
+            foreach (var bb in tile.GetActiveCollectibleHitboxes())
+            {
+                yield return bb;
+            }
+        }
+    }
+
     public virtual void Draw(
         GameTime gameTime,
         Camera camera

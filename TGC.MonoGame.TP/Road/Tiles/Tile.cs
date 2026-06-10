@@ -106,6 +106,17 @@ public abstract class Tile
         }
     }
 
+    public IEnumerable<BoundingBox> GetActiveCollectibleHitboxes()
+    {
+        foreach (var obj in _tileObjects)
+        {
+            if (obj is Collectible collectible && collectible.IsActive)
+            {
+                yield return collectible.BoundingBox;
+            }
+        }
+    }
+
     public void Draw(
         GameTime gameTime,
         Camera camera

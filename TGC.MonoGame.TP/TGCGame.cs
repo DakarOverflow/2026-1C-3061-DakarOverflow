@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -336,7 +336,11 @@ public class TGCGame : Game
         {
             DrawBoundingBox(_playerVehicle.BoundingBox, _cameraInUse, Color.Red);
 
-            // si se agregan más hitboxes acá va su dibujado
+            // Dibujar las cajas de los coleccionables activos
+            foreach (var bb in _road.GetCollectibleHitboxes())
+            {
+                DrawBoundingBox(bb, _cameraInUse, Color.Yellow);
+            }
         }
 
         base.Draw(gameTime);
