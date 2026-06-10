@@ -28,6 +28,7 @@ public class Road
         foreach(Tile tile in this._tiles)
         {
             tile.Update(gameTime);
+            tile.CheckCollisions(car);
         }
 
         this.ExtendRoadIfCarNearEnd(car);

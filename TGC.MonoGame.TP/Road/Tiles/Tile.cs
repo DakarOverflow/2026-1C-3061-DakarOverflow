@@ -92,6 +92,20 @@ public abstract class Tile
         }
     }
 
+    public void CheckCollisions(Vehicle player)
+    {
+        foreach (var obj in _tileObjects)
+        {
+            if (obj is Collectible collectible && collectible.IsActive)
+            {
+                if (player.BoundingBox.Intersects(collectible.BoundingBox))
+                {
+                    collectible.PickUp(player);
+                }
+            }
+        }
+    }
+
     public void Draw(
         GameTime gameTime,
         Camera camera
