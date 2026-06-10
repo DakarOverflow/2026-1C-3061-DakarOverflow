@@ -52,20 +52,20 @@ public class Collectible : WorldObject, IAssetLoader
         switch (type)
         {
             case CollectibleType.FuelTank:
-                return new Collectible(type, modelMap.GetValueOrDefault("car-kit/box", null), position, effectValue);
+                return new Collectible(type, modelMap.GetValueOrDefault("car-kit/box", null), position, 1f, effectValue);
             
             case CollectibleType.Wrench:
-                return new Collectible(type, modelMap.GetValueOrDefault("car-kit/debris-bolt", null), position, effectValue);
+                return new Collectible(type, modelMap.GetValueOrDefault("car-kit/debris-bolt", null), position, 5f,  effectValue);
             
             case CollectibleType.Coin:
-                return new Collectible(type, modelMap.GetValueOrDefault("car-kit/debris-nut", null), position, effectValue);
+                return new Collectible(type, modelMap.GetValueOrDefault("car-kit/debris-nut", null), position, 5f, effectValue);
             
             default:
                 throw new ArgumentException("Tipo de coleccionable desconocido: " + type);
         }
     }
 
-    public Collectible(CollectibleType type, CustomModel model, Vector3 initialPosition, float effectValue) : base(model, Matrix.CreateTranslation(initialPosition))
+    public Collectible(CollectibleType type, CustomModel model, Vector3 initialPosition, float scale, float effectValue) : base(model, Matrix.CreateScale(scale) * Matrix.CreateTranslation(initialPosition))
     {
         Type = type;
         Position = initialPosition;
