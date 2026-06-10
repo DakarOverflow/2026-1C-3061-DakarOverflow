@@ -111,7 +111,7 @@ Scene _sceneNum = Scene.Menu;
     {
         _spriteBatch = new SpriteBatch(GraphicsDevice);
         // Fuente
-        font = Content.Load<SpriteFont>(AssetPaths.ContentFolderSpriteFonts +"CascadiaCode/CascadiaCodePL");
+        font = Content.Load<SpriteFont>(AssetPaths.ContentFolderSpriteFonts + "CascadiaCode/CascadiaCodePL");
         spriteBatch = new SpriteBatch(GraphicsDevice);
 
         _debugEffect = Content.Load<Effect>(AssetPaths.ContentFolderEffects + "BasicShader");

@@ -3111,3 +3111,14 @@
 #begin SpriteFonts/CascadiaCode/README.md
 /copy:SpriteFonts/CascadiaCode/README.md
 
+#begin SpriteFonts/CascadiaCode/CascadiaCodePL.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/build:SpriteFonts/CascadiaCode/CascadiaCodePL.spritefont
+
+#begin SpriteFonts/CascadiaCode/CascadiaMonoPL.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/build:SpriteFonts/CascadiaCode/CascadiaMonoPL.spritefont
+
+
