@@ -33,9 +33,21 @@ public class Road
         foreach(Tile tile in this._tiles)
         {
             tile.Update(gameTime);
+            tile.CheckCollisions(car);
         }
 
         this.ExtendRoadIfCarNearEnd(car);
+    }
+
+    public IEnumerable<BoundingBox> GetCollectibleHitboxes()
+    {
+        foreach (Tile tile in this._tiles)
+        {
+            foreach (var bb in tile.GetActiveCollectibleHitboxes())
+            {
+                yield return bb;
+            }
+        }
     }
 
     public virtual void Draw(

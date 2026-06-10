@@ -44,7 +44,8 @@ public class Collectible : WorldObject, IAssetLoader
     public float EffectValue { get; private set; }
 
     // --- PREPARACIÓN PARA COLISIONES ---
-    // TODO: definir atributo
+    public BoundingBox BoundingBox { get; private set; }
+    private readonly Vector3 _boundingBoxHalfSize = new Vector3(30f, 30f, 30f);
 
     
     public static Collectible CreateCollectibleOfType(CollectibleType type, Vector3 position, float effectValue)
@@ -73,7 +74,12 @@ public class Collectible : WorldObject, IAssetLoader
         IsActive = true;
         
         // --- PREPARACIÓN PARA COLISIONES ---
-        // Inicializar el atributo de colisiones.
+        UpdateBoundingBox();
+    }
+
+    private void UpdateBoundingBox()
+    {
+        BoundingBox = new BoundingBox(Position - _boundingBoxHalfSize, Position + _boundingBoxHalfSize);
     }
 
     // Update actualizar el estado del coleccionable

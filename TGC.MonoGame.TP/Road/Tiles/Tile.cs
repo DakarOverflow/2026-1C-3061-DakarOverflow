@@ -98,7 +98,6 @@ public abstract class Tile
     {
         _tileObjects.Add(obj);
     }
-
     public void Update(GameTime gameTime)
     {
         foreach (var obj in _tileObjects)
@@ -109,6 +108,31 @@ public abstract class Tile
         foreach (var obstacle in _obstacles)
         {
             obstacle.Update(gameTime);
+        }
+    }
+
+    public void CheckCollisions(Vehicle player)
+    {
+        foreach (var obj in _tileObjects)
+        {
+            if (obj is Collectible collectible && collectible.IsActive)
+            {
+                if (player.BoundingBox.Intersects(collectible.BoundingBox))
+                {
+                    collectible.PickUp(player);
+                }
+            }
+        }
+    }
+
+    public IEnumerable<BoundingBox> GetActiveCollectibleHitboxes()
+    {
+        foreach (var obj in _tileObjects)
+        {
+            if (obj is Collectible collectible && collectible.IsActive)
+            {
+                yield return collectible.BoundingBox;
+            }
         }
     }
 
