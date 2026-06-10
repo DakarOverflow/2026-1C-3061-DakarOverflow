@@ -3102,6 +3102,18 @@
 /processorParam:TextureFormat=Compressed
 /build:Models/tgc-logo/tgc-logo.fbx
 
+#begin Sounds/auto_frenando.mp3
+/importer:Mp3Importer
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:Sounds/auto_frenando.mp3
+
+#begin Sounds/motor_auto.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:Sounds/motor_auto.wav
+
 #begin SpriteFonts/CascadiaCode/CascadiaCodePL.ttf
 /copy:SpriteFonts/CascadiaCode/CascadiaCodePL.ttf
 
