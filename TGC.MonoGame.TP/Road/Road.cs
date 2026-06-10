@@ -92,7 +92,7 @@ public class Road
 
         Matrix world = Matrix.CreateScale(5f) * Matrix.CreateTranslation(worldPoint + new Vector3(0f, 30f, 0f));
 
-        tile.AddObstacle(new Obstacle(obstacleModel, world, worldPoint, new Vector3(90f), new Vector3(0f, 90f, 0f), 20f, 0.5f));
+        // tile.AddObstacle(new Obstacle(obstacleModel, world, worldPoint, new Vector3(90f), new Vector3(0f, 90f, 0f), 20f, 0.5f));
     }
 
     private CustomModel GetRandomObstacleModel()
