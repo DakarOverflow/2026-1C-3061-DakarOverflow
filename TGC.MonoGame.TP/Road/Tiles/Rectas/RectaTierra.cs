@@ -61,32 +61,52 @@ public class RectaTierra : Recta, IAssetLoader
 
         // EDIFICIOS
 
-        AddObject(
+        AddObstacle(
             modelMap.GetValueOrDefault("buildings/suburban/building-type-c", null),
             new Vector3(2f),
-            new Vector3(460f, 10f, 250),
-            rotation
+            new Vector3(460f, 10f, 250f),
+            rotation,
+            new Vector3(300f, 300f, 300f),
+            new Vector3(0f, 150f, 0f),
+            50f,
+            0f,
+            true
         );
 
-        AddObject(
+        AddObstacle(
             modelMap.GetValueOrDefault("buildings/suburban/building-type-c", null),
             new Vector3(2f),
-            new Vector3(-460f, 10f, 250),
-            rotation
+            new Vector3(-460f, 10f, 250f),
+            rotation,
+            new Vector3(300f, 300f, 300f),
+            new Vector3(0f, 150f, 0f),
+            50f,
+            0f,
+            true
         );
 
-         AddObject(
+        AddObstacle(
             modelMap.GetValueOrDefault("buildings/suburban/building-type-c", null),
             new Vector3(2f),
-            new Vector3(460f, 10f, -250),
-            rotation
+            new Vector3(460f, 10f, -250f),
+            rotation,
+            new Vector3(300f, 300f, 300f),
+            new Vector3(0f, 150f, 0f),
+            50f,
+            0f,
+            true
         );
 
-        AddObject(
+        AddObstacle(
             modelMap.GetValueOrDefault("buildings/suburban/building-type-c", null),
             new Vector3(2f),
-            new Vector3(-460f, 10f, -250),
-            rotation
+            new Vector3(-460f, 10f, -250f),
+            rotation,
+            new Vector3(300f, 300f, 300f),
+            new Vector3(0f, 150f, 0f),
+            50f,
+            0f,
+            true
         );
 
 
@@ -108,7 +128,12 @@ public class RectaTierra : Recta, IAssetLoader
             modelMap.GetValueOrDefault("buildings/suburban/fence", null),
             new Vector3(6f),
             new Vector3(-460f, 10f, 0f),
-            rotation
+            rotation,
+            new Vector3(300f, 300f, 300f),
+            new Vector3(0f, 150f, 0f),
+            50f,
+            0f,
+            true
         );
 
         AddObject(

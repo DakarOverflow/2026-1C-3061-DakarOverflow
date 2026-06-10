@@ -10,6 +10,8 @@ public class Obstacle : WorldObject
 
     public float SpeedMultiplier { get; }
 
+    public bool IsFatalOnFrontalCollision { get; }
+
     public bool IsActive { get; private set; }
 
     private readonly Vector3 _hitboxSize;
@@ -25,7 +27,8 @@ public class Obstacle : WorldObject
         Vector3 hitboxSize,
         Vector3 hitboxOffset,
         float damage,
-        float speedMultiplier
+        float speedMultiplier,
+        bool isFatalOnFrontalCollision = false
     ) : base(model, world)
     {
         Position = position;
@@ -37,6 +40,8 @@ public class Obstacle : WorldObject
         Damage = damage;
 
         SpeedMultiplier = speedMultiplier;
+
+        IsFatalOnFrontalCollision = isFatalOnFrontalCollision;
 
         IsActive = true;
 

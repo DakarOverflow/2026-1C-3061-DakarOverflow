@@ -28,9 +28,9 @@ public abstract class Recta : Tile
     {
         return
         [
-            new Vector3(0f,0f,-300f),
-            new Vector3(100f,0f,0f),
-            new Vector3(-100f,0f,300f)
+            new Vector3(75f,0f,-300f),
+            new Vector3(-75f,0f,0f),
+            new Vector3(75f,0f,300f)
         ];
     }
 }
