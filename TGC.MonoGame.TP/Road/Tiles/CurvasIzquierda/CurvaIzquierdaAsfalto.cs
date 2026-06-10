@@ -31,6 +31,7 @@ public class CurvaIzquierdaAsfalto : CurvaIzquierda, IAssetLoader
         CurvaIzquierdaAsfalto.LoadModel(content, "road-tiles/road-square", AssetPaths.ContentFolder3D + "road-tiles/road-square", AssetPaths.ContentFolderEffects + "BasicShader", Color.Gray);
         CurvaIzquierdaAsfalto.LoadModel(content, "road-tiles/road-curve", AssetPaths.ContentFolder3D + "road-tiles/road-curve", AssetPaths.ContentFolderEffects + "BasicShader", Color.Black);
         CurvaIzquierdaAsfalto.LoadModel(content, "buildings/suburban/building-type-s", AssetPaths.ContentFolder3D + "buildings/suburban/building-type-s", AssetPaths.ContentFolderEffects + "BasicShader", Color.DarkBlue);
+        CurvaIzquierdaAsfalto.LoadModel(content, "road-tiles/sign-highway", AssetPaths.ContentFolder3D + "road-tiles/sign-highway", AssetPaths.ContentFolderEffects + "BasicShader", Color.DarkSeaGreen);
     }
 
     public CurvaIzquierdaAsfalto(
@@ -59,6 +60,12 @@ public class CurvaIzquierdaAsfalto : CurvaIzquierda, IAssetLoader
             modelMap.GetValueOrDefault("buildings/suburban/building-type-s", null), 
             new Vector3(2f),
             new Vector3(322f, 10f, 450f), rotation + MathHelper.Pi
+        );
+        //Decoraciones
+        AddObject(
+            modelMap.GetValueOrDefault("road-tiles/sign-highway", null),
+            new Vector3(9f),
+            new Vector3(-500f, 10f, 0f), rotation + MathHelper.Pi/2
         );
     }
 }
