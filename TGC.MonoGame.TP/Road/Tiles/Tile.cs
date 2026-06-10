@@ -87,17 +87,17 @@ public abstract class Tile
         );
     }
 
-    public void AddObject(WorldObject obj)
-    {
-        _tileObjects.Add(obj);
-    }
-
     public void AddObstacle(Obstacle obstacle)
     {
         _obstacles.Add(obstacle);
     }
 
     public virtual List<Vector3> GetObstacleSpawnPoints(){ return null;}
+
+    public void AddObject(WorldObject obj)
+    {
+        _tileObjects.Add(obj);
+    }
     public void Update(GameTime gameTime)
     {
         foreach (var obj in _tileObjects)
