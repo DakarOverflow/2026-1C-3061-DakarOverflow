@@ -45,6 +45,7 @@ public class TGCGame : Game
     private SoundEffectInstance _instanciaSonidoMotor;
     private SoundEffect _sonidoFrenado;
     private Road _road;
+    private Skybox _skybox;
     // COLECCIONABLES
     private List<Collectible> _collectibles = new List<Collectible>();
 
@@ -122,6 +123,18 @@ Scene _sceneNum = Scene.Menu;
             AssetPaths.ContentFolder3D +
             "car-kit/Textures/colormap"
         );
+
+        var skyboxEffect = Content.Load<Effect>(AssetPaths.ContentFolderEffects + "TexturedShader");
+        var skyboxTextures = new Dictionary<string, Texture2D>
+        {
+            { "front", Content.Load<Texture2D>(AssetPaths.ContentFolderTextures + "barren_ft") },
+            { "back", Content.Load<Texture2D>(AssetPaths.ContentFolderTextures + "barren_bk") },
+            { "left", Content.Load<Texture2D>(AssetPaths.ContentFolderTextures + "barren_lf") },
+            { "right", Content.Load<Texture2D>(AssetPaths.ContentFolderTextures + "barren_rt") },
+            { "up", Content.Load<Texture2D>(AssetPaths.ContentFolderTextures + "barren_up") },
+            { "down", Content.Load<Texture2D>(AssetPaths.ContentFolderTextures + "barren_dn") }
+        };
+        _skybox = new Skybox(GraphicsDevice, skyboxEffect, skyboxTextures, 500f);
 
         var policeModel = new CustomModel(
             Content.Load<Model>(
@@ -450,6 +463,16 @@ Scene _sceneNum = Scene.Menu;
             break;
 
             default: 
+        // =========================
+        // DRAW SKYBOX
+        // =========================
+        {
+            var view = _cameraInUse.GetView();
+            var projection = _cameraInUse.GetProjection();
+            var cameraPosition = Matrix.Invert(view).Translation;
+            _skybox.Draw(view, projection, cameraPosition);
+        }
+
         // =========================
         // DRAW WORLD
         // =========================

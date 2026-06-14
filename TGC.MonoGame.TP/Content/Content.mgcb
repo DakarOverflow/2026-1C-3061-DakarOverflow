@@ -1284,18 +1284,6 @@
 /processorParam:TextureFormat=Compressed
 /build:Models/buildings/suburban/tree-small.fbx
 
-#begin Models/car-kit/Textures/colormap.png
-/importer:TextureImporter
-/processor:TextureProcessor
-/processorParam:ColorKeyColor=255,0,255,255
-/processorParam:ColorKeyEnabled=True
-/processorParam:GenerateMipmaps=False
-/processorParam:PremultiplyAlpha=True
-/processorParam:ResizeToPowerOfTwo=False
-/processorParam:MakeSquare=False
-/processorParam:TextureFormat=Color
-/build:Models/car-kit/Textures/colormap.png
-
 #begin Models/car-kit/ambulance.fbx
 /importer:FbxImporter
 /processor:ModelProcessor
@@ -1980,6 +1968,18 @@
 /processorParam:TextureFormat=Compressed
 /build:Models/car-kit/taxi.fbx
 
+#begin Models/car-kit/Textures/colormap.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Models/car-kit/Textures/colormap.png
+
 #begin Models/car-kit/tractor-police.fbx
 /importer:FbxImporter
 /processor:ModelProcessor
@@ -2245,17 +2245,6 @@
 /processorParam:SwapWindingOrder=False
 /processorParam:TextureFormat=Compressed
 /build:Models/car-kit/wheel-truck.fbx
-#begin Models/road-tiles/Textures/colormap.png
-/importer:TextureImporter
-/processor:TextureProcessor
-/processorParam:ColorKeyColor=255,0,255,255
-/processorParam:ColorKeyEnabled=True
-/processorParam:GenerateMipmaps=False
-/processorParam:PremultiplyAlpha=True
-/processorParam:ResizeToPowerOfTwo=False
-/processorParam:MakeSquare=False
-/processorParam:TextureFormat=Color
-/build:Models/road-tiles/Textures/colormap.png
 
 #begin Models/road-tiles/bridge-pillar-wide.fbx
 /importer:FbxImporter
@@ -3112,6 +3101,18 @@
 /processorParam:TextureFormat=Compressed
 /build:Models/road-tiles/sign-highway.fbx
 
+#begin Models/road-tiles/Textures/colormap.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Models/road-tiles/Textures/colormap.png
+
 #begin Models/tgc-logo/tgc-logo.fbx
 /importer:FbxImporter
 /processor:ModelProcessor
@@ -3143,8 +3144,22 @@
 /processorParam:Quality=Best
 /build:Sounds/motor_auto.wav
 
+#begin SpriteFonts/CascadiaCode/CascadiaCodePL.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:PremultiplyAlpha=True
+/processorParam:TextureFormat=Compressed
+/build:SpriteFonts/CascadiaCode/CascadiaCodePL.spritefont
+
 #begin SpriteFonts/CascadiaCode/CascadiaCodePL.ttf
 /copy:SpriteFonts/CascadiaCode/CascadiaCodePL.ttf
+
+#begin SpriteFonts/CascadiaCode/CascadiaMonoPL.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:PremultiplyAlpha=True
+/processorParam:TextureFormat=Compressed
+/build:SpriteFonts/CascadiaCode/CascadiaMonoPL.spritefont
 
 #begin SpriteFonts/CascadiaCode/CascadiaMonoPL.ttf
 /copy:SpriteFonts/CascadiaCode/CascadiaMonoPL.ttf
@@ -3152,14 +3167,75 @@
 #begin SpriteFonts/CascadiaCode/README.md
 /copy:SpriteFonts/CascadiaCode/README.md
 
-#begin SpriteFonts/CascadiaCode/CascadiaCodePL.spritefont
-/importer:FontDescriptionImporter
-/processor:FontDescriptionProcessor
-/build:SpriteFonts/CascadiaCode/CascadiaCodePL.spritefont
+#begin Textures/barren_bk.jpg
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Textures/barren_bk.jpg
 
-#begin SpriteFonts/CascadiaCode/CascadiaMonoPL.spritefont
-/importer:FontDescriptionImporter
-/processor:FontDescriptionProcessor
-/build:SpriteFonts/CascadiaCode/CascadiaMonoPL.spritefont
+#begin Textures/barren_dn.jpg
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Textures/barren_dn.jpg
 
+#begin Textures/barren_ft.jpg
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Textures/barren_ft.jpg
+
+#begin Textures/barren_lf.jpg
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Textures/barren_lf.jpg
+
+#begin Textures/barren_rt.jpg
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Textures/barren_rt.jpg
+
+#begin Textures/barren_up.jpg
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Textures/barren_up.jpg
 
