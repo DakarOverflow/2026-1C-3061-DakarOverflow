@@ -195,6 +195,11 @@ Scene _sceneNum = Scene.Menu;
             Color.Red
         );
 
+        var carKitColormap = Content.Load<Texture2D>(
+            AssetPaths.ContentFolder3D +
+            "car-kit/Textures/colormap"
+        );
+
         var mediumModel = new CustomModel(
             Content.Load<Model>(
                 AssetPaths.ContentFolder3D +
@@ -202,9 +207,9 @@ Scene _sceneNum = Scene.Menu;
             ),
             Content.Load<Effect>(
                 AssetPaths.ContentFolderEffects +
-                "BasicShader"
+                "TexturedShader"
             ),
-            Color.DarkOrange
+            carKitColormap
         );
 
         var heavyModel = new CustomModel(
