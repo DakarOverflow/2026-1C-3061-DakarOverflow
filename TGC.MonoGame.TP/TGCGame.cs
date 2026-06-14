@@ -118,6 +118,11 @@ Scene _sceneNum = Scene.Menu;
 
         _debugEffect = Content.Load<Effect>(AssetPaths.ContentFolderEffects + "BasicShader");
 
+        var carKitColormap = Content.Load<Texture2D>(
+            AssetPaths.ContentFolder3D +
+            "car-kit/Textures/colormap"
+        );
+
         var policeModel = new CustomModel(
             Content.Load<Model>(
                 AssetPaths.ContentFolder3D +
@@ -125,9 +130,9 @@ Scene _sceneNum = Scene.Menu;
             ),
             Content.Load<Effect>(
                 AssetPaths.ContentFolderEffects +
-                "BasicShader"
+                "TexturedShader"
             ),
-            Color.Blue
+            carKitColormap
         );
 
         var taxiModel = new CustomModel(
@@ -137,9 +142,9 @@ Scene _sceneNum = Scene.Menu;
             ),
             Content.Load<Effect>(
                 AssetPaths.ContentFolderEffects +
-                "BasicShader"
+                "TexturedShader"
             ),
-            Color.Yellow
+            carKitColormap
         );
 
         var ambulanceModel = new CustomModel(
@@ -149,9 +154,9 @@ Scene _sceneNum = Scene.Menu;
             ),
             Content.Load<Effect>(
                 AssetPaths.ContentFolderEffects +
-                "BasicShader"
+                "TexturedShader"
             ),
-            Color.White
+            carKitColormap
         );
 
         var obstacleModels = new List<CustomModel>
@@ -190,14 +195,9 @@ Scene _sceneNum = Scene.Menu;
             ),
             Content.Load<Effect>(
                 AssetPaths.ContentFolderEffects +
-                "BasicShader"
+                "TexturedShader"
             ),
-            Color.Red
-        );
-
-        var carKitColormap = Content.Load<Texture2D>(
-            AssetPaths.ContentFolder3D +
-            "car-kit/Textures/colormap"
+            carKitColormap
         );
 
         var mediumModel = new CustomModel(
@@ -219,9 +219,9 @@ Scene _sceneNum = Scene.Menu;
             ),
             Content.Load<Effect>(
                 AssetPaths.ContentFolderEffects +
-                "BasicShader"
+                "TexturedShader"
             ),
-            Color.DarkOliveGreen
+            carKitColormap
         );
 
         _lightVehicle = new Vehicle(

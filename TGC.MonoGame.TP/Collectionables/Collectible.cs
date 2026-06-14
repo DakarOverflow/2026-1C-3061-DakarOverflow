@@ -18,6 +18,15 @@ public class Collectible : WorldObject, IAssetLoader
         ));
     }
 
+    private static void LoadModel(ContentManager content, string key, string path, string effect, Texture2D texture)
+    {
+        Collectible.modelMap.Add(key, new CustomModel(
+            content.Load<Model>(path),
+            content.Load<Effect>(effect),
+            texture
+        ));
+    }
+
     private static void LoadModel(ContentManager content, string path, string effect, Color color)
     {
         //Genera el modelo utilizando el path del mismo como key para el diccionario interno
@@ -26,9 +35,10 @@ public class Collectible : WorldObject, IAssetLoader
 
     public static void LoadLocalModels(ContentManager content)
     {
-        Collectible.LoadModel(content, "car-kit/box", AssetPaths.ContentFolder3D + "car-kit/box", AssetPaths.ContentFolderEffects + "BasicShader", Color.Red);
-        Collectible.LoadModel(content, "car-kit/debris-bolt", AssetPaths.ContentFolder3D + "car-kit/debris-bolt", AssetPaths.ContentFolderEffects + "BasicShader", Color.Gray);
-        Collectible.LoadModel(content, "car-kit/debris-nut", AssetPaths.ContentFolder3D + "car-kit/debris-nut", AssetPaths.ContentFolderEffects + "BasicShader", Color.Gold);
+        var colormap = content.Load<Texture2D>(AssetPaths.ContentFolder3D + "car-kit/Textures/colormap");
+        Collectible.LoadModel(content, "car-kit/box", AssetPaths.ContentFolder3D + "car-kit/box", AssetPaths.ContentFolderEffects + "TexturedShader", colormap);
+        Collectible.LoadModel(content, "car-kit/debris-bolt", AssetPaths.ContentFolder3D + "car-kit/debris-bolt", AssetPaths.ContentFolderEffects + "TexturedShader", colormap);
+        Collectible.LoadModel(content, "car-kit/debris-nut", AssetPaths.ContentFolder3D + "car-kit/debris-nut", AssetPaths.ContentFolderEffects + "TexturedShader", colormap);
     }
     
     
