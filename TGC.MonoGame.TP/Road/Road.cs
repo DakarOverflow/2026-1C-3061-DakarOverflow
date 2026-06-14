@@ -98,10 +98,10 @@ public class Road
             carRotation += MathHelper.Pi;
         }
 
-        Matrix world = Matrix.CreateRotationY(carRotation) * Matrix.CreateTranslation(worldPoint);
+        Matrix world = Matrix.CreateScale(Vehicle.ScaleFactor) * Matrix.CreateRotationY(carRotation) * Matrix.CreateTranslation(worldPoint);
 
         // Hitbox similar a la del auto (200x100x200), daño alto (100) y son fatales de frente (true)
-        tile.AddObstacle(new Obstacle(obstacleModel, world, worldPoint, new Vector3(200f, 100f, 200f), new Vector3(0f, 40f, 0f), 100f, 0f, true));
+        tile.AddObstacle(new Obstacle(obstacleModel, world, worldPoint, new Vector3(200f, 100f, 200f) * Vehicle.ScaleFactor, new Vector3(0f, 40f, 0f) * Vehicle.ScaleFactor, 100f, 0f, true));
     }
 
     private CustomModel GetRandomObstacleModel()

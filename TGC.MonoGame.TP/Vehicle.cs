@@ -39,8 +39,10 @@ public class Vehicle
     // Colisiones
     public BoundingBox BoundingBox { get; private set; }
 
-    private readonly Vector3 _boundingBoxHalfSize = new Vector3(100f, 50f, 100f);
-    private readonly Vector3 _boundingBoxOffset = new Vector3(0f, 40f, 0f);
+    public const float ScaleFactor = 0.5f;
+
+    private readonly Vector3 _boundingBoxHalfSize = new Vector3(100f, 50f, 100f) * ScaleFactor;
+    private readonly Vector3 _boundingBoxOffset = new Vector3(0f, 40f, 0f) * ScaleFactor;
 
     // Constructor
     public Vehicle(CustomModel model, Vector3 initialPosition, VehicleStats stats, VehicleType type)
@@ -230,6 +232,7 @@ public class Vehicle
     public Matrix GetVisualWorld()
     {
         return
+            Matrix.CreateScale(ScaleFactor) *
             Matrix.CreateRotationY(RotationY + ModelRotationOffset) *
             Matrix.CreateTranslation(Position);
     }
