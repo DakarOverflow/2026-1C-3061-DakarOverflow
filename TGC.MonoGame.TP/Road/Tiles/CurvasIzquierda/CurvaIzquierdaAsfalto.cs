@@ -20,6 +20,15 @@ public class CurvaIzquierdaAsfalto : CurvaIzquierda, IAssetLoader
         ));
     }
 
+    private static void LoadModel(ContentManager content, string key, string path, string effect, Texture2D texture)
+    {
+        CurvaIzquierdaAsfalto.modelMap.Add(key, new CustomModel(
+            content.Load<Model>(path),
+            content.Load<Effect>(effect),
+            texture
+        ));
+    }
+
     private static void LoadModel(ContentManager content, string path, string effect, Color color)
     {
         //Genera el modelo utilizando el path del mismo como key para el diccionario interno
@@ -28,8 +37,9 @@ public class CurvaIzquierdaAsfalto : CurvaIzquierda, IAssetLoader
 
     public static void LoadLocalModels(ContentManager content)
     {
+        var roadColormap = content.Load<Texture2D>(AssetPaths.ContentFolder3D + "road-tiles/Textures/colormap");
         CurvaIzquierdaAsfalto.LoadModel(content, "road-tiles/road-square", AssetPaths.ContentFolder3D + "road-tiles/road-square", AssetPaths.ContentFolderEffects + "BasicShader", Color.Gray);
-        CurvaIzquierdaAsfalto.LoadModel(content, "road-tiles/road-curve", AssetPaths.ContentFolder3D + "road-tiles/road-curve", AssetPaths.ContentFolderEffects + "BasicShader", Color.Black);
+        CurvaIzquierdaAsfalto.LoadModel(content, "road-tiles/road-curve", AssetPaths.ContentFolder3D + "road-tiles/road-curve", AssetPaths.ContentFolderEffects + "TexturedShader", roadColormap);
         CurvaIzquierdaAsfalto.LoadModel(content, "buildings/suburban/building-type-s", AssetPaths.ContentFolder3D + "buildings/suburban/building-type-s", AssetPaths.ContentFolderEffects + "BasicShader", Color.DarkBlue);
     }
 

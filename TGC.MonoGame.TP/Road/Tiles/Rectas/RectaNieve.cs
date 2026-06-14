@@ -19,6 +19,15 @@ public class RectaNieve : Recta, IAssetLoader
         ));
     }
 
+    private static void LoadModel(ContentManager content, string key, string path, string effect, Texture2D texture)
+    {
+        RectaNieve.modelMap.Add(key, new CustomModel(
+            content.Load<Model>(path),
+            content.Load<Effect>(effect),
+            texture
+        ));
+    }
+
     private static void LoadModel(ContentManager content, string path, string effect, Color color)
     {
         //Genera el modelo utilizando el path del mismo como key para el diccionario interno
@@ -27,12 +36,12 @@ public class RectaNieve : Recta, IAssetLoader
 
     public static void LoadLocalModels(ContentManager content)
     {
+        var roadColormap = content.Load<Texture2D>(AssetPaths.ContentFolder3D + "road-tiles/Textures/colormap");
         RectaNieve.LoadModel(content, "road-tiles/road-square", AssetPaths.ContentFolder3D + "road-tiles/road-square", AssetPaths.ContentFolderEffects + "BasicShader", Color.WhiteSmoke);
-        RectaNieve.LoadModel(content, "road-tiles/road-straight", AssetPaths.ContentFolder3D + "road-tiles/road-straight",  AssetPaths.ContentFolderEffects + "BasicShader", Color.LightBlue);
+        RectaNieve.LoadModel(content, "road-tiles/road-straight", AssetPaths.ContentFolder3D + "road-tiles/road-straight",  AssetPaths.ContentFolderEffects + "TexturedShader", roadColormap);
         RectaNieve.LoadModel(content, "buildings/suburban/building-type-c", AssetPaths.ContentFolder3D + "buildings/suburban/building-type-c", AssetPaths.ContentFolderEffects + "BasicShader", Color.Yellow);        
         RectaNieve.LoadModel(content, "buildings/suburban/planter", AssetPaths.ContentFolder3D + "buildings/suburban/planter", AssetPaths.ContentFolderEffects + "BasicShader", Color.Green);
         RectaNieve.LoadModel(content, "buildings/suburban/fence", AssetPaths.ContentFolder3D + "buildings/suburban/fence", AssetPaths.ContentFolderEffects + "BasicShader", Color.Brown);
-    
     }
 
     public RectaNieve(

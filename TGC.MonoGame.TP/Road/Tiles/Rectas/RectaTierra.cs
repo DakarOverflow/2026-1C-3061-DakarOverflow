@@ -19,6 +19,15 @@ public class RectaTierra : Recta, IAssetLoader
         ));
     }
 
+    private static void LoadModel(ContentManager content, string key, string path, string effect, Texture2D texture)
+    {
+        RectaTierra.modelMap.Add(key, new CustomModel(
+            content.Load<Model>(path),
+            content.Load<Effect>(effect),
+            texture
+        ));
+    }
+
     private static void LoadModel(ContentManager content, string path, string effect, Color color)
     {
         //Genera el modelo utilizando el path del mismo como key para el diccionario interno
@@ -27,12 +36,12 @@ public class RectaTierra : Recta, IAssetLoader
 
     public static void LoadLocalModels(ContentManager content)
     {
+        var roadColormap = content.Load<Texture2D>(AssetPaths.ContentFolder3D + "road-tiles/Textures/colormap");
         RectaTierra.LoadModel(content, "road-tiles/road-square", AssetPaths.ContentFolder3D + "road-tiles/road-square", AssetPaths.ContentFolderEffects + "BasicShader", Color.DarkGreen);
-        RectaTierra.LoadModel(content, "road-tiles/road-straight", AssetPaths.ContentFolder3D + "road-tiles/road-straight",  AssetPaths.ContentFolderEffects + "BasicShader", Color.Chocolate);
+        RectaTierra.LoadModel(content, "road-tiles/road-straight", AssetPaths.ContentFolder3D + "road-tiles/road-straight",  AssetPaths.ContentFolderEffects + "TexturedShader", roadColormap);
         RectaTierra.LoadModel(content, "buildings/suburban/building-type-c", AssetPaths.ContentFolder3D + "buildings/suburban/building-type-c", AssetPaths.ContentFolderEffects + "BasicShader", Color.LightCoral);        
         RectaTierra.LoadModel(content, "buildings/suburban/planter", AssetPaths.ContentFolder3D + "buildings/suburban/planter", AssetPaths.ContentFolderEffects + "BasicShader", Color.Green);
         RectaTierra.LoadModel(content, "buildings/suburban/fence", AssetPaths.ContentFolder3D + "buildings/suburban/fence", AssetPaths.ContentFolderEffects + "BasicShader", Color.Brown);
-   
     }
 
     public RectaTierra(
