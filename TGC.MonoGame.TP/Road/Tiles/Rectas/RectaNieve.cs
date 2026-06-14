@@ -37,11 +37,12 @@ public class RectaNieve : Recta, IAssetLoader
     public static void LoadLocalModels(ContentManager content)
     {
         var roadColormap = content.Load<Texture2D>(AssetPaths.ContentFolder3D + "road-tiles/Textures/colormap");
+        var suburbanColormap = content.Load<Texture2D>(AssetPaths.ContentFolder3D + "buildings/suburban/Textures/colormap");
         RectaNieve.LoadModel(content, "road-tiles/road-square", AssetPaths.ContentFolder3D + "road-tiles/road-square", AssetPaths.ContentFolderEffects + "BasicShader", Color.WhiteSmoke);
         RectaNieve.LoadModel(content, "road-tiles/road-straight", AssetPaths.ContentFolder3D + "road-tiles/road-straight",  AssetPaths.ContentFolderEffects + "TexturedShader", roadColormap);
-        RectaNieve.LoadModel(content, "buildings/suburban/building-type-c", AssetPaths.ContentFolder3D + "buildings/suburban/building-type-c", AssetPaths.ContentFolderEffects + "BasicShader", Color.Yellow);        
-        RectaNieve.LoadModel(content, "buildings/suburban/planter", AssetPaths.ContentFolder3D + "buildings/suburban/planter", AssetPaths.ContentFolderEffects + "BasicShader", Color.Green);
-        RectaNieve.LoadModel(content, "buildings/suburban/fence", AssetPaths.ContentFolder3D + "buildings/suburban/fence", AssetPaths.ContentFolderEffects + "BasicShader", Color.Brown);
+        RectaNieve.LoadModel(content, "buildings/suburban/building-type-c", AssetPaths.ContentFolder3D + "buildings/suburban/building-type-c", AssetPaths.ContentFolderEffects + "TexturedShader", suburbanColormap);        
+        RectaNieve.LoadModel(content, "buildings/suburban/planter", AssetPaths.ContentFolder3D + "buildings/suburban/planter", AssetPaths.ContentFolderEffects + "TexturedShader", suburbanColormap);
+        RectaNieve.LoadModel(content, "buildings/suburban/fence", AssetPaths.ContentFolder3D + "buildings/suburban/fence", AssetPaths.ContentFolderEffects + "TexturedShader", suburbanColormap);
     }
 
     public RectaNieve(

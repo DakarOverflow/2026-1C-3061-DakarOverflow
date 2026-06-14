@@ -37,11 +37,12 @@ public class RectaAsfalto : Recta, IAssetLoader
     public static void LoadLocalModels(ContentManager content)
     {
         var roadColormap = content.Load<Texture2D>(AssetPaths.ContentFolder3D + "road-tiles/Textures/colormap");
+        var suburbanColormap = content.Load<Texture2D>(AssetPaths.ContentFolder3D + "buildings/suburban/Textures/colormap");
         RectaAsfalto.LoadModel(content, "road-tiles/road-square", AssetPaths.ContentFolder3D + "road-tiles/road-square", AssetPaths.ContentFolderEffects + "BasicShader", Color.Gray);
         RectaAsfalto.LoadModel(content, "road-tiles/road-straight", AssetPaths.ContentFolder3D + "road-tiles/road-straight",  AssetPaths.ContentFolderEffects + "TexturedShader", roadColormap);
-        RectaAsfalto.LoadModel(content, "buildings/suburban/building-type-c", AssetPaths.ContentFolder3D + "buildings/suburban/building-type-c", AssetPaths.ContentFolderEffects + "BasicShader", Color.DarkBlue);        
-        RectaAsfalto.LoadModel(content, "buildings/suburban/planter", AssetPaths.ContentFolder3D + "buildings/suburban/planter", AssetPaths.ContentFolderEffects + "BasicShader", Color.Green);
-        RectaAsfalto.LoadModel(content, "buildings/suburban/fence", AssetPaths.ContentFolder3D + "buildings/suburban/fence", AssetPaths.ContentFolderEffects + "BasicShader", Color.Brown);
+        RectaAsfalto.LoadModel(content, "buildings/suburban/building-type-c", AssetPaths.ContentFolder3D + "buildings/suburban/building-type-c", AssetPaths.ContentFolderEffects + "TexturedShader", suburbanColormap);        
+        RectaAsfalto.LoadModel(content, "buildings/suburban/planter", AssetPaths.ContentFolder3D + "buildings/suburban/planter", AssetPaths.ContentFolderEffects + "TexturedShader", suburbanColormap);
+        RectaAsfalto.LoadModel(content, "buildings/suburban/fence", AssetPaths.ContentFolder3D + "buildings/suburban/fence", AssetPaths.ContentFolderEffects + "TexturedShader", suburbanColormap);
     }
 
     public RectaAsfalto(
