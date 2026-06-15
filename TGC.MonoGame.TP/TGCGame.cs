@@ -88,7 +88,7 @@ Scene _sceneNum = Scene.Menu;
 
         GraphicsDevice.RasterizerState = new RasterizerState()
         {
-            CullMode = CullMode.None
+            CullMode = CullMode.CullClockwiseFace,
         };
 
         _freeCamera = new FreeCamera(
