@@ -28,7 +28,7 @@ internal class FollowCamera : Camera
         _projection = Matrix.CreatePerspectiveFieldOfView(
             MathHelper.PiOver4,
             graphicsDevice.Viewport.AspectRatio,
-            0.1f,
+            1f,
             4000f
         );
     }
@@ -40,7 +40,7 @@ internal class FollowCamera : Camera
     public void OnClientSizeChanged(object sender, EventArgs e)
     {
         _projection = Matrix.CreatePerspectiveFieldOfView(
-            MathHelper.PiOver4, _graphicsDevice.Viewport.AspectRatio, 0.1f, 1000f);
+            MathHelper.PiOver4, _graphicsDevice.Viewport.AspectRatio, 1f, 1000f);
     }
 
     public static string GetName()

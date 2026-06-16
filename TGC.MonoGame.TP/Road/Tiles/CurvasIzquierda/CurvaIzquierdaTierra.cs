@@ -56,13 +56,15 @@ public class CurvaIzquierdaTierra : CurvaIzquierda, IAssetLoader
         AddObject(modelMap.GetValueOrDefault("road-tiles/road-square", null), 
             new Vector3(12f),
             Vector3.Zero,
-            0f
+            rotation,
+            MathHelper.Pi
         );
+
 
         AddObject(
             modelMap.GetValueOrDefault("road-tiles/road-curve", null), 
-            new Vector3(5f),
-            new Vector3(-130f, 20f, 250f),
+            new Vector3(5f, 5f, 5f),
+            new Vector3(-100f, 12f, 100f),
             rotation //Rotar 2pi = rotar 0
         );
         //Edificios 

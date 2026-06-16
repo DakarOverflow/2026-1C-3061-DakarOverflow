@@ -53,19 +53,19 @@ public class RectaTierra : Recta, IAssetLoader
     {
         NextTileOffset = Vector3.Transform(new Vector3(0f, 0f, -1200f), Matrix.CreateRotationY(rotation));
 
-               AddObject(
-            modelMap.GetValueOrDefault("road-tiles/road-square", null),
+        AddObject(modelMap.GetValueOrDefault("road-tiles/road-square", null), 
             new Vector3(12f),
             Vector3.Zero,
-            rotation
+            rotation,
+            MathHelper.Pi
         );
 
         // RUTA
 
         AddObject(
             modelMap.GetValueOrDefault("road-tiles/road-straight", null),
-            new Vector3(12f, 12f, 5f),
-            new Vector3(0f, 12f, 5f),
+            new Vector3(12f, 5f, 5f),
+            new Vector3(0f, 12f, 0f),
             rotation + MathHelper.PiOver2
         );
 

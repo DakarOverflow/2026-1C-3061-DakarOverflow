@@ -56,13 +56,14 @@ public class CurvaDerechaTierra : CurvaDerecha, IAssetLoader
         AddObject(modelMap.GetValueOrDefault("road-tiles/road-square", null), 
             new Vector3(12f),
             Vector3.Zero,
-            0f
+            rotation + MathHelper.PiOver2,
+            MathHelper.Pi
         );
 
         AddObject(
             modelMap.GetValueOrDefault("road-tiles/road-curve", null), 
-            new Vector3(5f),
-            new Vector3(-130f, 20f, 250f),
+            new Vector3(5f, 5f, 5f),
+            new Vector3(-100f, 12f, 100f),
             rotation + MathHelper.PiOver2
         );
         //Edificios 
