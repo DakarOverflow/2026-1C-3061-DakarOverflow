@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -55,9 +55,21 @@ public class TGCGame : Game
     public enum Scene
 {
    Menu,
-   Road
+   Road,
+   GameOver
 }
 Scene _sceneNum = Scene.Menu;
+
+//Para que sean accesibles globalmente
+CustomModel lightModel;
+CustomModel mediumModel;
+CustomModel heavyModel;
+
+Matrix _worldMenuCar;
+// Matrix _worldMenuCar2;
+// Matrix _worldMenuCar3;
+
+CameraStc _cameraMenu; 
 
     public TGCGame()
     {
@@ -66,10 +78,10 @@ Scene _sceneNum = Scene.Menu;
 
         var screenWidth = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width;
 
-        var screenHeight = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height;
+        float screenHeight = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height;
 
-        _graphics.PreferredBackBufferWidth = screenWidth / 2;
-        _graphics.PreferredBackBufferHeight = screenHeight / 2;
+        _graphics.PreferredBackBufferWidth  = screenWidth  ;
+        _graphics.PreferredBackBufferHeight = (int) (screenHeight * 0.90f);
 
         _graphics.IsFullScreen = false;
 
@@ -82,6 +94,9 @@ Scene _sceneNum = Scene.Menu;
 
     protected override void Initialize()
     {
+        _cameraMenu = new TargetCamera(GraphicsDevice.Viewport.AspectRatio, Vector3.UnitZ * 150, Vector3.UnitZ);
+        // _worldMenuCar = Matrix.Identity;
+        _worldMenuCar = Matrix.CreateScale(0.3f)  ;
         IsMouseVisible = false;
 
         _graphics.ApplyChanges();
@@ -201,7 +216,7 @@ Scene _sceneNum = Scene.Menu;
         // PLAYER
         // =========================
 
-        var lightModel = new CustomModel(
+        lightModel = new CustomModel(
             Content.Load<Model>(
                 AssetPaths.ContentFolder3D +
                 "car-kit/race"
@@ -213,7 +228,7 @@ Scene _sceneNum = Scene.Menu;
             carKitColormap
         );
 
-        var mediumModel = new CustomModel(
+         mediumModel = new CustomModel(
             Content.Load<Model>(
                 AssetPaths.ContentFolder3D +
                 "car-kit/sedan-sports"
@@ -225,7 +240,7 @@ Scene _sceneNum = Scene.Menu;
             carKitColormap
         );
 
-        var heavyModel = new CustomModel(
+         heavyModel = new CustomModel(
             Content.Load<Model>(
                 AssetPaths.ContentFolder3D +
                 "car-kit/delivery"
@@ -393,6 +408,10 @@ Scene _sceneNum = Scene.Menu;
 
         _previousKeyboardState = keyboardState;
 
+        // Cuando Termina el juego
+        if (_playerVehicle.CurrentHealth == 0) _sceneNum = Scene.GameOver ;
+   
+
         base.Update(gameTime);
          break;
         }
@@ -454,14 +473,22 @@ Scene _sceneNum = Scene.Menu;
         //Cambio de esena
         switch (_sceneNum){
             case  Scene.Menu: 
+
             DrawCenterTextY("MENU",10,10);
             DrawCenterTextY("Preciona 1, 2 O 3  para empezar",300,2);
             DrawCenterTextY("1 Para _lightVehicle",400,1);
             DrawCenterTextY("2 Para _mediumVehicle",450,1);
             DrawCenterTextY("3 Para _heavyVehicle",500,1);
 
+            lightModel.Draw(_worldMenuCar, _cameraMenu.View, _cameraMenu.Projection);
+            _worldMenuCar *= Matrix.CreateRotationY(MathHelper.ToRadians(Convert.ToSingle(gameTime.ElapsedGameTime.TotalSeconds) *20f ));
+
             break;
 
+            case  Scene.GameOver: 
+                DrawCenterTextY("GAME OVER",10,10);
+            break;
+                
             default: 
         // =========================
         // DRAW SKYBOX
