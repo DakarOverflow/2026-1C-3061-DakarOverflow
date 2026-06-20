@@ -66,8 +66,8 @@ CustomModel mediumModel;
 CustomModel heavyModel;
 
 Matrix _worldMenuCar;
-// Matrix _worldMenuCar2;
-// Matrix _worldMenuCar3;
+Matrix _worldMenuCar2;
+Matrix _worldMenuCar3;
 
 CameraStc _cameraMenu; 
 
@@ -97,12 +97,15 @@ CameraStc _cameraMenu;
         _cameraMenu = new TargetCamera(GraphicsDevice.Viewport.AspectRatio, Vector3.UnitZ * 150, Vector3.UnitZ);
         // _worldMenuCar = Matrix.Identity;
         _worldMenuCar = Matrix.CreateScale(0.3f)  ;
+        _worldMenuCar2 =  Matrix.CreateTranslation(500f,-100f,0f ) *  Matrix.CreateScale(0.1f) ;
+        _worldMenuCar3 =  Matrix.CreateTranslation(-500f,-100f,0f ) *  Matrix.CreateScale(0.1f) ;
+
         IsMouseVisible = false;
 
         _graphics.ApplyChanges();
 
         GraphicsDevice.RasterizerState = new RasterizerState()
-        {
+        {   
             CullMode = CullMode.CullClockwiseFace,
         };
 
@@ -481,8 +484,12 @@ CameraStc _cameraMenu;
             DrawCenterTextY("3 Para _heavyVehicle",500,1);
 
             lightModel.Draw(_worldMenuCar, _cameraMenu.View, _cameraMenu.Projection);
-            _worldMenuCar *= Matrix.CreateRotationY(MathHelper.ToRadians(Convert.ToSingle(gameTime.ElapsedGameTime.TotalSeconds) *20f ));
+            heavyModel.Draw(_worldMenuCar2, _cameraMenu.View, _cameraMenu.Projection);
+            mediumModel.Draw(_worldMenuCar3 , _cameraMenu.View, _cameraMenu.Projection);
 
+            _worldMenuCar *= Matrix.CreateRotationY(MathHelper.ToRadians(Convert.ToSingle(gameTime.ElapsedGameTime.TotalSeconds) *20f ));
+            _worldMenuCar2 *= Matrix.CreateRotationX(MathHelper.ToRadians(Convert.ToSingle(gameTime.ElapsedGameTime.TotalSeconds) *40f )) * Matrix.CreateRotationY(MathHelper.ToRadians(Convert.ToSingle(gameTime.ElapsedGameTime.TotalSeconds) *40f )) ;
+            _worldMenuCar3 *= Matrix.CreateRotationX(MathHelper.ToRadians(Convert.ToSingle(gameTime.ElapsedGameTime.TotalSeconds) *40f )) * Matrix.CreateRotationY(MathHelper.ToRadians(Convert.ToSingle(gameTime.ElapsedGameTime.TotalSeconds) *40f )) ;
             break;
 
             case  Scene.GameOver: 
@@ -559,7 +566,9 @@ CameraStc _cameraMenu;
         // =========================
         DrawLeftText("Velocidad: " +string.Format("{0:N2}",_playerVehicle._speed), 10, 1); 
         DrawLeftText("Nafta: " +Convert.ToString(Math.Round(_playerVehicle.CurrentFuel)), 300, 1);
-        DrawLeftText("Vida: " +Convert.ToString(Math.Round(_playerVehicle.CurrentHealth)), 600, 1); 
+        DrawLeftText("Vida: " +Convert.ToString(Math.Round(_playerVehicle.CurrentHealth)), 500, 1); 
+        DrawLeftText("Puntos: " +Convert.ToString(_playerVehicle.Score), 800, 1); 
+
         break; 
         }
 
