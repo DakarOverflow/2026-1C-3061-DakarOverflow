@@ -35,10 +35,14 @@ public class Collectible : WorldObject, IAssetLoader
 
     public static void LoadLocalModels(ContentManager content)
     {
-        var colormap = content.Load<Texture2D>(AssetPaths.ContentFolder3D + "car-kit/Textures/colormap");
-        Collectible.LoadModel(content, "car-kit/box", AssetPaths.ContentFolder3D + "car-kit/box", AssetPaths.ContentFolderEffects + "TexturedShader", colormap);
-        Collectible.LoadModel(content, "car-kit/debris-bolt", AssetPaths.ContentFolder3D + "car-kit/debris-bolt", AssetPaths.ContentFolderEffects + "TexturedShader", colormap);
-        Collectible.LoadModel(content, "car-kit/debris-nut", AssetPaths.ContentFolder3D + "car-kit/debris-nut", AssetPaths.ContentFolderEffects + "TexturedShader", colormap);
+        // Se carga el colormap de cada kit y se cargan los modelos de los coleccionables aplicando la textura del colormap correspondiente.
+
+        var survivalKitColormap = content.Load<Texture2D>(AssetPaths.ContentFolder3D + "survival-kit/Textures/colormap");
+        Collectible.LoadModel(content, "survival-kit/barrel", AssetPaths.ContentFolder3D + "survival-kit/barrel", AssetPaths.ContentFolderEffects + "TexturedShader", survivalKitColormap);
+        Collectible.LoadModel(content, "survival-kit/tool-hammer", AssetPaths.ContentFolder3D + "survival-kit/tool-hammer", AssetPaths.ContentFolderEffects + "TexturedShader", survivalKitColormap);
+
+        var toyCarKitColormap = content.Load<Texture2D>(AssetPaths.ContentFolder3D + "toy-car-kit/Textures/colormap");
+        Collectible.LoadModel(content, "toy-car-kit/item-coin-gold", AssetPaths.ContentFolder3D + "toy-car-kit/item-coin-gold", AssetPaths.ContentFolderEffects + "TexturedShader", toyCarKitColormap);
     }
     
     
@@ -63,13 +67,13 @@ public class Collectible : WorldObject, IAssetLoader
         switch (type)
         {
             case CollectibleType.FuelTank:
-                return new Collectible(type, modelMap.GetValueOrDefault("car-kit/box", null), position, 1f, effectValue);
+                return new Collectible(type, modelMap.GetValueOrDefault("survival-kit/barrel", null), position, 1.5f, effectValue);
             
             case CollectibleType.Wrench:
-                return new Collectible(type, modelMap.GetValueOrDefault("car-kit/debris-bolt", null), position, 5f,  effectValue);
+                return new Collectible(type, modelMap.GetValueOrDefault("survival-kit/tool-hammer", null), position, 3f,  effectValue);
             
             case CollectibleType.Coin:
-                return new Collectible(type, modelMap.GetValueOrDefault("car-kit/debris-nut", null), position, 5f, effectValue);
+                return new Collectible(type, modelMap.GetValueOrDefault("toy-car-kit/item-coin-gold", null), position, 1.5f, effectValue);
             
             default:
                 throw new ArgumentException("Tipo de coleccionable desconocido: " + type);
