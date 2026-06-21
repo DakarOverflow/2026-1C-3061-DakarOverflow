@@ -17,7 +17,7 @@ public enum VehicleType
 public class Vehicle
 {
     // Atributos
-    private readonly CustomModel _model;
+    private readonly CustomModel _bodyModel;
     public Vector3 Position;
     public float RotationY;
     private const float ModelRotationOffset = MathHelper.Pi;
@@ -44,10 +44,21 @@ public class Vehicle
     private readonly Vector3 _boundingBoxHalfSize = new Vector3(100f, 50f, 100f) * ScaleFactor;
     private readonly Vector3 _boundingBoxOffset = new Vector3(0f, 40f, 0f) * ScaleFactor;
 
+
+    // Ruedas
+    private Wheel  _frontLeftWheel;
+    private Wheel  _frontRightWheel;
+    private Wheel  _backLeftWheel;
+    private Wheel  _backRightWheel;
+    private float _wheelSpin;
+    private float _wheelSteeringAngle;
+
+    private bool _exploded;
+
     // Constructor
-    public Vehicle(CustomModel model, Vector3 initialPosition, VehicleStats stats, VehicleType type)
+    public Vehicle(CustomModel bodyModel, CustomModel wheelModel, Vector3 initialPosition, VehicleStats stats, VehicleType type, Vector3 frontLeftWheelPosition, Vector3 backLeftWheelPosition)
     {
-        _model = model;
+        _bodyModel = bodyModel;
         Position = initialPosition;
         _stats = stats;
         Type = type;
@@ -60,6 +71,14 @@ public class Vehicle
         CurrentHealth = _stats.MaxHealth;
         Score = 0;
 
+        _frontLeftWheel = new Wheel(wheelModel, frontLeftWheelPosition, false, ScaleFactor);   //Vector3(-40f,0f,60f)
+
+        _frontRightWheel = new Wheel(wheelModel, frontLeftWheelPosition * new Vector3(-1f,1f,1f), true, ScaleFactor);
+
+        _backLeftWheel = new Wheel(wheelModel, backLeftWheelPosition, false, ScaleFactor);
+
+        _backRightWheel = new Wheel(wheelModel, backLeftWheelPosition * new Vector3(-1f,1f,1f), true, ScaleFactor);
+
         // --- PREPARACIÓN PARA COLISIONES ---
         // Inicializar el atributo de colisiones.
     }
@@ -70,10 +89,15 @@ public class Vehicle
         KeyboardState keyboard = Keyboard.GetState();
 
         // Si el auto se queda sin nafta o salud, el auto no debería poder seguir
-        if (CurrentFuel <= 0 || CurrentHealth <= 0)
+        if (CurrentFuel <= 0)
         {
             _speed = 0;
-            return; // TODO: Manejar Game Over en TGCGame
+            return;
+        }
+        if(CurrentHealth <= 0) 
+        {
+            Explode();
+            _speed = 0;
         }
         // Consumo de combustible progresivo
         CurrentFuel -= _stats.FuelConsumption * deltaTime;
@@ -92,7 +116,7 @@ public class Vehicle
         // FRENAR
         // =========================
 
-        if (keyboard.IsKeyDown(Keys.S))
+        if (keyboard.IsKeyDown(Keys.S) && !_exploded)
         {
             // contemplada lógica para baja suave de la aceleración al frenar
             _currentAcceleration = MathHelper.Lerp(
@@ -103,7 +127,7 @@ public class Vehicle
 
             _speed -= _stats.BrakeForce * deltaTime;
         }
-        else
+        else if(!_exploded)
         {
             float targetAcceleration = _stats.MaxAcceleration * accelFactor;
 
@@ -115,6 +139,19 @@ public class Vehicle
 
             _speed += _currentAcceleration * deltaTime;
         }
+
+
+        _wheelSpin += _speed * deltaTime * 0.01f;
+
+        _frontLeftWheel.SpinRotation = _wheelSpin;
+        _frontRightWheel.SpinRotation = _wheelSpin;
+        _backLeftWheel.SpinRotation = _wheelSpin;
+        _backRightWheel.SpinRotation = _wheelSpin;
+
+        _frontLeftWheel.VehicleRotation = RotationY + ModelRotationOffset;
+        _frontRightWheel.VehicleRotation = RotationY + ModelRotationOffset;
+        _backLeftWheel.VehicleRotation = RotationY + ModelRotationOffset;
+        _backRightWheel.VehicleRotation = RotationY + ModelRotationOffset;
 
         // =========================
         // LIMITES VELOCIDAD
@@ -140,16 +177,25 @@ public class Vehicle
         {
             float steeringDirection = _speed >= 0f ? 1f : -1f;
 
-            if (keyboard.IsKeyDown(Keys.A))
+            if (keyboard.IsKeyDown(Keys.A) && !_exploded)
             {
                 RotationY += currentTurnSpeed * steeringDirection * deltaTime;
+                _wheelSteeringAngle = MathHelper.Lerp(_wheelSteeringAngle, MathHelper.ToRadians(25f), 0.1f);
             }
 
-            if (keyboard.IsKeyDown(Keys.D))
+            else if (keyboard.IsKeyDown(Keys.D) && !_exploded)
             {
                 RotationY -= currentTurnSpeed * steeringDirection * deltaTime;
+                _wheelSteeringAngle = MathHelper.Lerp(_wheelSteeringAngle, MathHelper.ToRadians(-25f), 0.1f);
+            }
+            else
+            {
+                _wheelSteeringAngle = MathHelper.Lerp(_wheelSteeringAngle, 0f, 0.1f);
             }
         }
+
+        _frontLeftWheel.SteeringRotation = _wheelSteeringAngle;
+        _frontRightWheel.SteeringRotation = _wheelSteeringAngle;
 
         // =========================
         // AVANZAR
@@ -157,6 +203,16 @@ public class Vehicle
 
         Vector3 forward = Vector3.Transform(Vector3.Forward, Matrix.CreateRotationY(RotationY));
         Position += forward * _speed * deltaTime;
+
+        // =========================
+        // ACTUALIZAR RUEDAS
+        // =========================
+        Matrix vehicleWorld = GetVisualWorld();
+
+        _frontLeftWheel.Update(gameTime, vehicleWorld);
+        _frontRightWheel.Update(gameTime, vehicleWorld);
+        _backLeftWheel.Update(gameTime, vehicleWorld);
+        _backRightWheel.Update(gameTime, vehicleWorld);
 
         // Colisiones
         UpdateBoundingBox();
@@ -218,7 +274,22 @@ public class Vehicle
     {
         TakeDamage(damage);
 
-        speedMultiplier *= speedMultiplier;
+        _speed *= speedMultiplier;
+    }
+
+
+    private void Explode()
+    {
+        if(_exploded) return;
+
+        _exploded = true;
+
+        Random r = new();
+
+        _frontLeftWheel.Detach(new Vector3(r.Next(-500,500), 800, r.Next(-500,500)));
+        _frontRightWheel.Detach(new Vector3(r.Next(-500,500), 800, r.Next(-500,500)));
+        _backLeftWheel.Detach(new Vector3(r.Next(-500,500), 800, r.Next(-500,500)));
+        _backRightWheel.Detach(new Vector3(r.Next(-500,500), 800, r.Next(-500,500)));
     }
     // ==========================================
     // MÉTODOS PARA DIBUJAR EL VEHÍCULO
@@ -238,10 +309,14 @@ public class Vehicle
     }
     public void Draw(GameTime gameTime, Camera camera)
     {
-        _model.Draw(
+        _bodyModel.Draw(
             GetVisualWorld(),
             camera.GetView(),
-            camera.GetProjection()
-        );
+            camera.GetProjection());
+        
+        _frontLeftWheel.Draw(camera);
+        _frontRightWheel.Draw(camera);
+        _backLeftWheel.Draw(camera);
+        _backRightWheel.Draw(camera);
     }
 }
