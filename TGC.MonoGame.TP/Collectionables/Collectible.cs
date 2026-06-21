@@ -80,20 +80,39 @@ public class Collectible : WorldObject, IAssetLoader
         }
     }
 
+    private float _scale;
+    private Vector3 _modelCenterOffset;
+
     public Collectible(CollectibleType type, CustomModel model, Vector3 initialPosition, float scale, float effectValue) : base(model, Matrix.CreateScale(scale) * Matrix.CreateTranslation(initialPosition))
     {
         Type = type;
         Position = initialPosition;
         EffectValue = effectValue;
         IsActive = true;
+        _scale = scale;
+        _modelCenterOffset = CalculateModelCenter(model.InnerModel);
         
         // --- PREPARACIÓN PARA COLISIONES ---
         UpdateBoundingBox();
     }
 
+    private Vector3 CalculateModelCenter(Model model)
+    {
+        Vector3 min = new Vector3(float.MaxValue);
+        Vector3 max = new Vector3(float.MinValue);
+        foreach (var mesh in model.Meshes)
+        {
+            var sphere = mesh.BoundingSphere;
+            min = Vector3.Min(min, sphere.Center - new Vector3(sphere.Radius));
+            max = Vector3.Max(max, sphere.Center + new Vector3(sphere.Radius));
+        }
+        return (min + max) / 2f;
+    }
+
     private void UpdateBoundingBox()
     {
-        BoundingBox = new BoundingBox(Position - _boundingBoxHalfSize, Position + _boundingBoxHalfSize);
+        Vector3 currentPosition = World.Translation;
+        BoundingBox = new BoundingBox(currentPosition - _boundingBoxHalfSize, currentPosition + _boundingBoxHalfSize);
     }
 
     // Update actualizar el estado del coleccionable
@@ -103,8 +122,25 @@ public class Collectible : WorldObject, IAssetLoader
         if (!IsActive) return;
 
         // --- PREPARACIÓN PARA LA 4TA ENTREGA ---
-        // TODO: Los coleccionables deben tener rotación en Y y rebote vertical.
-        // TODO: Como el modelo va a estar rebotando y rotando, hay que actualizar la posición del BoundingBox también.
+        float time = (float)gameTime.TotalGameTime.TotalSeconds;
+        
+        // Efecto de rebote vertical
+        float bounceHeight = 10f; 
+        float bounceSpeed = 2f;
+        float yOffset = (float)Math.Sin(time * bounceSpeed) * bounceHeight;
+
+        // Efecto de rotación en Y
+        float rotationSpeed = 1.5f;
+        float rotationY = time * rotationSpeed;
+
+        // Posición actual con el rebote
+        Vector3 animatedPosition = Position + new Vector3(0, yOffset, 0);
+
+        // Actualizar matriz World centrando el modelo antes de rotar
+        World = Matrix.CreateTranslation(-_modelCenterOffset) * Matrix.CreateScale(_scale) * Matrix.CreateRotationY(rotationY) * Matrix.CreateTranslation(animatedPosition);
+
+        // Actualizar la posición del BoundingBox también
+        UpdateBoundingBox();
     }
 
     // Draw dibuja el coleccionable si está activo

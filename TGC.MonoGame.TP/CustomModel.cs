@@ -9,14 +9,14 @@ namespace TGC.MonoGame.TP;
 public class CustomModel
 {
     private Effect _effect;
-    private Model _model;
+    public Model InnerModel { get; private set; }
 
     private Color _diffusionColor;
     private Texture2D _texture;
 
     public CustomModel(Model model, Effect effect, Color diffusionColor)
     {
-        _model = model;
+        InnerModel = model;
         _effect = effect;
         _diffusionColor = diffusionColor;
         _texture = null;
@@ -26,7 +26,7 @@ public class CustomModel
 
     public CustomModel(Model model, Effect effect, Texture2D texture)
     {
-        _model = model;
+        InnerModel = model;
         _effect = effect;
         _texture = texture;
         _diffusionColor = Color.White;
@@ -36,7 +36,7 @@ public class CustomModel
 
     private void ApplyEffectToMeshParts()
     {
-        foreach (var mesh in _model.Meshes)
+        foreach (var mesh in InnerModel.Meshes)
         {
             foreach (var meshPart in mesh.MeshParts)
             {
@@ -59,10 +59,10 @@ public class CustomModel
             _effect.Parameters["DiffuseColor"]?.SetValue(_diffusionColor.ToVector3());
         }
 
-        var modelMeshesBaseTransforms = new Matrix[_model.Bones.Count];
-        _model.CopyAbsoluteBoneTransformsTo(modelMeshesBaseTransforms);
+        var modelMeshesBaseTransforms = new Matrix[InnerModel.Bones.Count];
+        InnerModel.CopyAbsoluteBoneTransformsTo(modelMeshesBaseTransforms);
 
-        foreach (var mesh in _model.Meshes)
+        foreach (var mesh in InnerModel.Meshes)
         {
             var meshWorld = modelMeshesBaseTransforms[mesh.ParentBone.Index];
             _effect.Parameters["World"]?.SetValue(meshWorld * world);

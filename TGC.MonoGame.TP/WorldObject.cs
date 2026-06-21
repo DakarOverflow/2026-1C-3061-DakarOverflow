@@ -10,7 +10,7 @@ public class WorldObject
 {
     private readonly CustomModel _model;
 
-    private Matrix _world;
+    public Matrix World { get; protected set; }
 
     public WorldObject(
         CustomModel model,
@@ -18,7 +18,7 @@ public class WorldObject
     )
     {
         _model = model;
-        _world = world;
+        World = world;
     }
 
     public virtual void Update(GameTime gameTime)
@@ -32,7 +32,7 @@ public class WorldObject
     )
     {
         _model.Draw(
-            _world,
+            World,
             view,
             projection
         );
