@@ -162,22 +162,21 @@ public class RectaAsfalto : Recta, IAssetLoader
         );
 
 
-        if (biome.ShouldSpawnCollectibleOfType(CollectibleType.Coin))
+        var collectibleToSpawn = biome.GetCollectibleToSpawn();
+        switch (collectibleToSpawn)
         {
-            AddObject(Collectible.CreateCollectibleOfType(CollectibleType.Coin,
-                this.Position + Vector3.Transform(new Vector3(50f, 50f, -600f), Matrix.CreateRotationY(rotation)), 10f));
-        }
-
-        if (biome.ShouldSpawnCollectibleOfType(CollectibleType.FuelTank))
-        {
-            AddObject(Collectible.CreateCollectibleOfType(CollectibleType.FuelTank,
-                this.Position + Vector3.Transform(new Vector3(-50f, 50f, -300f), Matrix.CreateRotationY(rotation)), 100f));
-        }
-
-        if (biome.ShouldSpawnCollectibleOfType(CollectibleType.Wrench))
-        {
-            AddObject(Collectible.CreateCollectibleOfType(CollectibleType.Wrench,
-                this.Position + Vector3.Transform(new Vector3(0f, 50f, -550f), Matrix.CreateRotationY(rotation)), 50f));
+            case CollectibleType.Coin:
+                AddObject(Collectible.CreateCollectibleOfType(CollectibleType.Coin,
+                    this.Position + Vector3.Transform(new Vector3(50f, 50f, -600f), Matrix.CreateRotationY(rotation)), 10f));
+                break;
+            case CollectibleType.FuelTank:
+                AddObject(Collectible.CreateCollectibleOfType(CollectibleType.FuelTank,
+                    this.Position + Vector3.Transform(new Vector3(-50f, 50f, -300f), Matrix.CreateRotationY(rotation)), 100f));
+                break;
+            case CollectibleType.Wrench:
+                AddObject(Collectible.CreateCollectibleOfType(CollectibleType.Wrench,
+                    this.Position + Vector3.Transform(new Vector3(0f, 50f, -550f), Matrix.CreateRotationY(rotation)), 50f));
+                break;
         }
     }
 }
