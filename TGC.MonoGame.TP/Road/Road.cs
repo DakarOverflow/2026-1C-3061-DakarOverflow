@@ -121,24 +121,24 @@ public class Road
         return _obstacleModels[_randomGenerator.Next(_obstacleModels.Count)];
     }
 
-    private TileType t = TileType.RIGHT_CURVE;
-    private TileType t2 = TileType.LEFT_CURVE;
+    // private TileType t = TileType.RIGHT_CURVE;
+    // private TileType t2 = TileType.LEFT_CURVE;
 
     private TileType GetNextTileType()
     {
-        TileType x = t;
-        if (t == TileType.NONE)
-        {
-            x = t2;
-            if (t2 == TileType.NONE)
-            {
-                return TileType.STRAIGHT_LINE;
-            }
-            t2 = TileType.NONE;
-            return x;
-        }
-        t = TileType.NONE;
-        return x;
+        // TileType x = t;
+        // if (t == TileType.NONE)
+        // {
+        //     x = t2;
+        //     if (t2 == TileType.NONE)
+        //     {
+        //         return TileType.STRAIGHT_LINE;
+        //     }
+        //     t2 = TileType.NONE;
+        //     return x;
+        // }
+        // t = TileType.NONE;
+        // return x;
         float rightCurveChance = 0.2f;
         float leftCurveChance = 0.2f;
 
