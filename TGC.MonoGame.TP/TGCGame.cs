@@ -65,6 +65,7 @@ public class TGCGame : Game
     private const float GameOverDelay = 2f;
 
     //Para que sean accesibles globalmente
+    #region  Menu Objecs
     CustomModel lightModel;
     CustomModel mediumModel;
     CustomModel heavyModel;
@@ -79,8 +80,20 @@ public class TGCGame : Game
     Matrix _worldMenuCar2;
     Matrix _worldMenuCar3;
 
-    CameraStc _cameraMenu; 
+    CameraStc _cameraMenu;
 
+    float _worldMenuCar3Rotation;
+    #endregion
+
+
+CustomModel FuelTank;
+CustomModel Wrench;
+CustomModel Coin;
+Matrix _worldFuelTank;
+Matrix _worldWrench;
+Matrix _worldCoin;
+
+Matrix _worldMainCarHud;
     public TGCGame()
     {
         // Maneja la configuracion y la administracion del dispositivo grafico.
@@ -106,9 +119,18 @@ public class TGCGame : Game
     {
         _cameraMenu = new TargetCamera(GraphicsDevice.Viewport.AspectRatio, Vector3.UnitZ * 150, Vector3.UnitZ);
         // _worldMenuCar = Matrix.Identity;
+        # region UI Road
+
         _worldMenuCar = Matrix.CreateScale(0.3f)  ;
         _worldMenuCar2 =  Matrix.CreateTranslation(500f,-100f,0f ) *  Matrix.CreateScale(0.1f) ;
         _worldMenuCar3 =  Matrix.CreateTranslation(-500f,-100f,0f ) *  Matrix.CreateScale(0.1f) ;
+
+   
+        _worldFuelTank =   Matrix.CreateScale(0.2f) * Matrix.CreateTranslation(-_graphics.PreferredBackBufferWidth/35,_graphics.PreferredBackBufferHeight/18,0f ) * Matrix.CreateRotationX(MathHelper.PiOver4);
+        _worldWrench = Matrix.CreateScale(0.8f) * Matrix.CreateRotationX(MathHelper.PiOver4) * Matrix.CreateTranslation(-_graphics.PreferredBackBufferWidth/39,_graphics.PreferredBackBufferHeight/20,0f )  ;
+        _worldCoin = Matrix.CreateScale(0.4f)* Matrix.CreateRotationZ(MathHelper.PiOver4)  * Matrix.CreateTranslation(-10f,_graphics.PreferredBackBufferHeight/18,0f )  ;
+        // _worldMainCarHud = Matrix.CreateScale(0.1f)*  Matrix.CreateRotationX(MathHelper.PiOver2)  * Matrix.CreateTranslation(-100f,_graphics.PreferredBackBufferHeight/18,0f ) ;
+        #endregion 
 
         IsMouseVisible = false;
 
@@ -151,6 +173,9 @@ public class TGCGame : Game
             AssetPaths.ContentFolder3D +
             "car-kit/Textures/colormap"
         );
+
+        var survivalKitColormap = Content.Load<Texture2D>(AssetPaths.ContentFolder3D + "survival-kit/Textures/colormap");
+        var toyCarKitColormap = Content.Load<Texture2D>(AssetPaths.ContentFolder3D + "toy-car-kit/Textures/colormap");
 
         var skyboxEffect = Content.Load<Effect>(AssetPaths.ContentFolderEffects + "TexturedShader");
         var skyboxTextures = new Dictionary<string, Texture2D>
@@ -206,6 +231,43 @@ public class TGCGame : Game
             taxiModel,
             ambulanceModel,
         };
+
+        // UI 
+        FuelTank = new CustomModel(
+            Content.Load<Model>(
+                AssetPaths.ContentFolder3D +
+                "survival-kit/barrel"
+            ),
+            Content.Load<Effect>(
+                AssetPaths.ContentFolderEffects +
+                "TexturedShader"
+            ),
+            survivalKitColormap
+        );
+        Wrench = new CustomModel(
+            Content.Load<Model>(
+                AssetPaths.ContentFolder3D +
+                "survival-kit/tool-hammer"
+            ),
+            Content.Load<Effect>(
+                AssetPaths.ContentFolderEffects +
+                "TexturedShader"
+            ),
+            survivalKitColormap
+        );
+
+        Coin = new CustomModel(
+            Content.Load<Model>(
+                AssetPaths.ContentFolder3D +
+                "toy-car-kit/item-coin-gold"
+            ),
+            Content.Load<Effect>(
+                AssetPaths.ContentFolderEffects +
+                "TexturedShader"
+            ),
+            toyCarKitColormap
+        );
+
 
         //Debe ejecuitarse antes del new Road()
         Collectible.LoadLocalModels(Content);
@@ -449,10 +511,11 @@ public class TGCGame : Game
         // =========================
         // UPDATE PLAYER
         // =========================
-
+        if (!_useFreeCamera){
         _playerVehicle.Update(gameTime);
         _playerVehicle.UpdateSound(_instanciaSonidoMotor, _sonidoFrenado);
         CheckObstacleCollisions();
+        }
 
         // =========================
         // UPDATE WORLD
@@ -501,7 +564,7 @@ public class TGCGame : Game
             }
         }
 
-
+        _worldMenuCar3Rotation =MathHelper.ToRadians(Convert.ToSingle(gameTime.ElapsedGameTime.TotalSeconds) *60f  * _playerVehicle._speed);
         base.Update(gameTime);
             break;
         }
@@ -634,17 +697,35 @@ public class TGCGame : Game
             }
         }
 
-        base.Draw(gameTime);
         // =========================
         // UI
         // =========================
-        DrawLeftText("Velocidad: " +string.Format("{0:N2}",_playerVehicle._speed), 10, 1); 
-        DrawLeftText("Nafta: " +Convert.ToString(Math.Round(_playerVehicle.CurrentFuel)), 300, 1);
-        DrawLeftText("Vida: " +Convert.ToString(Math.Round(_playerVehicle.CurrentHealth)), 500, 1); 
-        DrawLeftText("Puntos: " +Convert.ToString(_playerVehicle.Score), 800, 1); 
+        // DrawLeftText("Velocidad: " +string.Format("{0:N2}",_playerVehicle._speed), 10, 1,100); 
+        DrawLeftText("Nafta: " +Convert.ToString(Math.Round(_playerVehicle.CurrentFuel)), 300, 1,100);
+        DrawLeftText("Vida: " +Convert.ToString(Math.Round(_playerVehicle.CurrentHealth)), 500, 1,100); 
+        DrawLeftText("Puntos: " +Convert.ToString(_playerVehicle.Score), 800, 1,100); 
 
+        FuelTank.Draw(_worldFuelTank , _cameraMenu.View, _cameraMenu.Projection);
+        Wrench.Draw(_worldWrench , _cameraMenu.View, _cameraMenu.Projection);
+        Coin.Draw(_worldCoin , _cameraMenu.View, _cameraMenu.Projection);
+        
+        switch (_playerVehicle.Type){
+            
+            case VehicleType.Light:
+                lightModel.Draw(_worldMainCarHud, _cameraMenu.View, _cameraMenu.Projection);
+            break;
+            case VehicleType.Medium:
+                mediumModel.Draw(_worldMainCarHud, _cameraMenu.View, _cameraMenu.Projection);
+            break;
+            case VehicleType.Heavy:
+                heavyModel.Draw(_worldMainCarHud, _cameraMenu.View, _cameraMenu.Projection);
+            break;
+            
+        }
+        _worldMainCarHud = Matrix.CreateScale(0.1f)*  Matrix.CreateRotationX(_worldMenuCar3Rotation)  * Matrix.CreateTranslation(100f,-_graphics.PreferredBackBufferHeight/18,0f );
         break; 
         }
+        base.Draw(gameTime);
 
     }
 
@@ -704,7 +785,7 @@ public class TGCGame : Game
         spriteBatch.DrawString(font, msg, new Vector2(0, 0), Color.White);
         spriteBatch.End();
     }
-    public void DrawLeftText(string msg, float X, float escala)
+    public void DrawLeftText(string msg, float X, float escala,float Y)
     {
             var W = GraphicsDevice.Viewport.Width;
             var H = GraphicsDevice.Viewport.Height;
@@ -713,7 +794,7 @@ public class TGCGame : Game
             null, 
             DepthStencilState.Default,
             null, null,
-                Matrix.CreateScale(escala) * Matrix.CreateTranslation(X, 0, 0) );
+                Matrix.CreateScale(escala) * Matrix.CreateTranslation(X, Y, 0) );
             spriteBatch.DrawString(font, msg, new Vector2(0, 0), Color.White);
             spriteBatch.End();
     }

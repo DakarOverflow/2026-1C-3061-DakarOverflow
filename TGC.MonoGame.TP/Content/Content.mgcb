@@ -25,6 +25,12 @@
 /processorParam:DebugMode=Auto
 /build:Effects/TexturedShader.fx
 
+#begin Effects/TxPixel.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:Effects/TxPixel.fx
+
 #begin Models/buildings/industrial/building-a.fbx
 /importer:FbxImporter
 /processor:ModelProcessor
