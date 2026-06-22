@@ -6,6 +6,7 @@ using System.Linq;
 using BepuPhysics.CollisionDetection.CollisionTasks;
 using ImGuiNET;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace TGC.MonoGame.TP;
 
@@ -54,6 +55,26 @@ public class Road
             {
                 yield return bb;
             }
+        }
+    }
+
+    public void SetShadowMap(Texture2D shadowMap, Matrix lightViewProjection)
+    {
+        int start = Math.Max(0, this._tiles.Count - 10);
+
+        for (int i = start; i < this._tiles.Count; i++)
+        {
+            this._tiles[i].SetShadowMap(shadowMap, lightViewProjection);
+        }
+    }
+
+    public void DrawDepth(Matrix lightViewProjection)
+    {
+        int start = Math.Max(0, this._tiles.Count - 10);
+
+        for (int i = start; i < this._tiles.Count; i++)
+        {
+            this._tiles[i].DrawDepth(lightViewProjection);
         }
     }
 

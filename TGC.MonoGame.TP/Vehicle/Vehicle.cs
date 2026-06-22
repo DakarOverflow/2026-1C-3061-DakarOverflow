@@ -307,6 +307,24 @@ public class Vehicle
             Matrix.CreateRotationY(RotationY + ModelRotationOffset) *
             Matrix.CreateTranslation(Position);
     }
+    public void SetShadowMap(Texture2D shadowMap, Matrix lightViewProjection)
+    {
+        _bodyModel.SetShadowMap(shadowMap, lightViewProjection);
+        _frontLeftWheel.SetShadowMap(shadowMap, lightViewProjection);
+        _frontRightWheel.SetShadowMap(shadowMap, lightViewProjection);
+        _backLeftWheel.SetShadowMap(shadowMap, lightViewProjection);
+        _backRightWheel.SetShadowMap(shadowMap, lightViewProjection);
+    }
+
+    public void DrawDepth(Matrix lightViewProjection)
+    {
+        _bodyModel.DrawDepth(GetVisualWorld(), lightViewProjection);
+        _frontLeftWheel.DrawDepth(lightViewProjection);
+        _frontRightWheel.DrawDepth(lightViewProjection);
+        _backLeftWheel.DrawDepth(lightViewProjection);
+        _backRightWheel.DrawDepth(lightViewProjection);
+    }
+
     public void Draw(GameTime gameTime, Camera camera)
     {
         _bodyModel.Draw(

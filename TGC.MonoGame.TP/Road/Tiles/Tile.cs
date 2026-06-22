@@ -287,6 +287,38 @@ public abstract class Tile
         }
     }
 
+    public void SetShadowMap(Texture2D shadowMap, Matrix lightViewProjection)
+    {
+        foreach (var obj in _tileObjects)
+        {
+            obj.SetShadowMap(shadowMap, lightViewProjection);
+        }
+
+        foreach (var obstacle in _obstacles)
+        {
+            if (obstacle.IsActive)
+            {
+                obstacle.SetShadowMap(shadowMap, lightViewProjection);
+            }
+        }
+    }
+
+    public void DrawDepth(Matrix lightViewProjection)
+    {
+        foreach (var obj in _tileObjects)
+        {
+            obj.DrawDepth(lightViewProjection);
+        }
+
+        foreach (var obstacle in _obstacles)
+        {
+            if (obstacle.IsActive)
+            {
+                obstacle.DrawDepth(lightViewProjection);
+            }
+        }
+    }
+
     public void Draw(
         GameTime gameTime,
         Camera camera

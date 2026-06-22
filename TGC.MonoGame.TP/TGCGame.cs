@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -21,6 +21,20 @@ public class TGCGame : Game
     // SHADDER PARA DEBUGUEAR
     private Effect _debugEffect;
     private bool _showHitboxes = false;
+    private RenderTarget2D _shadowMap;
+    private Matrix _lightViewProjection;
+    private const int ShadowMapSize = 2048;
+    private static readonly Vector3 LightDirection = Vector3.Normalize(new Vector3(1f, 1f, 1f));
+    private readonly RasterizerState _mainRasterizerState = new()
+    {
+        CullMode = CullMode.None
+    };
+    private readonly RasterizerState _shadowRasterizerState = new()
+    {
+        CullMode = CullMode.None,
+        DepthBias = 0f,
+        SlopeScaleDepthBias = 0f
+    };
 
     // CAMARAS
     private FreeCamera _freeCamera;
@@ -137,10 +151,7 @@ Matrix _worldMainCarHud;
 
         _graphics.ApplyChanges();
 
-        GraphicsDevice.RasterizerState = new RasterizerState()
-        {   
-            CullMode = CullMode.CullClockwiseFace,
-        };
+        GraphicsDevice.RasterizerState = _mainRasterizerState;
 
         _freeCamera = new FreeCamera(
             new Vector3(110f, 10f, 110f),
@@ -169,6 +180,7 @@ Matrix _worldMainCarHud;
         spriteBatch = new SpriteBatch(GraphicsDevice);
 
         _debugEffect = Content.Load<Effect>(AssetPaths.ContentFolderEffects + "BasicShader");
+        _shadowMap = new RenderTarget2D(GraphicsDevice, ShadowMapSize, ShadowMapSize, false, SurfaceFormat.Single, DepthFormat.Depth24);
 
         var carKitColormap = Content.Load<Texture2D>(
             AssetPaths.ContentFolder3D +
@@ -670,7 +682,7 @@ Matrix _worldMainCarHud;
 
     protected override void Draw(GameTime gameTime)
     {
-        GraphicsDevice.Clear(Color.CornflowerBlue);
+        ResetMainRenderState(true);
         //Cambio de esena
         switch (_sceneNum){
             case  Scene.Menu: 
@@ -681,9 +693,9 @@ Matrix _worldMainCarHud;
             DrawCenterTextY("2 Para _mediumVehicle",450,1);
             DrawCenterTextY("3 Para _heavyVehicle",500,1);
 
-            lightModel.Draw(_worldMenuCar, _cameraMenu.View, _cameraMenu.Projection);
-            heavyModel.Draw(_worldMenuCar2, _cameraMenu.View, _cameraMenu.Projection);
-            mediumModel.Draw(_worldMenuCar3 , _cameraMenu.View, _cameraMenu.Projection);
+            lightModel.DrawUnlit(_worldMenuCar, _cameraMenu.View, _cameraMenu.Projection);
+            heavyModel.DrawUnlit(_worldMenuCar2, _cameraMenu.View, _cameraMenu.Projection);
+            mediumModel.DrawUnlit(_worldMenuCar3 , _cameraMenu.View, _cameraMenu.Projection);
 
             _worldMenuCar *= Matrix.CreateRotationY(MathHelper.ToRadians(Convert.ToSingle(gameTime.ElapsedGameTime.TotalSeconds) *20f ));
             _worldMenuCar2 *= Matrix.CreateRotationX(MathHelper.ToRadians(Convert.ToSingle(gameTime.ElapsedGameTime.TotalSeconds) *40f )) * Matrix.CreateRotationY(MathHelper.ToRadians(Convert.ToSingle(gameTime.ElapsedGameTime.TotalSeconds) *40f )) ;
@@ -691,6 +703,14 @@ Matrix _worldMainCarHud;
             break;
 
             default:
+        // =========================
+        // SHADOW MAP
+        // =========================
+        UpdateLightViewProjection();
+        DrawShadowMap();
+        ResetMainRenderState(true);
+        ApplyShadowMap();
+
         // =========================
         // DRAW SKYBOX
         // =========================
@@ -700,6 +720,8 @@ Matrix _worldMainCarHud;
             var cameraPosition = Matrix.Invert(view).Translation;
             _skybox.Draw(view, projection, cameraPosition);
         }
+
+        ResetMainRenderState(false);
 
         // =========================
         // DRAW WORLD
@@ -762,20 +784,20 @@ Matrix _worldMainCarHud;
         DrawLeftText("Vida: " +Convert.ToString(Math.Round(_playerVehicle.CurrentHealth)), 500, 1,100); 
         DrawLeftText("Puntos: " +Convert.ToString(_playerVehicle.Score), 800, 1,100); 
 
-        FuelTank.Draw(_worldFuelTank , _cameraMenu.View, _cameraMenu.Projection);
-        Wrench.Draw(_worldWrench , _cameraMenu.View, _cameraMenu.Projection);
-        Coin.Draw(_worldCoin , _cameraMenu.View, _cameraMenu.Projection);
+        FuelTank.DrawUnlit(_worldFuelTank , _cameraMenu.View, _cameraMenu.Projection);
+        Wrench.DrawUnlit(_worldWrench , _cameraMenu.View, _cameraMenu.Projection);
+        Coin.DrawUnlit(_worldCoin , _cameraMenu.View, _cameraMenu.Projection);
         
         switch (_playerVehicle.Type){
             
             case VehicleType.Light:
-                lightModel.Draw(_worldMainCarHud, _cameraMenu.View, _cameraMenu.Projection);
+                lightModel.DrawUnlit(_worldMainCarHud, _cameraMenu.View, _cameraMenu.Projection);
             break;
             case VehicleType.Medium:
-                mediumModel.Draw(_worldMainCarHud, _cameraMenu.View, _cameraMenu.Projection);
+                mediumModel.DrawUnlit(_worldMainCarHud, _cameraMenu.View, _cameraMenu.Projection);
             break;
             case VehicleType.Heavy:
-                heavyModel.Draw(_worldMainCarHud, _cameraMenu.View, _cameraMenu.Projection);
+                heavyModel.DrawUnlit(_worldMainCarHud, _cameraMenu.View, _cameraMenu.Projection);
             break;
             
         }
@@ -793,6 +815,58 @@ Matrix _worldMainCarHud;
         }
        
 
+    }
+
+    private void UpdateLightViewProjection()
+    {
+        var center = _playerVehicle?.Position ?? Vector3.Zero;
+        var lightPosition = center + LightDirection * 1600f;
+        var lightView = Matrix.CreateLookAt(lightPosition, center, Vector3.Up);
+        var lightProjection = Matrix.CreateOrthographic(3200f, 3200f, 1f, 5000f);
+        _lightViewProjection = lightView * lightProjection;
+    }
+
+    private void DrawShadowMap()
+    {
+        var previousBlendState = GraphicsDevice.BlendState;
+        var previousDepthStencilState = GraphicsDevice.DepthStencilState;
+        var previousRasterizerState = GraphicsDevice.RasterizerState;
+
+        GraphicsDevice.SetRenderTarget(_shadowMap);
+        GraphicsDevice.BlendState = BlendState.Opaque;
+        GraphicsDevice.DepthStencilState = DepthStencilState.Default;
+        GraphicsDevice.Clear(ClearOptions.Target | ClearOptions.DepthBuffer, Color.White, 1f, 0);
+
+        GraphicsDevice.RasterizerState = _shadowRasterizerState;
+
+        _road.DrawDepth(_lightViewProjection);
+        _playerVehicle.DrawDepth(_lightViewProjection);
+
+        GraphicsDevice.RasterizerState = previousRasterizerState;
+        GraphicsDevice.DepthStencilState = previousDepthStencilState;
+        GraphicsDevice.BlendState = previousBlendState;
+        GraphicsDevice.SetRenderTarget(null);
+    }
+
+    private void ResetMainRenderState(bool clear)
+    {
+        GraphicsDevice.SetRenderTarget(null);
+        GraphicsDevice.Viewport = new Viewport(0, 0, _graphics.PreferredBackBufferWidth, _graphics.PreferredBackBufferHeight);
+        GraphicsDevice.BlendState = BlendState.Opaque;
+        GraphicsDevice.DepthStencilState = DepthStencilState.Default;
+        GraphicsDevice.RasterizerState = _mainRasterizerState;
+        GraphicsDevice.SamplerStates[0] = SamplerState.LinearClamp;
+
+        if (clear)
+        {
+            GraphicsDevice.Clear(ClearOptions.Target | ClearOptions.DepthBuffer, Color.CornflowerBlue, 1f, 0);
+        }
+    }
+
+    private void ApplyShadowMap()
+    {
+        _road.SetShadowMap(_shadowMap, _lightViewProjection);
+        _playerVehicle.SetShadowMap(_shadowMap, _lightViewProjection);
     }
 
     private void DrawBoundingBox(BoundingBox box, Camera camera, Color color)
@@ -837,6 +911,7 @@ Matrix _worldMainCarHud;
 
     protected override void UnloadContent()
     {
+        _shadowMap?.Dispose();
         Content.Unload();
 
         base.UnloadContent();
