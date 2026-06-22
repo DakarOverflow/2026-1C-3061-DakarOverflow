@@ -14,24 +14,31 @@ public class Road
     private const float SQUARED_GENERATION_DISTANCE = 4000000f; //Generation distance: 2000
 
     private int _generalDirection = 0;
-    private Queue<Tile> _tiles;
-    public IEnumerable<Tile> Tiles{get => _tiles;}
-    
-    private readonly  Random _randomGenerator;
+    private List<Tile> _tiles;
+
+    public IEnumerable<Tile> Tiles
+    {
+        get => _tiles;
+    }
+
+    private readonly Random _randomGenerator;
 
     private readonly List<CustomModel> _obstacleModels;
 
     public Road(Tile firstTile, List<CustomModel> obstacleModels)
     {
-        this._tiles = new Queue<Tile>([firstTile]);  
-        this._randomGenerator = new Random();      
+        this._tiles = new List<Tile>([firstTile]);
+        this._randomGenerator = new Random();
         _obstacleModels = obstacleModels;
     }
 
     public virtual void UpdateFor(Vehicle car, GameTime gameTime)
     {
-        foreach(Tile tile in this._tiles)
+        int start = Math.Max(0, this._tiles.Count - 10);
+
+        for (int i = start; i < this._tiles.Count; i++)
         {
+            Tile tile = this._tiles[i];
             tile.Update(gameTime);
             tile.CheckCollisions(car);
         }
@@ -55,8 +62,12 @@ public class Road
         Camera camera
     )
     {
-        foreach(Tile tile in this._tiles)
+        int start = Math.Max(0, this._tiles.Count - 10);
+
+        for (int i = start; i < this._tiles.Count; i++)
         {
+            Tile tile = this._tiles[i];
+
             tile.Draw(gameTime, camera);
         }
     }
@@ -72,7 +83,7 @@ public class Road
 
             PopulateObstacles(newTile);
 
-            _tiles.Enqueue(newTile);
+            _tiles.Add(newTile);
         }
     }
 
@@ -86,22 +97,23 @@ public class Road
 
         Vector3 localPoint = spawnPoints[_randomGenerator.Next(spawnPoints.Count)];
 
-        Vector3 worldPoint = tile.Position + Vector3.Transform(localPoint, Matrix.CreateRotationY(tile.NextTileRotation));
+        Vector3 worldPoint = tile.Position + Vector3.Transform(localPoint, Matrix.CreateRotationY(tile.Rotation));
 
         CustomModel obstacleModel = GetRandomObstacleModel();
 
         // Si están en el carril izquierdo (X < 0) apuntan hacia nosotros.
         // Si están en el derecho, apuntan en nuestra misma dirección.
-        float carRotation = tile.NextTileRotation;
-        if (localPoint.X < 0) 
+        float carRotation = tile.Rotation;
+        if (localPoint.X < 0)
         {
             carRotation += MathHelper.Pi;
         }
 
-        Matrix world = Matrix.CreateRotationY(carRotation) * Matrix.CreateTranslation(worldPoint);
+        Matrix world = Matrix.CreateScale(Vehicle.ScaleFactor) * Matrix.CreateRotationY(carRotation) * Matrix.CreateTranslation(worldPoint);
 
         // Hitbox similar a la del auto (200x100x200), daño alto (100) y son fatales de frente (true)
-        tile.AddObstacle(new Obstacle(obstacleModel, world, worldPoint, new Vector3(200f, 100f, 200f), new Vector3(0f, 40f, 0f), 100f, 0f, true));
+        tile.AddObstacle(new Obstacle(obstacleModel, world, worldPoint, new Vector3(200f, 100f, 200f) * Vehicle.ScaleFactor,
+            new Vector3(0f, 40f, 0f) * Vehicle.ScaleFactor, 40f, 0f, true));
     }
 
     private CustomModel GetRandomObstacleModel()
@@ -109,28 +121,45 @@ public class Road
         return _obstacleModels[_randomGenerator.Next(_obstacleModels.Count)];
     }
 
+    // private TileType t = TileType.RIGHT_CURVE;
+    // private TileType t2 = TileType.LEFT_CURVE;
+
     private TileType GetNextTileType()
     {
+        // TileType x = t;
+        // if (t == TileType.NONE)
+        // {
+        //     x = t2;
+        //     if (t2 == TileType.NONE)
+        //     {
+        //         return TileType.STRAIGHT_LINE;
+        //     }
+        //     t2 = TileType.NONE;
+        //     return x;
+        // }
+        // t = TileType.NONE;
+        // return x;
         float rightCurveChance = 0.2f;
         float leftCurveChance = 0.2f;
 
 
-        if(_generalDirection >= 1)
+        if (_generalDirection >= 1)
         {
             rightCurveChance = 0f;
         }
-        else if(_generalDirection <= -1)
+        else if (_generalDirection <= -1)
         {
             leftCurveChance = 0f;
         }
 
-        float randomNumber = (float) _randomGenerator.NextDouble();
+        float randomNumber = (float)_randomGenerator.NextDouble();
 
-        if(randomNumber < rightCurveChance)
+        if (randomNumber < rightCurveChance)
         {
             _generalDirection++;
             return TileType.RIGHT_CURVE;
-        } else if(randomNumber < rightCurveChance + leftCurveChance)
+        }
+        else if (randomNumber < rightCurveChance + leftCurveChance)
         {
             _generalDirection--;
             return TileType.LEFT_CURVE;

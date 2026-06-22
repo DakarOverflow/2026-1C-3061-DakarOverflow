@@ -18,6 +18,15 @@ public class Collectible : WorldObject, IAssetLoader
         ));
     }
 
+    private static void LoadModel(ContentManager content, string key, string path, string effect, Texture2D texture)
+    {
+        Collectible.modelMap.Add(key, new CustomModel(
+            content.Load<Model>(path),
+            content.Load<Effect>(effect),
+            texture
+        ));
+    }
+
     private static void LoadModel(ContentManager content, string path, string effect, Color color)
     {
         //Genera el modelo utilizando el path del mismo como key para el diccionario interno
@@ -26,9 +35,14 @@ public class Collectible : WorldObject, IAssetLoader
 
     public static void LoadLocalModels(ContentManager content)
     {
-        Collectible.LoadModel(content, "car-kit/box", AssetPaths.ContentFolder3D + "car-kit/box", AssetPaths.ContentFolderEffects + "BasicShader", Color.Red);
-        Collectible.LoadModel(content, "car-kit/debris-bolt", AssetPaths.ContentFolder3D + "car-kit/debris-bolt", AssetPaths.ContentFolderEffects + "BasicShader", Color.Gray);
-        Collectible.LoadModel(content, "car-kit/debris-nut", AssetPaths.ContentFolder3D + "car-kit/debris-nut", AssetPaths.ContentFolderEffects + "BasicShader", Color.Gold);
+        // Se carga el colormap de cada kit y se cargan los modelos de los coleccionables aplicando la textura del colormap correspondiente.
+
+        var survivalKitColormap = content.Load<Texture2D>(AssetPaths.ContentFolder3D + "survival-kit/Textures/colormap");
+        Collectible.LoadModel(content, "survival-kit/barrel", AssetPaths.ContentFolder3D + "survival-kit/barrel", AssetPaths.ContentFolderEffects + "TexturedShader", survivalKitColormap);
+        Collectible.LoadModel(content, "survival-kit/tool-hammer", AssetPaths.ContentFolder3D + "survival-kit/tool-hammer", AssetPaths.ContentFolderEffects + "TexturedShader", survivalKitColormap);
+
+        var toyCarKitColormap = content.Load<Texture2D>(AssetPaths.ContentFolder3D + "toy-car-kit/Textures/colormap");
+        Collectible.LoadModel(content, "toy-car-kit/item-coin-gold", AssetPaths.ContentFolder3D + "toy-car-kit/item-coin-gold", AssetPaths.ContentFolderEffects + "TexturedShader", toyCarKitColormap);
     }
     
     
@@ -53,18 +67,21 @@ public class Collectible : WorldObject, IAssetLoader
         switch (type)
         {
             case CollectibleType.FuelTank:
-                return new Collectible(type, modelMap.GetValueOrDefault("car-kit/box", null), position, 1f, effectValue);
+                return new Collectible(type, modelMap.GetValueOrDefault("survival-kit/barrel", null), position, 1.5f, effectValue);
             
             case CollectibleType.Wrench:
-                return new Collectible(type, modelMap.GetValueOrDefault("car-kit/debris-bolt", null), position, 5f,  effectValue);
+                return new Collectible(type, modelMap.GetValueOrDefault("survival-kit/tool-hammer", null), position, 3f,  effectValue);
             
             case CollectibleType.Coin:
-                return new Collectible(type, modelMap.GetValueOrDefault("car-kit/debris-nut", null), position, 5f, effectValue);
+                return new Collectible(type, modelMap.GetValueOrDefault("toy-car-kit/item-coin-gold", null), position, 1.5f, effectValue);
             
             default:
                 throw new ArgumentException("Tipo de coleccionable desconocido: " + type);
         }
     }
+
+    private float _scale;
+    private Vector3 _modelCenterOffset;
 
     public Collectible(CollectibleType type, CustomModel model, Vector3 initialPosition, float scale, float effectValue) : base(model, Matrix.CreateScale(scale) * Matrix.CreateTranslation(initialPosition))
     {
@@ -72,14 +89,30 @@ public class Collectible : WorldObject, IAssetLoader
         Position = initialPosition;
         EffectValue = effectValue;
         IsActive = true;
+        _scale = scale;
+        _modelCenterOffset = CalculateModelCenter(model.Model);
         
         // --- PREPARACIÓN PARA COLISIONES ---
         UpdateBoundingBox();
     }
 
+    private Vector3 CalculateModelCenter(Model model)
+    {
+        Vector3 min = new Vector3(float.MaxValue);
+        Vector3 max = new Vector3(float.MinValue);
+        foreach (var mesh in model.Meshes)
+        {
+            var sphere = mesh.BoundingSphere;
+            min = Vector3.Min(min, sphere.Center - new Vector3(sphere.Radius));
+            max = Vector3.Max(max, sphere.Center + new Vector3(sphere.Radius));
+        }
+        return (min + max) / 2f;
+    }
+
     private void UpdateBoundingBox()
     {
-        BoundingBox = new BoundingBox(Position - _boundingBoxHalfSize, Position + _boundingBoxHalfSize);
+        Vector3 currentPosition = World.Translation;
+        BoundingBox = new BoundingBox(currentPosition - _boundingBoxHalfSize, currentPosition + _boundingBoxHalfSize);
     }
 
     // Update actualizar el estado del coleccionable
@@ -89,8 +122,25 @@ public class Collectible : WorldObject, IAssetLoader
         if (!IsActive) return;
 
         // --- PREPARACIÓN PARA LA 4TA ENTREGA ---
-        // TODO: Los coleccionables deben tener rotación en Y y rebote vertical.
-        // TODO: Como el modelo va a estar rebotando y rotando, hay que actualizar la posición del BoundingBox también.
+        float time = (float)gameTime.TotalGameTime.TotalSeconds;
+        
+        // Efecto de rebote vertical
+        float bounceHeight = 10f; 
+        float bounceSpeed = 2f;
+        float yOffset = (float)Math.Sin(time * bounceSpeed) * bounceHeight;
+
+        // Efecto de rotación en Y
+        float rotationSpeed = 1.5f;
+        float rotationY = time * rotationSpeed;
+
+        // Posición actual con el rebote
+        Vector3 animatedPosition = Position + new Vector3(0, yOffset, 0);
+
+        // Actualizar matriz World centrando el modelo antes de rotar
+        setWorld(Matrix.CreateTranslation(-_modelCenterOffset) * Matrix.CreateScale(_scale) * Matrix.CreateRotationY(rotationY) * Matrix.CreateTranslation(animatedPosition));
+
+        // Actualizar la posición del BoundingBox también
+        UpdateBoundingBox();
     }
 
     // Draw dibuja el coleccionable si está activo

@@ -8,27 +8,6 @@ namespace TGC.MonoGame.TP;
 
 public class FreeCamera : Camera
 {
-#if WINDOWS
-    private const string SDL2 = "SDL2.dll";
-#elif LINUX
-    private const string SDL2 = "libSDL2-2.0.so.0";
-#elif OSX
-    private const string SDL2 = "libSDL2-2.0.0.dylib";
-#else
-    private const string SDL2 = "SDL2";
-#endif
-
-    [DllImport(SDL2, CallingConvention = CallingConvention.Cdecl)]
-    private static extern int SDL_SetRelativeMouseMode(int enabled);
-
-    [DllImport(SDL2, CallingConvention = CallingConvention.Cdecl)]
-    private static extern int SDL_GetRelativeMouseMode();
-
-    [DllImport(SDL2, CallingConvention = CallingConvention.Cdecl)]
-    private static extern IntPtr SDL_GetError();
-
-    [DllImport(SDL2, CallingConvention = CallingConvention.Cdecl)]
-    private static extern int SDL_GetRelativeMouseState(out int x, out int y);
     private const float DefaultSpeed = 1000f;
     private const float DefaultMouseSensitivity = 0.2f;
 
@@ -42,11 +21,19 @@ public class FreeCamera : Camera
 
     public FreeCamera(Vector3 position, Vector3 target, GraphicsDevice graphicsDevice)
     {
-        var hasError = SDL_SetRelativeMouseMode(1);
-        Console.WriteLine("Enabled SDL: " + SDL_GetRelativeMouseMode());
-        if (hasError != 0)
+        try
         {
-            Console.WriteLine("SDL Error: " + Marshal.PtrToStringAnsi(SDL_GetError()));
+            Sdl2Native.SetRelativeMouseMode(true);
+        }
+        catch (DllNotFoundException e)
+        {
+            Console.WriteLine("Error enabling SDL (Not Found): " + e.Message);
+            throw new ApplicationException();
+        }
+        catch (InvalidOperationException e)
+        {
+            Console.WriteLine("Error enabling SDL (OS Not Supported): " + e.Message);
+            throw new ApplicationException();
         }
         _position = position;
         _target = target;
@@ -66,7 +53,7 @@ public class FreeCamera : Camera
     public void OnClientSizeChanged(object sender, EventArgs e)
     {
         _projection = Matrix.CreatePerspectiveFieldOfView(
-            MathHelper.PiOver4, _graphicsDevice.Viewport.AspectRatio, 0.1f, 1000f);
+            MathHelper.PiOver4, _graphicsDevice.Viewport.AspectRatio, 1f, 1000f);
     }
 
     public static string GetName()
@@ -89,7 +76,7 @@ public class FreeCamera : Camera
         if (mouseCaptured)
         {
             float deltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
-            SDL_GetRelativeMouseState(out int relX, out int relY);
+            Sdl2Native.GetRelativeMouseState(out int relX, out int relY);
             _yaw += relX * DefaultMouseSensitivity;
             _pitch -= relY * DefaultMouseSensitivity;
             _pitch = MathHelper.Clamp(_pitch, -89f, 89f);

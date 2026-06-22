@@ -28,8 +28,8 @@ public abstract class CurvaIzquierda : Tile
     {
         return
         [
-            new Vector3(150f,0f,100f),
-            new Vector3(50f,0f,-200f)
+            new Vector3(190f,15f,400f),
+            new Vector3(-430f,0f,-225f)
         ];
     }
 }

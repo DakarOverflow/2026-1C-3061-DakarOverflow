@@ -12,6 +12,15 @@ public class WorldObject
 
     private Matrix _world;
 
+    public CustomModel Model => _model;
+
+    public Matrix World => _world;
+
+    public void setWorld(Matrix world)
+    {
+        _world = world;
+    }
+
     public WorldObject(
         CustomModel model,
         Matrix world

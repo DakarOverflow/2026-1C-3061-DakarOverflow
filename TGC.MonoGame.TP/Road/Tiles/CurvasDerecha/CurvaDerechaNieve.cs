@@ -20,6 +20,15 @@ public class CurvaDerechaNieve : CurvaDerecha, IAssetLoader
         ));
     }
 
+    private static void LoadModel(ContentManager content, string key, string path, string effect, Texture2D texture)
+    {
+        CurvaDerechaNieve.modelMap.Add(key, new CustomModel(
+            content.Load<Model>(path),
+            content.Load<Effect>(effect),
+            texture
+        ));
+    }
+
     private static void LoadModel(ContentManager content, string path, string effect, Color color)
     {
         //Genera el modelo utilizando el path del mismo como key para el diccionario interno
@@ -28,9 +37,11 @@ public class CurvaDerechaNieve : CurvaDerecha, IAssetLoader
 
     public static void LoadLocalModels(ContentManager content)
     {
+        var roadColormap = content.Load<Texture2D>(AssetPaths.ContentFolder3D + "road-tiles/Textures/colormap");
+        var suburbanColormap = content.Load<Texture2D>(AssetPaths.ContentFolder3D + "buildings/suburban/Textures/colormap");
         CurvaDerechaNieve.LoadModel(content, "road-tiles/road-square", AssetPaths.ContentFolder3D + "road-tiles/road-square", AssetPaths.ContentFolderEffects + "BasicShader", Color.WhiteSmoke);
-        CurvaDerechaNieve.LoadModel(content, "road-tiles/road-curve", AssetPaths.ContentFolder3D + "road-tiles/road-curve", AssetPaths.ContentFolderEffects + "BasicShader", Color.LightBlue);
-        CurvaDerechaNieve.LoadModel(content, "buildings/suburban/building-type-s", AssetPaths.ContentFolder3D + "buildings/suburban/building-type-s", AssetPaths.ContentFolderEffects + "BasicShader", Color.Yellow);
+        CurvaDerechaNieve.LoadModel(content, "road-tiles/road-curve", AssetPaths.ContentFolder3D + "road-tiles/road-curve", AssetPaths.ContentFolderEffects + "TexturedShader", roadColormap);
+        CurvaDerechaNieve.LoadModel(content, "buildings/suburban/building-type-s", AssetPaths.ContentFolder3D + "buildings/suburban/building-type-s", AssetPaths.ContentFolderEffects + "TexturedShader", suburbanColormap);
     }
 
     public CurvaDerechaNieve(
@@ -45,33 +56,15 @@ public class CurvaDerechaNieve : CurvaDerecha, IAssetLoader
         AddObject(modelMap.GetValueOrDefault("road-tiles/road-square", null), 
             new Vector3(12f),
             Vector3.Zero,
-            0f
+            rotation + MathHelper.PiOver2,
+            MathHelper.Pi
         );
 
         AddObject(
             modelMap.GetValueOrDefault("road-tiles/road-curve", null), 
-            new Vector3(5f),
-            new Vector3(-130f, 20f, 250f),
+            new Vector3(5f, 5f, 5f),
+            new Vector3(100f, 12f, 100f),
             rotation + MathHelper.PiOver2
         );
-        //Edificios 
-        AddObject( 
-            modelMap.GetValueOrDefault("buildings/suburban/building-type-s", null), 
-            new Vector3(2f),
-            new Vector3(322f, 10f, 450f), rotation + MathHelper.Pi
-        );
-
-        if(biome.ShouldSpawnCollectibleOfType(CollectibleType.Coin))
-        {
-            AddObject(Collectible.CreateCollectibleOfType(CollectibleType.Coin, this.Position + Vector3.Transform(new Vector3(300f, 50f, -100f), Matrix.CreateRotationY(rotation)), 10f));
-        }
-        if(biome.ShouldSpawnCollectibleOfType(CollectibleType.FuelTank))
-        {
-            AddObject(Collectible.CreateCollectibleOfType(CollectibleType.FuelTank, this.Position + Vector3.Transform(new Vector3(200f, 50f, -300f), Matrix.CreateRotationY(rotation)), 100f));
-        }
-        if(biome.ShouldSpawnCollectibleOfType(CollectibleType.Wrench))
-        {
-            AddObject(Collectible.CreateCollectibleOfType(CollectibleType.Wrench, this.Position + Vector3.Transform(new Vector3(0f, 50f, 0), Matrix.CreateRotationY(rotation)), 50f));
-        }
     }
 }

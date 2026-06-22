@@ -19,9 +19,45 @@ public abstract class Tile
         get => _obstacles;
     }
 
+    public IEnumerable<WorldObject> WorldObjects
+    {
+        get
+        {
+            foreach (var obj in _tileObjects)
+            {
+                yield return obj;
+            }
+
+            foreach (var obstacle in _obstacles)
+            {
+                if (obstacle.IsActive)
+                {
+                    yield return obstacle;
+                }
+            }
+        }
+    }
+
+    public BoundingSphere GetBoundingSphere()
+    {
+        BoundingSphere? sphere = null;
+
+        foreach (var obj in WorldObjects)
+        {
+            BoundingSphere objectSphere = ModelRaycaster.CreateWorldBoundingSphere(obj);
+            sphere = sphere.HasValue
+                ? BoundingSphere.CreateMerged(sphere.Value, objectSphere)
+                : objectSphere;
+        }
+
+        return sphere ?? new BoundingSphere(Position, 0f);
+    }
+
     public Vector3 Position;
 
     public Vector3 NextTileOffset;
+
+    public float Rotation;
 
     public float NextTileRotation;
 
@@ -33,26 +69,75 @@ public abstract class Tile
 
     public Tile GenerateNextOfType(TileType type)
     {
-        return this.biome.GenerateNewTileOf(type, this.Position + this.NextTileOffset,this.NextTileRotation);
+        Vector3 localCorrection = Vector3.Zero;
+
+        if (this.GetTileType() == TileType.STRAIGHT_LINE)
+        {
+            if (type == TileType.LEFT_CURVE)
+            {
+                localCorrection = new Vector3(-150f, 0f, 0f);
+            }
+            else if (type == TileType.RIGHT_CURVE)
+            {
+                localCorrection = new Vector3(150f, 0f, 0f);
+            }
+        }
+        else if (this.GetTileType() == TileType.LEFT_CURVE)
+        {
+            if (type == TileType.STRAIGHT_LINE)
+            {
+                localCorrection = new Vector3(0f, 0f, -150f);
+            }
+            else if (type == TileType.RIGHT_CURVE)
+            {
+                localCorrection = new Vector3(0f, 0f, -300f);
+            }
+        }
+        else if (this.GetTileType() == TileType.RIGHT_CURVE)
+        {
+            if (type == TileType.STRAIGHT_LINE)
+            {
+                localCorrection = new Vector3(0f, 0f, -150f);
+            }
+            else if (type == TileType.LEFT_CURVE)
+            {
+                localCorrection = new Vector3(0f, 0f, -300f);
+            }
+        }
+
+        float currentTileDirection = this.NextTileRotation - this.GetRotationOffsetForNextTile();
+
+        Vector3 worldCorrection = Vector3.Transform(
+            localCorrection,
+            Matrix.CreateRotationY(currentTileDirection)
+        );
+
+        Vector3 correctedNextTileOffset = this.NextTileOffset + worldCorrection;
+
+        return this.biome.GenerateNewTileOf(
+            type,
+            this.Position + correctedNextTileOffset,
+            this.NextTileRotation
+        );
     }
 
     public static void LoadModels(ContentManager content)
     {
         Assembly currentAssembly = Assembly.GetExecutingAssembly();
-        
+
         var concreteTileTypes = currentAssembly.GetTypes()
-            .Where(t => 
+            .Where(t =>
                 t.IsSubclassOf(typeof(Tile))
-                && !t.IsAbstract               
+                && !t.IsAbstract
                 && t.IsClass
                 && typeof(IAssetLoader).IsAssignableFrom(t)
             );
 
         //No, esto no lo hizo una IA! Parece mágia pero es simple. Uso reflection para buscar todas las subclases instanciables de Tile, que por ser iomplementar la interfac IAssetLoader tienen que implementar el método estatico LoadLocalModels utilizado para cargar una única vez los modelos a memoria y optimizar el espacio 
-        foreach(Type type in concreteTileTypes)
+        foreach (Type type in concreteTileTypes)
         {
             MethodInfo modelLoader = type.GetMethod("LoadLocalModels");
-            modelLoader.Invoke(null, new object[] {content});
+            modelLoader.Invoke(null, new object[] { content });
         }
     }
 
@@ -63,10 +148,17 @@ public abstract class Tile
     )
     {
         Position = position;
+        Rotation = rotation;
         _tileObjects = new List<WorldObject>();
         this.biome = biome;
         NextTileRotation = rotation + this.GetRotationOffsetForNextTile();
         _obstacles = new List<Obstacle>();
+    }
+
+
+    private Vector3 GetWorldOffset(Vector3 localOffset)
+    {
+        return Vector3.Transform(localOffset, Matrix.CreateRotationY(Rotation));
     }
 
     public void AddObject(
@@ -78,8 +170,29 @@ public abstract class Tile
     {
         Matrix world =
             Matrix.CreateScale(scale) *
-            Matrix.CreateTranslation(offset) *
             Matrix.CreateRotationY(rotationY) *
+            Matrix.CreateTranslation(GetWorldOffset(offset)) *
+            Matrix.CreateTranslation(Position);
+
+        _tileObjects.Add(
+            new WorldObject(model, world)
+        );
+    }
+
+
+    public void AddObject(
+        CustomModel model,
+        Vector3 scale,
+        Vector3 offset,
+        float rotationY,
+        float rotationZ
+    )
+    {
+        Matrix world =
+            Matrix.CreateScale(scale) *
+            Matrix.CreateRotationY(rotationY) *
+            Matrix.CreateRotationZ(rotationZ) *
+            Matrix.CreateTranslation(GetWorldOffset(offset)) *
             Matrix.CreateTranslation(Position);
 
         _tileObjects.Add(
@@ -106,8 +219,8 @@ public abstract class Tile
     {
         Matrix world =
             Matrix.CreateScale(scale) *
-            Matrix.CreateTranslation(offset) *
             Matrix.CreateRotationY(rotationY) *
+            Matrix.CreateTranslation(GetWorldOffset(offset)) *
             Matrix.CreateTranslation(Position);
 
         Vector3 finalPos = world.Translation;
@@ -126,12 +239,16 @@ public abstract class Tile
         AddObstacle(obstacle);
     }
 
-    public virtual List<Vector3> GetObstacleSpawnPoints(){ return null;}
+    public virtual List<Vector3> GetObstacleSpawnPoints()
+    {
+        return null;
+    }
 
     public void AddObject(WorldObject obj)
     {
         _tileObjects.Add(obj);
     }
+
     public void Update(GameTime gameTime)
     {
         foreach (var obj in _tileObjects)

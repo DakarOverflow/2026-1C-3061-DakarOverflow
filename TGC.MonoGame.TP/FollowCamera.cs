@@ -9,13 +9,17 @@ namespace TGC.MonoGame.TP;
 /// </summary>
 internal class FollowCamera : Camera
 {
-    private const float AxisDistanceToTarget = 1000f;
-    private const float AngleFollowSpeed = 0.015f;
-    private const float AngleThreshold = 0.85f;
+    private const float AxisDistanceToTarget = 600f;
+    private const float CameraHeightRatio = 0.4f;
+    private const float LookAheadDistance = 300f;
+    private const float MinForwardFollowSpeed = 3.5f;
+    private const float MaxForwardFollowSpeed = 16f;
+    private const float MinLookAtFollowSpeed = 6f;
+    private const float MaxLookAtFollowSpeed = 22f;
 
     private Vector3 _currentForwardVector = Vector3.Forward;
-    private Vector3 _pastForwardVector = Vector3.Forward;
-    private float _forwardVectorInterpolator;
+    private Vector3 _currentLookAtPosition;
+    private bool _isInitialized;
     private readonly GraphicsDevice _graphicsDevice;
 
     /// <summary>
@@ -25,12 +29,7 @@ internal class FollowCamera : Camera
     public FollowCamera(GraphicsDevice graphicsDevice)
     {
         _graphicsDevice = graphicsDevice;
-        _projection = Matrix.CreatePerspectiveFieldOfView(
-            MathHelper.PiOver4,
-            graphicsDevice.Viewport.AspectRatio,
-            0.1f,
-            4000f
-        );
+        _projection = CreateProjectionMatrix();
     }
 
     private Matrix _projection;
@@ -39,8 +38,7 @@ internal class FollowCamera : Camera
 
     public void OnClientSizeChanged(object sender, EventArgs e)
     {
-        _projection = Matrix.CreatePerspectiveFieldOfView(
-            MathHelper.PiOver4, _graphicsDevice.Viewport.AspectRatio, 0.1f, 1000f);
+        _projection = CreateProjectionMatrix();
     }
 
     public static string GetName()
@@ -58,6 +56,15 @@ internal class FollowCamera : Camera
         return _projection;
     }
 
+    private Matrix CreateProjectionMatrix()
+    {
+        return Matrix.CreatePerspectiveFieldOfView(
+            MathHelper.PiOver4,
+            _graphicsDevice.Viewport.AspectRatio,
+            1f,
+            4000f
+        );
+    }
 
     /// <summary>
     ///     Actualiza la Camara usando una matriz de mundo actualizada para seguirla.
@@ -66,69 +73,55 @@ internal class FollowCamera : Camera
     /// <param name="followedWorld">The World matrix to follow</param>
     public void Update(GameTime gameTime, Matrix followedWorld)
     {
-        // Obtengo el tiempo.
         var elapsedTime = Convert.ToSingle(gameTime.ElapsedGameTime.TotalSeconds);
-
-        // Obtengo la posicion de la matriz de mundo que estoy siguiendo.
         var followedPosition = followedWorld.Translation;
+        var followedForward = Vector3.Normalize(followedWorld.Forward);
+        var targetLookAtPosition = followedPosition + followedForward * LookAheadDistance;
 
-        // Obtengo el vector Adelante de la matriz de mundo que estoy siguiendo.
-        var followedForward = followedWorld.Forward;
-
-        // Si el producto escalar entre el vector Adelante anterior
-        // y el actual es mas grande que un limite,
-        // muevo el Interpolator (desde 0 a 1) mas cerca de 1.
-        if (Vector3.Dot(followedForward, _pastForwardVector) > AngleThreshold)
+        if (!_isInitialized)
         {
-            // Incremento el Interpolator.
-            _forwardVectorInterpolator += elapsedTime * AngleFollowSpeed;
-
-            // No permito que Interpolator pase de 1.
-            _forwardVectorInterpolator = MathF.Min(_forwardVectorInterpolator, 1f);
-
-            // Calculo el vector Adelante a partir de la interpolacion.
-            // Esto mueve el vector Adelante para igualar al vector Adelante que sigo.
-            // En este caso uso la curva x^2 para hacerlo mas suave.
-            // Interpolator se convertira en 1 eventualmente.
-            _currentForwardVector = Vector3.Lerp(_currentForwardVector, followedForward,
-                _forwardVectorInterpolator * _forwardVectorInterpolator);
+            _currentForwardVector = followedForward;
+            _currentLookAtPosition = targetLookAtPosition;
+            _isInitialized = true;
         }
-        else
-            // Si el angulo no pasa de cierto limite, lo pongo de nuevo en cero.
-        {
-            _forwardVectorInterpolator = 0f;
-        }
+        
+        var forwardDot = MathHelper.Clamp(Vector3.Dot(_currentForwardVector, followedForward), -1f, 1f);
+        var turnSharpness = (1f - forwardDot) * 0.5f;
+        var forwardFollowSpeed = MathHelper.Lerp(MinForwardFollowSpeed, MaxForwardFollowSpeed, turnSharpness);
+        var lookAtFollowSpeed = MathHelper.Lerp(MinLookAtFollowSpeed, MaxLookAtFollowSpeed, turnSharpness);
 
-        // Guardo el vector Adelante para usar en la siguiente iteracion.
-        _pastForwardVector = followedForward;
+        _currentForwardVector = SmoothDampDirection(
+            _currentForwardVector,
+            followedForward,
+            GetExponentialBlendAmount(forwardFollowSpeed, elapsedTime)
+        );
 
-        // Calculo la posicion de la camara
-        // tomo la posicion que estoy siguiendo, agrego un offset hacia atras y hacia arriba.
-        // Restar el vector Adelante (-Forward = Backward) coloca la camara detras del auto.
+        _currentLookAtPosition = Vector3.Lerp(
+            _currentLookAtPosition,
+            targetLookAtPosition,
+            GetExponentialBlendAmount(lookAtFollowSpeed, elapsedTime)
+        );
+
         var offsetedPosition = followedPosition
                                - _currentForwardVector * AxisDistanceToTarget
-                               + Vector3.Up * (AxisDistanceToTarget * 0.4f); // Altura de la camara ajustada
+                               + Vector3.Up * (AxisDistanceToTarget * CameraHeightRatio);
 
-        // Calculo el vector Arriba actualizado.
-        // Nota: No se puede usar el vector Arriba por defecto (0, 1, 0).
-        // Como no es correcto, se calcula con este truco de producto vectorial.
+        _view = Matrix.CreateLookAt(offsetedPosition, _currentLookAtPosition, Vector3.Up);
+    }
 
-        // Calcular el vector Adelante haciendo la resta entre el destino y el origen
-        // y luego normalizandolo (Esta operacion es cara!).
-        // (La siguiente operacion necesita vectores normalizados)
-        var forward = followedPosition - offsetedPosition;
-        forward.Normalize();
+    private static float GetExponentialBlendAmount(float speed, float elapsedTime)
+    {
+        return 1f - MathF.Exp(-speed * elapsedTime);
+    }
 
-        // Obtengo el vector Derecha asumiendo que la camara tiene el vector Arriba apuntando hacia arriba
-        // y no esta rotada en el eje X (Roll).
-        var right = Vector3.Cross(forward, Vector3.Up);
+    private static Vector3 SmoothDampDirection(Vector3 currentDirection, Vector3 targetDirection, float blendAmount)
+    {
+        var blendedDirection = Vector3.Lerp(currentDirection, targetDirection, blendAmount);
 
-        // Una vez que tengo la correcta direccion Derecha, obtengo la correcta direccion Arriba usando
-        // otro producto vectorial.
-        var cameraCorrectUp = Vector3.Cross(right, forward);
+        if (blendedDirection.LengthSquared() < 0.0001f)
+            return targetDirection;
 
-        // Calculo la matriz de Vista de la camara usando la Posicion, La Posicion a donde esta mirando,
-        // y su vector Arriba.
-        _view = Matrix.CreateLookAt(offsetedPosition, followedPosition, cameraCorrectUp);
+        blendedDirection.Normalize();
+        return blendedDirection;
     }
 }

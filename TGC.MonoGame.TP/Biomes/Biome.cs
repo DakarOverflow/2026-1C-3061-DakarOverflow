@@ -28,20 +28,27 @@ public abstract class Biome
         return this.GetNextBiome().GenerateNewTileForCurrentBiomeOf(type, position, Rotation);
     }
 
-    public float GetCollectionableSpawnChance(CollectibleType type)
+    public CollectibleType? GetCollectibleToSpawn()
     {
-        //FIXME: Por ahora defino las probabilidades generales pero deberíamos redefinirlas según el tipo de coleccionable 
-        return this._gameMode.Difficulty switch
+        // 1. Probabilidad general de que aparezca *algún* coleccionable
+        float baseSpawnChance = this._gameMode.Difficulty switch
         {
             GameDifficulty.EASY => 0.5f,
             GameDifficulty.MEDIUM => 0.3f,
             GameDifficulty.HARD => 0.1f,
             _ => throw new Exception("Invalid Game Difficulty")
         };
-    }
 
-    public bool ShouldSpawnCollectibleOfType(CollectibleType type)
-    {
-        return this._randomGenerator.NextDouble() < this.GetCollectionableSpawnChance(type);
+        if (this._randomGenerator.NextDouble() > baseSpawnChance)
+        {
+            return null; // No aparece nada en esta recta
+        }
+
+        // 2. Si aparece algo, decidimos QUÉ aparece usando probabilidades relativas
+        // Ejemplo: 50% Moneda, 30% Combustible, 20% Llave (Wrench)
+        double roll = this._randomGenerator.NextDouble();
+        if (roll < 0.5) return CollectibleType.Coin;
+        if (roll < 0.8) return CollectibleType.FuelTank;
+        return CollectibleType.Wrench;
     }
 }
