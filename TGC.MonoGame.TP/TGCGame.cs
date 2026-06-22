@@ -554,7 +554,7 @@ Matrix _worldMainCarHud;
             _gameOver = true;
             _gameOverTimer = GameOverDelay;
         }
-        if (_gameOver)
+        if (_gameOver && !_useFreeCamera)
         {
             _gameOverTimer -= (float)gameTime.ElapsedGameTime.TotalSeconds;
 
