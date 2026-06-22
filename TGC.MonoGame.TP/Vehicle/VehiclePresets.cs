@@ -18,7 +18,7 @@ public static class VehiclePresets
             BrakeForce = 1000f,
             TurnSpeed = 2.5f,
             MaxHealth = 50f,
-            FuelCapacity = 60f,
+            FuelCapacity = 80f,
             FuelConsumption = 2.0f
         };
 
@@ -32,7 +32,7 @@ public static class VehiclePresets
             BrakeForce = 700f,
             TurnSpeed = 2f,
             MaxHealth = 100f,
-            FuelCapacity = 100f,
+            FuelCapacity = 125f,
             FuelConsumption = 1.0f
         };
 

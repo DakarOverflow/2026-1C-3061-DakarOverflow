@@ -68,6 +68,9 @@ public class TGCGame : Game
     CustomModel lightModel;
     CustomModel mediumModel;
     CustomModel heavyModel;
+    CustomModel lightBodyModel;
+    CustomModel mediumBodyModel;
+    CustomModel heavyBodyModel;
     CustomModel lightWheelModel;
     CustomModel mediumWheelModel;
     CustomModel heavyWheelModel;
@@ -221,15 +224,11 @@ public class TGCGame : Game
             obstacleModels
         );
 
-
-        // =========================
-        // PLAYER
-        // =========================
-
+        //Modelos para el menú:
         lightModel = new CustomModel(
             Content.Load<Model>(
                 AssetPaths.ContentFolder3D +
-                "car-kit/light-vehicle-body"
+                "car-kit/race"
             ),
             Content.Load<Effect>(
                 AssetPaths.ContentFolderEffects +
@@ -241,7 +240,7 @@ public class TGCGame : Game
         mediumModel = new CustomModel(
             Content.Load<Model>(
                 AssetPaths.ContentFolder3D +
-                "car-kit/medium-vehicle-body"
+                "car-kit/sedan-sports"
             ),
             Content.Load<Effect>(
                 AssetPaths.ContentFolderEffects +
@@ -251,6 +250,47 @@ public class TGCGame : Game
         );
 
         heavyModel = new CustomModel(
+            Content.Load<Model>(
+                AssetPaths.ContentFolder3D +
+                "car-kit/delivery"
+            ),
+            Content.Load<Effect>(
+                AssetPaths.ContentFolderEffects +
+                "TexturedShader"
+            ),
+            carKitColormap
+        );
+
+
+        // =========================
+        // PLAYER
+        // =========================
+
+        lightBodyModel = new CustomModel(
+            Content.Load<Model>(
+                AssetPaths.ContentFolder3D +
+                "car-kit/light-vehicle-body"
+            ),
+            Content.Load<Effect>(
+                AssetPaths.ContentFolderEffects +
+                "TexturedShader"
+            ),
+            carKitColormap
+        );
+
+        mediumBodyModel = new CustomModel(
+            Content.Load<Model>(
+                AssetPaths.ContentFolder3D +
+                "car-kit/medium-vehicle-body"
+            ),
+            Content.Load<Effect>(
+                AssetPaths.ContentFolderEffects +
+                "TexturedShader"
+            ),
+            carKitColormap
+        );
+
+        heavyBodyModel = new CustomModel(
             Content.Load<Model>(
                 AssetPaths.ContentFolder3D +
                 "car-kit/heavy-vehicle-body"
@@ -299,19 +339,19 @@ public class TGCGame : Game
         );
 
         _lightVehicle = new Vehicle(
-            lightModel,
+            lightBodyModel,
             lightWheelModel,
-            Vector3.Zero + new Vector3(0f,-20f,0f),
+            Vector3.Zero + new Vector3(0f,-34f,0f),
             VehiclePresets.Light,
             VehicleType.Light,
             new Vector3(40f,30f,66f),
-            new Vector3(40f,30f,-73f)
+            new Vector3(40f,30f,-83f)
         );
 
         _mediumVehicle = new Vehicle(
-            mediumModel,
+            mediumBodyModel,
             mediumWheelModel,
-            Vector3.Zero + new Vector3(0f,-20f,0f),
+            Vector3.Zero + new Vector3(0f,-34f,0f),
             VehiclePresets.Medium,
             VehicleType.Medium,
             new Vector3(40f,30f,66f),
@@ -319,9 +359,9 @@ public class TGCGame : Game
         );
 
         _heavyVehicle = new Vehicle(
-            heavyModel,
+            heavyBodyModel,
             heavyWheelModel,
-            Vector3.Zero + new Vector3(0f,-20f,0f),
+            Vector3.Zero + new Vector3(0f,-34f,0f),
             VehiclePresets.Heavy,
             VehicleType.Heavy,
             new Vector3(40f,30f,103f),
@@ -354,26 +394,29 @@ public class TGCGame : Game
         }
 
         switch (_sceneNum){
-            case  Scene.Menu: 
+            case Scene.Menu:
 
             if (keyboardState.IsKeyDown(Keys.D1) &&
                 _previousKeyboardState.IsKeyUp(Keys.D1))
             {
-                ChangeVehicle(_lightVehicle);
+                _playerVehicle = _lightVehicle;
+                _sceneNum = Scene.Road;
             }
 
             if (keyboardState.IsKeyDown(Keys.D2) &&
                 _previousKeyboardState.IsKeyUp(Keys.D2))
             {
-                ChangeVehicle(_mediumVehicle);
+                _playerVehicle = _mediumVehicle;
+                _sceneNum = Scene.Road;
             }
 
             if (keyboardState.IsKeyDown(Keys.D3) &&
                 _previousKeyboardState.IsKeyUp(Keys.D3))
             {
-                ChangeVehicle(_heavyVehicle);
+                _playerVehicle = _heavyVehicle;
+                _sceneNum = Scene.Road;
             }
-            if (keyboardState.IsKeyDown(Keys.D1) || keyboardState.IsKeyDown(Keys.D2) || keyboardState.IsKeyDown(Keys.D3)) _sceneNum = Scene.Road ;
+
             break;
 
             default: 
@@ -401,27 +444,6 @@ public class TGCGame : Game
             _previousKeyboardState.IsKeyUp(Keys.F))
         {
             _useFreeCamera = !_useFreeCamera;
-        }
-        // =========================
-        // CHANGE VEHICLE
-        // =========================
-
-        if (keyboardState.IsKeyDown(Keys.D1) &&
-            _previousKeyboardState.IsKeyUp(Keys.D1))
-        {
-            ChangeVehicle(_lightVehicle);
-        }
-
-        if (keyboardState.IsKeyDown(Keys.D2) &&
-            _previousKeyboardState.IsKeyUp(Keys.D2))
-        {
-            ChangeVehicle(_mediumVehicle);
-        }
-
-        if (keyboardState.IsKeyDown(Keys.D3) &&
-            _previousKeyboardState.IsKeyUp(Keys.D3))
-        {
-            ChangeVehicle(_heavyVehicle);
         }
 
         // =========================
@@ -483,19 +505,6 @@ public class TGCGame : Game
         base.Update(gameTime);
             break;
         }
-    }
-
-    private void ChangeVehicle(Vehicle newVehicle)
-    {
-        // conservar posicion, rotacion y velocidad
-
-        newVehicle.Position = _playerVehicle.Position;
-
-        newVehicle.RotationY = _playerVehicle.RotationY;
-
-        newVehicle._speed = 0;
-
-        _playerVehicle = newVehicle;
     }
 
     private void CheckObstacleCollisions()
