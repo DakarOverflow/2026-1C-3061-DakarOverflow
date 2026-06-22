@@ -170,7 +170,7 @@ float4 MainPS(VertexShaderOutput input) : COLOR
 
     float3 ambientColor = float3(0.2, 0.25, 0.35);
     // FIX: Vector L corregido para que apunte HACIA la luz de forma correcta
-    float3 L = normalize(float3(1.0, 1.0, 1.0)); 
+    float3 L = normalize(-float3(1.0, 1.0, 1.0)); 
     float3 diffuseColor = float3(0.8, 0.8, 0.8);
     float3 specularColor = float3(0.5, 0.5, 0.5);
     float3 N = normalize(input.normal);
