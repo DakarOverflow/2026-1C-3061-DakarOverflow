@@ -53,23 +53,33 @@ public class TGCGame : Game
     public SpriteBatch spriteBatch;
 
     public enum Scene
-{
-   Menu,
-   Road,
-   GameOver
-}
-Scene _sceneNum = Scene.Menu;
+    {
+        Menu,
+        Road,
+        GameOver
+    }
+    Scene _sceneNum = Scene.Menu;
 
-//Para que sean accesibles globalmente
-CustomModel lightModel;
-CustomModel mediumModel;
-CustomModel heavyModel;
+    private bool _gameOver;
+    private float _gameOverTimer;
+    private const float GameOverDelay = 2f;
 
-Matrix _worldMenuCar;
-Matrix _worldMenuCar2;
-Matrix _worldMenuCar3;
+    //Para que sean accesibles globalmente
+    CustomModel lightModel;
+    CustomModel mediumModel;
+    CustomModel heavyModel;
+    CustomModel lightBodyModel;
+    CustomModel mediumBodyModel;
+    CustomModel heavyBodyModel;
+    CustomModel lightWheelModel;
+    CustomModel mediumWheelModel;
+    CustomModel heavyWheelModel;
 
-CameraStc _cameraMenu; 
+    Matrix _worldMenuCar;
+    Matrix _worldMenuCar2;
+    Matrix _worldMenuCar3;
+
+    CameraStc _cameraMenu; 
 
     public TGCGame()
     {
@@ -214,11 +224,7 @@ CameraStc _cameraMenu;
             obstacleModels
         );
 
-
-        // =========================
-        // PLAYER
-        // =========================
-
+        //Modelos para el menú:
         lightModel = new CustomModel(
             Content.Load<Model>(
                 AssetPaths.ContentFolder3D +
@@ -231,7 +237,7 @@ CameraStc _cameraMenu;
             carKitColormap
         );
 
-         mediumModel = new CustomModel(
+        mediumModel = new CustomModel(
             Content.Load<Model>(
                 AssetPaths.ContentFolder3D +
                 "car-kit/sedan-sports"
@@ -243,7 +249,7 @@ CameraStc _cameraMenu;
             carKitColormap
         );
 
-         heavyModel = new CustomModel(
+        heavyModel = new CustomModel(
             Content.Load<Model>(
                 AssetPaths.ContentFolder3D +
                 "car-kit/delivery"
@@ -255,25 +261,111 @@ CameraStc _cameraMenu;
             carKitColormap
         );
 
+
+        // =========================
+        // PLAYER
+        // =========================
+
+        lightBodyModel = new CustomModel(
+            Content.Load<Model>(
+                AssetPaths.ContentFolder3D +
+                "car-kit/light-vehicle-body"
+            ),
+            Content.Load<Effect>(
+                AssetPaths.ContentFolderEffects +
+                "TexturedShader"
+            ),
+            carKitColormap
+        );
+
+        mediumBodyModel = new CustomModel(
+            Content.Load<Model>(
+                AssetPaths.ContentFolder3D +
+                "car-kit/medium-vehicle-body"
+            ),
+            Content.Load<Effect>(
+                AssetPaths.ContentFolderEffects +
+                "TexturedShader"
+            ),
+            carKitColormap
+        );
+
+        heavyBodyModel = new CustomModel(
+            Content.Load<Model>(
+                AssetPaths.ContentFolder3D +
+                "car-kit/heavy-vehicle-body"
+            ),
+            Content.Load<Effect>(
+                AssetPaths.ContentFolderEffects +
+                "TexturedShader"
+            ),
+            carKitColormap
+        );
+
+        lightWheelModel = new CustomModel(
+            Content.Load<Model>(
+                AssetPaths.ContentFolder3D +
+                "car-kit/wheel-front-left-light"
+            ),
+            Content.Load<Effect>(
+                AssetPaths.ContentFolderEffects +
+                "TexturedShader"
+            ),
+            carKitColormap
+        );
+
+        mediumWheelModel = new CustomModel(
+            Content.Load<Model>(
+                AssetPaths.ContentFolder3D +
+                "car-kit/wheel-front-left-medium"
+            ),
+            Content.Load<Effect>(
+                AssetPaths.ContentFolderEffects +
+                "TexturedShader"
+            ),
+            carKitColormap
+        );
+
+        heavyWheelModel = new CustomModel(
+            Content.Load<Model>(
+                AssetPaths.ContentFolder3D +
+                "car-kit/wheel-front-left-heavy"
+            ),
+            Content.Load<Effect>(
+                AssetPaths.ContentFolderEffects +
+                "TexturedShader"
+            ),
+            carKitColormap
+        );
+
         _lightVehicle = new Vehicle(
-            lightModel,
-            Vector3.Zero,
+            lightBodyModel,
+            lightWheelModel,
+            Vector3.Zero + new Vector3(0f,-34f,0f),
             VehiclePresets.Light,
-            VehicleType.Light
+            VehicleType.Light,
+            new Vector3(40f,30f,66f),
+            new Vector3(40f,30f,-83f)
         );
 
         _mediumVehicle = new Vehicle(
-            mediumModel,
-            Vector3.Zero,
+            mediumBodyModel,
+            mediumWheelModel,
+            Vector3.Zero + new Vector3(0f,-34f,0f),
             VehiclePresets.Medium,
-            VehicleType.Medium
+            VehicleType.Medium,
+            new Vector3(40f,30f,66f),
+            new Vector3(40f,30f,-67f)
         );
 
         _heavyVehicle = new Vehicle(
-            heavyModel,
-            Vector3.Zero,
+            heavyBodyModel,
+            heavyWheelModel,
+            Vector3.Zero + new Vector3(0f,-34f,0f),
             VehiclePresets.Heavy,
-            VehicleType.Heavy
+            VehicleType.Heavy,
+            new Vector3(40f,30f,103f),
+            new Vector3(40f,30f,-62f)
         );
 
         // Vehículo inicial:
@@ -291,7 +383,7 @@ CameraStc _cameraMenu;
 
     protected override void Update(GameTime gameTime)
     {
-     
+    
         var keyboardState = Keyboard.GetState();
 
         // EXIT
@@ -302,30 +394,33 @@ CameraStc _cameraMenu;
         }
 
         switch (_sceneNum){
-            case  Scene.Menu: 
+            case Scene.Menu:
 
             if (keyboardState.IsKeyDown(Keys.D1) &&
                 _previousKeyboardState.IsKeyUp(Keys.D1))
             {
-                ChangeVehicle(_lightVehicle);
+                _playerVehicle = _lightVehicle;
+                _sceneNum = Scene.Road;
             }
 
             if (keyboardState.IsKeyDown(Keys.D2) &&
                 _previousKeyboardState.IsKeyUp(Keys.D2))
             {
-                ChangeVehicle(_mediumVehicle);
+                _playerVehicle = _mediumVehicle;
+                _sceneNum = Scene.Road;
             }
 
             if (keyboardState.IsKeyDown(Keys.D3) &&
                 _previousKeyboardState.IsKeyUp(Keys.D3))
             {
-                ChangeVehicle(_heavyVehicle);
+                _playerVehicle = _heavyVehicle;
+                _sceneNum = Scene.Road;
             }
-            if (keyboardState.IsKeyDown(Keys.D1) || keyboardState.IsKeyDown(Keys.D2) || keyboardState.IsKeyDown(Keys.D3)) _sceneNum = Scene.Road ;
+
             break;
 
             default: 
-           
+        
         // TOGGLE MOUSE
 
         if (keyboardState.IsKeyDown(Keys.M) &&
@@ -349,27 +444,6 @@ CameraStc _cameraMenu;
             _previousKeyboardState.IsKeyUp(Keys.F))
         {
             _useFreeCamera = !_useFreeCamera;
-        }
-        // =========================
-        // CHANGE VEHICLE
-        // =========================
-
-        if (keyboardState.IsKeyDown(Keys.D1) &&
-            _previousKeyboardState.IsKeyUp(Keys.D1))
-        {
-            ChangeVehicle(_lightVehicle);
-        }
-
-        if (keyboardState.IsKeyDown(Keys.D2) &&
-            _previousKeyboardState.IsKeyUp(Keys.D2))
-        {
-            ChangeVehicle(_mediumVehicle);
-        }
-
-        if (keyboardState.IsKeyDown(Keys.D3) &&
-            _previousKeyboardState.IsKeyUp(Keys.D3))
-        {
-            ChangeVehicle(_heavyVehicle);
         }
 
         // =========================
@@ -412,25 +486,25 @@ CameraStc _cameraMenu;
         _previousKeyboardState = keyboardState;
 
         // Cuando Termina el juego
-        if (_playerVehicle.CurrentHealth == 0) _sceneNum = Scene.GameOver ;
-   
+        if (!_gameOver && _playerVehicle.CurrentHealth == 0)
+        {
+            _gameOver = true;
+            _gameOverTimer = GameOverDelay;
+        }
+        if (_gameOver)
+        {
+            _gameOverTimer -= (float)gameTime.ElapsedGameTime.TotalSeconds;
+
+            if (_gameOverTimer <= 0)
+            {
+                _sceneNum = Scene.GameOver;
+            }
+        }
+
 
         base.Update(gameTime);
-         break;
+            break;
         }
-    }
-
-    private void ChangeVehicle(Vehicle newVehicle)
-    {
-        // conservar posicion, rotacion y velocidad
-
-        newVehicle.Position = _playerVehicle.Position;
-
-        newVehicle.RotationY = _playerVehicle.RotationY;
-
-        newVehicle._speed = 0;
-
-        _playerVehicle = newVehicle;
     }
 
     private void CheckObstacleCollisions()

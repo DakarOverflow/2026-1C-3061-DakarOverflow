@@ -7,7 +7,6 @@ using Microsoft.Xna.Framework.Input;
 namespace TGC.MonoGame.TP;
 
 
-// Dataclass
 public class VehicleStats
 {
     public float MaxAcceleration;
