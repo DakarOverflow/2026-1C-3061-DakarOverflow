@@ -39,8 +39,15 @@ public class CurvaIzquierdaNieve : CurvaIzquierda, IAssetLoader
     {
         var roadColormap = content.Load<Texture2D>(AssetPaths.ContentFolder3D + "road-tiles/Textures/colormap");
         var suburbanColormap = content.Load<Texture2D>(AssetPaths.ContentFolder3D + "buildings/suburban/Textures/colormap");
+        var towerdefenseColormap = content.Load<Texture2D>(AssetPaths.ContentFolder3D + "tower-defense-kit/Textures/colormap");
+        
+        // BASE 
         CurvaIzquierdaNieve.LoadModel(content, "road-tiles/road-square", AssetPaths.ContentFolder3D + "road-tiles/road-square", AssetPaths.ContentFolderEffects + "BasicShader", Color.WhiteSmoke);
-        CurvaIzquierdaNieve.LoadModel(content, "road-tiles/road-curve", AssetPaths.ContentFolder3D + "road-tiles/road-curve", AssetPaths.ContentFolderEffects + "TexturedShader", roadColormap);
+        
+        // RUTA
+        CurvaIzquierdaNieve.LoadModel(content, "tower-defense-kit/snow-tile-corner-large", AssetPaths.ContentFolder3D + "tower-defense-kit/snow-tile-corner-large", AssetPaths.ContentFolderEffects + "TexturedShader", towerdefenseColormap);
+        
+        // DECO
         CurvaIzquierdaNieve.LoadModel(content, "buildings/suburban/building-type-s", AssetPaths.ContentFolder3D + "buildings/suburban/building-type-s", AssetPaths.ContentFolderEffects + "TexturedShader", suburbanColormap);
     }
 
@@ -52,7 +59,7 @@ public class CurvaIzquierdaNieve : CurvaIzquierda, IAssetLoader
     {
         NextTileOffset = Vector3.Transform(new Vector3(-1200f, 0f, 0f), Matrix.CreateRotationY(rotation));
 
-        //Piso y Autopista 
+        // BASE 
         AddObject(modelMap.GetValueOrDefault("road-tiles/road-square", null), 
             new Vector3(12f),
             Vector3.Zero,
@@ -60,20 +67,15 @@ public class CurvaIzquierdaNieve : CurvaIzquierda, IAssetLoader
             MathHelper.Pi
         );
 
-
+        // RUTA
         AddObject(
-            modelMap.GetValueOrDefault("road-tiles/road-curve", null), 
-            new Vector3(5f, 5f, 5f),
-            new Vector3(-100f, 12f, 100f),
-            rotation //Rotar 2pi = rotar 0
-        );
-        //Edificios 
-        AddObject( 
-            modelMap.GetValueOrDefault("buildings/suburban/building-type-s", null), 
-            new Vector3(2f),
-            new Vector3(322f, 10f, 450f), rotation + MathHelper.Pi
+            modelMap.GetValueOrDefault("tower-defense-kit/snow-tile-corner-large", null), 
+            new Vector3(5f, 1f, 5f), // Escala
+            new Vector3(250f, -5f, 250f), // Posicion
+            rotation - MathHelper.PiOver2
         );
 
-
+        // DECO 
+        
     }
 }
