@@ -31,6 +31,7 @@ public class TGCGame : Game
 
     // TECLADO
     private KeyboardState _previousKeyboardState;
+    private MouseState _previousMouseState;
 
 
     // PLAYER
@@ -53,12 +54,12 @@ public class TGCGame : Game
     public SpriteBatch spriteBatch;
 
     public enum Scene
-    {
-        Menu,
-        Road,
-        GameOver
-    }
-    Scene _sceneNum = Scene.Menu;
+{
+   Menu,
+   Road,
+   GameOver
+}
+Scene _sceneNum = Scene.Menu;
 
     private bool _gameOver;
     private float _gameOverTimer;
@@ -456,7 +457,7 @@ Matrix _worldMainCarHud;
         }
 
         switch (_sceneNum){
-            case Scene.Menu:
+            case  Scene.Menu: 
 
             if (keyboardState.IsKeyDown(Keys.D1) &&
                 _previousKeyboardState.IsKeyUp(Keys.D1))
@@ -481,8 +482,11 @@ Matrix _worldMainCarHud;
 
             break;
 
-            default: 
-        
+            default:
+                if (_sceneNum == Scene.GameOver)
+                {
+                    return;
+                }
         // TOGGLE MOUSE
 
         if (keyboardState.IsKeyDown(Keys.M) &&
@@ -535,6 +539,8 @@ Matrix _worldMainCarHud;
                 gameTime,
                 _mouseCaptured
             );
+
+            CheckFreeCameraModelPicking();
         }
         else
         {
@@ -547,6 +553,7 @@ Matrix _worldMainCarHud;
         }
 
         _previousKeyboardState = keyboardState;
+        _previousMouseState = Mouse.GetState();
 
         // Cuando Termina el juego
         if (!_gameOver && _playerVehicle.CurrentHealth == 0)
@@ -566,7 +573,7 @@ Matrix _worldMainCarHud;
 
         _worldMenuCar3Rotation =MathHelper.ToRadians(Convert.ToSingle(gameTime.ElapsedGameTime.TotalSeconds) *60f  * _playerVehicle._speed);
         base.Update(gameTime);
-            break;
+         break;
         }
     }
 
@@ -607,6 +614,60 @@ Matrix _worldMainCarHud;
         }
     }
 
+    private void CheckFreeCameraModelPicking()
+    {
+        MouseState mouseState = Mouse.GetState();
+
+        if (mouseState.LeftButton != ButtonState.Pressed ||
+            _previousMouseState.LeftButton != ButtonState.Released)
+        {
+            return;
+        }
+
+        Point screenPoint = _mouseCaptured
+            ? new Point(GraphicsDevice.Viewport.Width / 2, GraphicsDevice.Viewport.Height / 2)
+            : new Point(mouseState.X, mouseState.Y);
+        Ray ray = ModelRaycaster.CreateRayFromScreenPoint(screenPoint, GraphicsDevice, _freeCamera);
+        ModelRaycastHit? closestHit = null;
+        Tile closestTile = null;
+
+        foreach (var tile in _road.Tiles)
+        {
+            if (!tile.GetBoundingSphere().Intersects(ray).HasValue)
+            {
+                continue;
+            }
+
+            foreach (WorldObject obj in tile.WorldObjects)
+            {
+                if (!ModelRaycaster.TryIntersectObject(ray, obj, out ModelRaycastHit hit))
+                {
+                    continue;
+                }
+
+                if (!closestHit.HasValue || hit.Distance < closestHit.Value.Distance)
+                {
+                    closestHit = hit;
+                    closestTile = tile;
+                }
+            }
+        }
+
+        if (closestHit.HasValue && closestTile != null)
+        {
+            Vector3 localPoint = closestHit.Value.LocalPoint;
+            Vector3 worldPoint = closestHit.Value.WorldPoint;
+            Vector3 addObstacleOffset = Vector3.Transform(
+                worldPoint - closestTile.Position,
+                Matrix.CreateRotationY(-closestTile.Rotation)
+            );
+
+            Console.WriteLine($"Model local coordinates hit: X={localPoint.X:F3}, Y={localPoint.Y:F3}, Z={localPoint.Z:F3}");
+            Console.WriteLine($"World coordinates hit: X={worldPoint.X:F3}, Y={worldPoint.Y:F3}, Z={worldPoint.Z:F3}");
+            Console.WriteLine($"AddObstacle offset for this tile: new Vector3({addObstacleOffset.X:F3}f, {addObstacleOffset.Y:F3}f, {addObstacleOffset.Z:F3}f)");
+        }
+    }
+
     protected override void Draw(GameTime gameTime)
     {
         GraphicsDevice.Clear(Color.CornflowerBlue);
@@ -629,11 +690,7 @@ Matrix _worldMainCarHud;
             _worldMenuCar3 *= Matrix.CreateRotationX(MathHelper.ToRadians(Convert.ToSingle(gameTime.ElapsedGameTime.TotalSeconds) *40f )) * Matrix.CreateRotationY(MathHelper.ToRadians(Convert.ToSingle(gameTime.ElapsedGameTime.TotalSeconds) *40f )) ;
             break;
 
-            case  Scene.GameOver: 
-                DrawCenterTextY("GAME OVER",10,10);
-            break;
-                
-            default: 
+            default:
         // =========================
         // DRAW SKYBOX
         // =========================
@@ -696,7 +753,7 @@ Matrix _worldMainCarHud;
                 }
             }
         }
-
+        base.Draw(gameTime);
         // =========================
         // UI
         // =========================
@@ -723,9 +780,18 @@ Matrix _worldMainCarHud;
             
         }
         _worldMainCarHud = Matrix.CreateScale(0.1f)*  Matrix.CreateRotationX(_worldMenuCar3Rotation)  * Matrix.CreateTranslation(100f,-_graphics.PreferredBackBufferHeight/18,0f );
+        if (_cameraInUse is FreeCamera)
+        {
+            DrawCenterText("+", 3, Color.White);
+        }
+
+        if (_gameOver)
+        {
+            DrawCenterText("GAME OVER",10, Color.Red);
+        }
         break; 
         }
-        base.Draw(gameTime);
+       
 
     }
 
@@ -776,13 +842,17 @@ Matrix _worldMainCarHud;
         base.UnloadContent();
     }
 
-    public void DrawCenterText(string msg, float escala)
+    public void DrawCenterText(string msg, float escala, Color color)
     {
         var W = GraphicsDevice.Viewport.Width;
         var H = GraphicsDevice.Viewport.Height;
         var size = font.MeasureString(msg) * escala;
-        spriteBatch.Begin();
-        spriteBatch.DrawString(font, msg, new Vector2(0, 0), Color.White);
+        spriteBatch.Begin(SpriteSortMode.Deferred,null, 
+            null, 
+            DepthStencilState.Default, 
+            null, null,
+            Matrix.CreateScale(escala) * Matrix.CreateTranslation((W - size.X) / 2, (H - size.Y) / 2, 0));
+        spriteBatch.DrawString(font, msg, new Vector2(0, 0), color);
         spriteBatch.End();
     }
     public void DrawLeftText(string msg, float X, float escala,float Y)
@@ -801,7 +871,6 @@ Matrix _worldMainCarHud;
     public void DrawCenterTextY(string msg, float Y, float escala)
         {
             var W = GraphicsDevice.Viewport.Width;
-            var H = GraphicsDevice.Viewport.Height;
             var size = font.MeasureString(msg) * escala;
             spriteBatch.Begin(SpriteSortMode.Deferred,null, 
             null, 

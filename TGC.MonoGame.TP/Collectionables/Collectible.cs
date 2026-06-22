@@ -90,7 +90,7 @@ public class Collectible : WorldObject, IAssetLoader
         EffectValue = effectValue;
         IsActive = true;
         _scale = scale;
-        _modelCenterOffset = CalculateModelCenter(model.InnerModel);
+        _modelCenterOffset = CalculateModelCenter(model.Model);
         
         // --- PREPARACIÓN PARA COLISIONES ---
         UpdateBoundingBox();
@@ -137,7 +137,7 @@ public class Collectible : WorldObject, IAssetLoader
         Vector3 animatedPosition = Position + new Vector3(0, yOffset, 0);
 
         // Actualizar matriz World centrando el modelo antes de rotar
-        World = Matrix.CreateTranslation(-_modelCenterOffset) * Matrix.CreateScale(_scale) * Matrix.CreateRotationY(rotationY) * Matrix.CreateTranslation(animatedPosition);
+        setWorld(Matrix.CreateTranslation(-_modelCenterOffset) * Matrix.CreateScale(_scale) * Matrix.CreateRotationY(rotationY) * Matrix.CreateTranslation(animatedPosition));
 
         // Actualizar la posición del BoundingBox también
         UpdateBoundingBox();
