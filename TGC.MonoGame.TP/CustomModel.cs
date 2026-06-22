@@ -50,6 +50,7 @@ public class CustomModel
     public void Draw(Matrix world, Matrix view, Matrix projection)
     {
         _effect.Parameters["View"]?.SetValue(view);
+        _effect.Parameters["CameraPosition"]?.SetValue(view.Translation);
         _effect.Parameters["Projection"]?.SetValue(projection);
 
         if (_texture != null)
@@ -67,7 +68,10 @@ public class CustomModel
         foreach (var mesh in _model.Meshes)
         {
             var meshWorld = modelMeshesBaseTransforms[mesh.ParentBone.Index];
-            _effect.Parameters["World"]?.SetValue(meshWorld * world);
+            var finalWorld = meshWorld * world;
+            _effect.Parameters["World"]?.SetValue(finalWorld);
+            var worldInverseTranspose = Matrix.Transpose(Matrix.Invert(finalWorld));
+            _effect.Parameters["WorldInverseTranspose"]?.SetValue(worldInverseTranspose);
             try
             {
                 mesh.Draw();

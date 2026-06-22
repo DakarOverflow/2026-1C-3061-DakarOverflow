@@ -140,7 +140,7 @@ public class Skybox
         _effect.Parameters["World"]?.SetValue(world);
         _effect.Parameters["View"]?.SetValue(view);
         _effect.Parameters["Projection"]?.SetValue(projection);
-
+        _effect.Parameters["WorldInverseTranspose"]?.SetValue(world);
         foreach (var face in _faces)
         {
             _effect.Parameters["ModelTexture"]?.SetValue(face.Texture);
