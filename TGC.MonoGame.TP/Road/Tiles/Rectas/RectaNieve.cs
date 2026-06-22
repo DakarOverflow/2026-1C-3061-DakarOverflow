@@ -38,8 +38,15 @@ public class RectaNieve : Recta, IAssetLoader
     {
         var roadColormap = content.Load<Texture2D>(AssetPaths.ContentFolder3D + "road-tiles/Textures/colormap");
         var suburbanColormap = content.Load<Texture2D>(AssetPaths.ContentFolder3D + "buildings/suburban/Textures/colormap");
+        var towerdefenseColormap = content.Load<Texture2D>(AssetPaths.ContentFolder3D + "tower-defense-kit/Textures/colormap");
+        
+        // BASE
         RectaNieve.LoadModel(content, "road-tiles/road-square", AssetPaths.ContentFolder3D + "road-tiles/road-square", AssetPaths.ContentFolderEffects + "BasicShader", Color.WhiteSmoke);
-        RectaNieve.LoadModel(content, "road-tiles/road-straight", AssetPaths.ContentFolder3D + "road-tiles/road-straight",  AssetPaths.ContentFolderEffects + "TexturedShader", roadColormap);
+        
+        // RUTA
+        RectaNieve.LoadModel(content, "tower-defense-kit/snow-tile-straight", AssetPaths.ContentFolder3D + "tower-defense-kit/snow-tile-straight",  AssetPaths.ContentFolderEffects + "TexturedShader", towerdefenseColormap);
+        
+        // DECO
         RectaNieve.LoadModel(content, "buildings/suburban/building-type-c", AssetPaths.ContentFolder3D + "buildings/suburban/building-type-c", AssetPaths.ContentFolderEffects + "TexturedShader", suburbanColormap);        
         RectaNieve.LoadModel(content, "buildings/suburban/planter", AssetPaths.ContentFolder3D + "buildings/suburban/planter", AssetPaths.ContentFolderEffects + "TexturedShader", suburbanColormap);
         RectaNieve.LoadModel(content, "buildings/suburban/fence", AssetPaths.ContentFolder3D + "buildings/suburban/fence", AssetPaths.ContentFolderEffects + "TexturedShader", suburbanColormap);
@@ -52,6 +59,8 @@ public class RectaNieve : Recta, IAssetLoader
     ) : base(position,rotation, biome)
     {
         NextTileOffset = Vector3.Transform(new Vector3(0f, 0f, -1200f), Matrix.CreateRotationY(rotation));
+        
+        // BASE
         AddObject(modelMap.GetValueOrDefault("road-tiles/road-square", null), 
             new Vector3(12f),
             Vector3.Zero,
@@ -60,16 +69,14 @@ public class RectaNieve : Recta, IAssetLoader
         );
 
         // RUTA
-
         AddObject(
-            modelMap.GetValueOrDefault("road-tiles/road-straight", null),
-            new Vector3(12f, 5f, 5f),
-            new Vector3(0f, 12f, 0f),
-            rotation + MathHelper.PiOver2
+            modelMap.GetValueOrDefault("tower-defense-kit/snow-tile-straight", null),
+            new Vector3(5f, 5f, 12f), // Escala X, Y, Z.
+            new Vector3(0f, -30f, 0f), // Posicion en eje Y
+            rotation
         );
 
-        // EDIFICIOS
-
+        // DECO
         AddObstacle(
             modelMap.GetValueOrDefault("buildings/suburban/building-type-c", null),
             new Vector3(2f),
