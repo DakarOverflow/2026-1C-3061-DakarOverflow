@@ -161,4 +161,31 @@ public class Road
     {
         return this._tiles.Last<Tile>();
     }
+
+    //TOOD: Intentar resolverlo con colisiones para reutilizar la lógica de los coleccionables
+    public float GetFrictionAtPosition(Vector3 position)
+    {
+        const float detectionThreshold = 800f;
+        float detectionThresholdSq = detectionThreshold * detectionThreshold;
+        float bestDistSq = float.MaxValue;
+        float bestFriction = 1f;
+
+        foreach (Tile tile in this._tiles)
+        {
+            float dx = tile.Position.X - position.X;
+            float dz = tile.Position.Z - position.Z;
+            float distSq = dx * dx + dz * dz;
+
+            if (distSq < bestDistSq)
+            {
+                bestDistSq = distSq;
+                if (distSq <= detectionThresholdSq)
+                {
+                    bestFriction = tile.GetFrictionCoefficient();
+                }
+            }
+        }
+
+        return bestFriction;
+    }
 }

@@ -43,4 +43,9 @@ public class DirtBiome : Biome
         }
         throw new ArgumentException("Tipo de tile no válido para el bioma de tierra");
     }
+
+    public override float GetFrictionCoefficient()
+    {
+        return 0.8f; 
+    }
 }

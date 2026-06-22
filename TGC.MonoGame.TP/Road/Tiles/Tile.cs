@@ -218,6 +218,11 @@ public abstract class Tile
         }
     }
 
+    public float GetFrictionCoefficient()
+    {
+        return this.biome.GetFrictionCoefficient();
+    }
+
     public void CheckCollisions(Vehicle player)
     {
         foreach (var obj in _tileObjects)

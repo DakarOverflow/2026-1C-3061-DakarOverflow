@@ -376,6 +376,9 @@ CameraStc _cameraMenu;
         // UPDATE PLAYER
         // =========================
 
+        // Actualizo el coeficiente de fricción según el bioma actual
+        _playerVehicle.FrictionCoefficient = _road.GetFrictionAtPosition(_playerVehicle.Position);
+
         _playerVehicle.Update(gameTime);
         _playerVehicle.UpdateSound(_instanciaSonidoMotor, _sonidoFrenado);
         CheckObstacleCollisions();

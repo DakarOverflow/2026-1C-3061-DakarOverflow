@@ -45,5 +45,8 @@ public class SnowBiome : Biome
         }
         throw new ArgumentException("Tipo de tile no válido para el bioma de nieve");
     }
-
+    public override float GetFrictionCoefficient()
+    {
+        return 0.6f; 
+    }
 }

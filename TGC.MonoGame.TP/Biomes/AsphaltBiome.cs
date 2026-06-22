@@ -46,4 +46,9 @@ public class AsphaltBiome : Biome
         }
         throw new ArgumentException("Tipo de tile no válido para el bioma de asfalto");
     }
+
+    public override float GetFrictionCoefficient()
+    {
+        return 1f;
+    }
 }   

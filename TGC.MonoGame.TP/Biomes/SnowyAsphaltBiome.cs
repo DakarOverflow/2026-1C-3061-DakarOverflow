@@ -45,5 +45,8 @@ public class SnowyAsphaltBiome : Biome
         }
         throw new ArgumentException("Tipo de tile no válido para el bioma de nieve-asfalto");
     }
-
+    public override float GetFrictionCoefficient()
+    {
+        return 0.75f; 
+    }
 }
