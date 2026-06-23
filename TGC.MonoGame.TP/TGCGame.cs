@@ -72,6 +72,7 @@ public class TGCGame : Game
 {
    Menu,
    Road,
+   Difficulty,
    GameOver
 }
 Scene _sceneNum = Scene.Menu;
@@ -99,6 +100,7 @@ Scene _sceneNum = Scene.Menu;
     CameraStc _cameraMenu;
 
     float _worldMenuCar3Rotation;
+    GameDifficulty _currentDifficulty = GameDifficulty.EASY;
     #endregion
 
 
@@ -295,7 +297,7 @@ Matrix _worldMainCarHud;
         _road = new Road(
             new AsphaltBiome(
                 null,
-                new GameMode(BiomeType.RANDOM, GameDifficulty.EASY)
+                new GameMode(BiomeType.RANDOM, _currentDifficulty)
             ).GenerateNewTileOf(
                 TileType.STRAIGHT_LINE,
                 new Vector3(0f, -50f, 0f),
@@ -480,24 +482,46 @@ Matrix _worldMainCarHud;
                 _previousKeyboardState.IsKeyUp(Keys.D1))
             {
                 _playerVehicle = _lightVehicle;
-                _sceneNum = Scene.Road;
+                _sceneNum = Scene.Difficulty;
             }
 
             if (keyboardState.IsKeyDown(Keys.D2) &&
                 _previousKeyboardState.IsKeyUp(Keys.D2))
             {
                 _playerVehicle = _mediumVehicle;
-                _sceneNum = Scene.Road;
+                _sceneNum = Scene.Difficulty;
             }
 
             if (keyboardState.IsKeyDown(Keys.D3) &&
                 _previousKeyboardState.IsKeyUp(Keys.D3))
             {
                 _playerVehicle = _heavyVehicle;
-                _sceneNum = Scene.Road;
+                _sceneNum = Scene.Difficulty;
             }
 
             break;
+            case  Scene.Difficulty:
+            if (keyboardState.IsKeyDown(Keys.M) &&
+                _previousKeyboardState.IsKeyUp(Keys.M))
+            {
+                _currentDifficulty = GameDifficulty.EASY;
+                _sceneNum = Scene.Road;
+            }
+
+            if (keyboardState.IsKeyDown(Keys.N) &&
+                _previousKeyboardState.IsKeyUp(Keys.N))
+            {
+                _currentDifficulty = GameDifficulty.MEDIUM;
+                _sceneNum = Scene.Road;
+            }
+
+            if (keyboardState.IsKeyDown(Keys.B) &&
+                _previousKeyboardState.IsKeyUp(Keys.B))
+            {
+                _currentDifficulty = GameDifficulty.HARD;
+                _sceneNum = Scene.Road;
+            }
+            break; 
 
             default:
                 if (_sceneNum == Scene.GameOver)
@@ -716,6 +740,15 @@ Matrix _worldMainCarHud;
             _worldMenuCar3 *= Matrix.CreateRotationX(MathHelper.ToRadians(Convert.ToSingle(gameTime.ElapsedGameTime.TotalSeconds) *40f )) * Matrix.CreateRotationY(MathHelper.ToRadians(Convert.ToSingle(gameTime.ElapsedGameTime.TotalSeconds) *40f )) ;
             break;
 
+            case  Scene.Difficulty: 
+
+            DrawCenterTextY("Dificultad",10,10);
+            DrawCenterTextY("M Para Facil",400,1);
+            DrawCenterTextY("N Para Normal",450,1);
+            DrawCenterTextY("B Para Dificil",500,1);
+
+            break;
+
             default:
         // =========================
         // SHADOW MAP
@@ -821,7 +854,7 @@ Matrix _worldMainCarHud;
             DrawCenterText("+", 3, Color.White);
         }
 
-        if (_gameOver)
+        if (_gameOver &&  !_useFreeCamera)
         {
             DrawCenterText("GAME OVER",10, Color.Red);
         }
@@ -1010,6 +1043,7 @@ Matrix _worldMainCarHud;
             spriteBatch.End();
         }
 
+    //UI
     public void DrawFuelBar()
     {
         float fuelPercentage = Math.Max(0, _playerVehicle.CurrentFuel / _playerVehicle.MaxFuel);
