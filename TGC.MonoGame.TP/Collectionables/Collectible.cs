@@ -165,16 +165,19 @@ public class Collectible : WorldObject, IAssetLoader
             case CollectibleType.FuelTank:
                 // Restaura combustible
                 player.AddFuel(EffectValue); 
+                SoundManager.GetInstance().SonarCargaCombustible();
                 break;
             
             case CollectibleType.Wrench:
                 // Restaura puntos de salud
                 player.RepairDamage(EffectValue);
+                SoundManager.GetInstance().SonarReparacionAuto();
                 break;
             
             case CollectibleType.Coin:
                 // Incrementa puntaje, se trabaja en numeros enteros.
                 player.AddScore((int)EffectValue);
+                SoundManager.GetInstance().SonarRecoleccionMoneda();
                 break;
         }
     }

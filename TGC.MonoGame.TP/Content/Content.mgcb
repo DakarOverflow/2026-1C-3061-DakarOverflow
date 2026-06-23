@@ -3282,6 +3282,30 @@
 /processorParam:Quality=Best
 /build:Sounds/auto_frenando.mp3
 
+#begin Sounds/choque.mp3
+/importer:Mp3Importer
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:Sounds/choque.mp3
+
+#begin Sounds/efectoCargaCombustible.mp3
+/importer:Mp3Importer
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:Sounds/efectoCargaCombustible.mp3
+
+#begin Sounds/efectoMoneda.mp3
+/importer:Mp3Importer
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:Sounds/efectoMoneda.mp3
+
+#begin Sounds/efectoReparacionAuto.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:Sounds/efectoReparacionAuto.wav
+
 #begin Sounds/motor_auto.wav
 /importer:WavImporter
 /processor:SoundEffectProcessor
