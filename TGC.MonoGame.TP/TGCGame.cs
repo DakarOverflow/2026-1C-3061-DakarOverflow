@@ -145,7 +145,7 @@ Matrix _worldMainCarHud;
         // Modelos de Coleccionables para el HUD
         _worldFuelTank = Matrix.CreateScale(0.15f) * Matrix.CreateTranslation(- _graphics.PreferredBackBufferWidth/17 , - _graphics.PreferredBackBufferHeight/17 , 0f);
         _worldWrench = Matrix.CreateScale(0.4f) * Matrix.CreateTranslation(- _graphics.PreferredBackBufferWidth/19 , - _graphics.PreferredBackBufferHeight/17 , 0f);
-        _worldCoin = Matrix.CreateScale(0.4f)* Matrix.CreateRotationZ(MathHelper.PiOver4)  * Matrix.CreateTranslation(-10f, _graphics.PreferredBackBufferHeight/18, 0f)  ;
+        _worldCoin = Matrix.CreateScale(0.2f) * Matrix.CreateRotationZ(MathHelper.PiOver4) * Matrix.CreateTranslation(_graphics.PreferredBackBufferWidth/20f, _graphics.PreferredBackBufferHeight/19f, 0f);
         // _worldMainCarHud = Matrix.CreateScale(0.1f)*  Matrix.CreateRotationX(MathHelper.PiOver2)  * Matrix.CreateTranslation(-100f,_graphics.PreferredBackBufferHeight/18,0f ) ;
         #endregion 
 
@@ -793,7 +793,7 @@ Matrix _worldMainCarHud;
         // DrawLeftText("Velocidad: " +string.Format("{0:N2}",_playerVehicle._speed), 10, 1,100); 
         DrawFuelBar();
         DrawHealthBar();
-        DrawLeftText("Puntos: " +Convert.ToString(_playerVehicle.Score), 800, 1,100); 
+        DrawScoreUI();
 
         FuelTank.DrawUnlit(_worldFuelTank , _cameraMenu.View, _cameraMenu.Projection);
         Wrench.DrawUnlit(_worldWrench , _cameraMenu.View, _cameraMenu.Projection);
@@ -1067,6 +1067,32 @@ Matrix _worldMainCarHud;
         spriteBatch.Draw(_blankTexture, new Rectangle(x, y + barHeight - 2, barWidth, 2), Color.Black);
         spriteBatch.Draw(_blankTexture, new Rectangle(x, y, 2, barHeight), Color.Black);
         spriteBatch.Draw(_blankTexture, new Rectangle(x + barWidth - 2, y, 2, barHeight), Color.Black);
+        
+        spriteBatch.End();
+    }
+
+    public void DrawScoreUI()
+    {
+        // Proyectamos la posicion real de la moneda 3D a coordenadas de pixeles en 2D
+        Vector3 screenPos = GraphicsDevice.Viewport.Project(Vector3.Zero, _cameraMenu.Projection, _cameraMenu.View, _worldCoin);
+        
+        // Ubicamos el texto a la derecha de la moneda
+        int x = (int)screenPos.X + 40;
+        int y = (int)screenPos.Y - 20; // Centrado verticalmente con la moneda
+        
+        string scoreText = _playerVehicle.Score.ToString();
+        
+        spriteBatch.Begin(SpriteSortMode.Deferred, null, null, DepthStencilState.Default, null, null, null);
+        
+        // Efecto de borde negro (dibujamos el texto desplazado en 4 direcciones)
+        Vector2 position = new Vector2(x, y);
+        spriteBatch.DrawString(font, scoreText, position + new Vector2(2, 0), Color.Black);
+        spriteBatch.DrawString(font, scoreText, position + new Vector2(-2, 0), Color.Black);
+        spriteBatch.DrawString(font, scoreText, position + new Vector2(0, 2), Color.Black);
+        spriteBatch.DrawString(font, scoreText, position + new Vector2(0, -2), Color.Black);
+        
+        // Texto blanco por encima
+        spriteBatch.DrawString(font, scoreText, position, Color.White);
         
         spriteBatch.End();
     }
