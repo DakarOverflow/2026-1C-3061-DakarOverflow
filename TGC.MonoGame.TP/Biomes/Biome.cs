@@ -51,4 +51,5 @@ public abstract class Biome
         if (roll < 0.8) return CollectibleType.FuelTank;
         return CollectibleType.Wrench;
     }
+    public abstract float GetFrictionCoefficient();
 }

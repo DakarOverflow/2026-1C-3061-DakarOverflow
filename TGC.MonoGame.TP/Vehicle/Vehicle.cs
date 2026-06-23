@@ -40,6 +40,8 @@ public class Vehicle
     public BoundingBox BoundingBox { get; private set; }
     public OrientedBoundingBox OBB { get; private set; }
 
+    public float FrictionCoefficient { get; set; } = 1f;
+
     public const float ScaleFactor = 0.5f;
 
     private readonly Vector3 _boundingBoxHalfSize = new Vector3(100f, 50f, 100f) * ScaleFactor;
@@ -126,7 +128,8 @@ public class Vehicle
                 lerpFactor
             );
 
-            _speed -= _stats.BrakeForce * deltaTime;
+
+            _speed -= _stats.BrakeForce * FrictionCoefficient * deltaTime;
         }
         else if(!_exploded)
         {
@@ -138,7 +141,8 @@ public class Vehicle
                 lerpFactor
             );
 
-            _speed += _currentAcceleration * deltaTime;
+
+            _speed += _currentAcceleration * FrictionCoefficient * deltaTime;
         }
 
 
@@ -158,7 +162,7 @@ public class Vehicle
         // LIMITES VELOCIDAD
         // =========================
 
-        _speed = MathHelper.Clamp(_speed, _stats.MinSpeed, _stats.MaxSpeed);
+        _speed = MathHelper.Clamp(_speed, _stats.MinSpeed, _stats.MaxSpeed * MathHelper.Clamp(FrictionCoefficient, 0.1f, 1f));
 
         // =========================
         // GIRAR
@@ -172,7 +176,7 @@ public class Vehicle
             speedFactor
         );
 
-        float currentTurnSpeed = _stats.TurnSpeed * turnMultiplier;
+        float currentTurnSpeed = _stats.TurnSpeed * turnMultiplier * FrictionCoefficient;
 
         if (Math.Abs(_speed) > 5f)
         {

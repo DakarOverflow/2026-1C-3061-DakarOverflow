@@ -19,10 +19,10 @@ public class AsphaltBiome : Biome
             float rand = (float) this._randomGenerator.NextDouble();
             if(rand < PROBABILIDAD_PASE_A_TIERRA)
             {
-                return new DirtBiome(_randomGenerator, _gameMode);
+                return new DirtyAsphaltBiome(_randomGenerator, _gameMode);
             }else if(rand < PROBABILIDAD_PASE_A_TIERRA + PROBABILIDAD_PASE_A_NIEVE)
             {
-                return new SnowBiome(_randomGenerator, _gameMode);
+                return new SnowyAsphaltBiome(_randomGenerator, _gameMode);
             }
         }
         return this; // Si el bioma es constante o no se alcanza la probabilidad requerida para el cambio, continuamos en el bioma actual
@@ -45,5 +45,10 @@ public class AsphaltBiome : Biome
             return new CurvaDerechaAsfalto(position,rotation, this);
         }
         throw new ArgumentException("Tipo de tile no válido para el bioma de asfalto");
+    }
+
+    public override float GetFrictionCoefficient()
+    {
+        return 1f;
     }
 }   
