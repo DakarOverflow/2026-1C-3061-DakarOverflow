@@ -43,6 +43,7 @@ public class SoundManager
     private SoundEffectInstance _cargarCombustibleInstance;
 
     private SoundEffect _explosion;
+    private SoundEffect _golpe;
 
     public SoundManager(ContentManager content)
     {
@@ -56,6 +57,7 @@ public class SoundManager
         _cargarCombustibleInstance = _cargarCombustible.CreateInstance();
 
         _explosion = content.Load<SoundEffect>(AssetPaths.ContentFolderSounds + "choque");
+        _golpe = content.Load<SoundEffect>(AssetPaths.ContentFolderSounds + "raspon");
     }
 
 
@@ -77,6 +79,11 @@ public class SoundManager
     public void SonarExplosion()
     {
         _explosion.Play();
+    }
+
+    public void SonarGolpe()
+    {
+        _golpe.Play();
     }
     
 }

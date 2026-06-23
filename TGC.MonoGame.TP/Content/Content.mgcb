@@ -3312,6 +3312,12 @@
 /processorParam:Quality=Best
 /build:Sounds/motor_auto.wav
 
+#begin Sounds/raspon.mp3
+/importer:Mp3Importer
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:Sounds/raspon.mp3
+
 #begin SpriteFonts/CascadiaCode/CascadiaCodePL.spritefont
 /importer:FontDescriptionImporter
 /processor:FontDescriptionProcessor
