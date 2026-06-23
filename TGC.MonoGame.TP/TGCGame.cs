@@ -81,6 +81,7 @@ Scene _sceneNum = Scene.Menu;
     private float _gameOverTimer;
     private const float GameOverDelay = 2f;
 
+    bool _godMode = false;
     //Para que sean accesibles globalmente
     #region  Menu Objecs
     CustomModel lightModel;
@@ -554,6 +555,9 @@ Matrix _worldMainCarHud;
         {
             _useFreeCamera = !_useFreeCamera;
         }
+        //GOD MODE 
+        if (keyboardState.IsKeyDown(Keys.G) &&_previousKeyboardState.IsKeyUp(Keys.G)) _godMode = !_godMode ;
+        
 
         // =========================
         // UPDATE PLAYER
@@ -564,7 +568,7 @@ Matrix _worldMainCarHud;
 
         _playerVehicle.Update(gameTime);
         _playerVehicle.UpdateSound(_instanciaSonidoMotor, _sonidoFrenado);
-        CheckObstacleCollisions();
+        if(!_godMode) CheckObstacleCollisions();
         }
 
         // =========================
@@ -733,6 +737,8 @@ Matrix _worldMainCarHud;
             DrawCenterTextY("1 Para _lightVehicle",400,1);
             DrawCenterTextY("2 Para _mediumVehicle",450,1);
             DrawCenterTextY("3 Para _heavyVehicle",500,1);
+            DrawCenterTextY("W A S D: moverse G:God mode H:hitboxs F:Modo Foto ",550,1);
+
 
             lightModel.DrawUnlit(_worldMenuCar, _cameraMenu.View, _cameraMenu.Projection);
             heavyModel.DrawUnlit(_worldMenuCar2, _cameraMenu.View, _cameraMenu.Projection);
@@ -830,6 +836,10 @@ Matrix _worldMainCarHud;
         // UI
         // =========================
         // DrawLeftText("Velocidad: " +string.Format("{0:N2}",_playerVehicle._speed), 10, 1,100); 
+
+        if (!_useFreeCamera){
+        if (_godMode) DrawLeftText("GOD MODE",10f,1,0);
+    
         DrawFuelBar();
         DrawHealthBar();
         DrawScoreUI();
@@ -851,6 +861,7 @@ Matrix _worldMainCarHud;
             break;
             
         }
+        }
         _worldMainCarHud = Matrix.CreateScale(0.1f)*  Matrix.CreateRotationX(_worldMenuCar3Rotation)  * Matrix.CreateTranslation(100f,-_graphics.PreferredBackBufferHeight/18,0f );
         if (_cameraInUse is FreeCamera)
         {
@@ -860,6 +871,8 @@ Matrix _worldMainCarHud;
         if (_gameOver &&  !_useFreeCamera)
         {
             DrawCenterText("GAME OVER",10, Color.Red);
+            DrawCenterTextY("PUNTAJE: "+ _playerVehicle.Score.ToString() ,100, 10,Color.Yellow);
+            _instanciaSonidoMotor.Stop();
         }
         break; 
         }
@@ -1043,6 +1056,18 @@ Matrix _worldMainCarHud;
             null, null,
                 Matrix.CreateScale(escala) * Matrix.CreateTranslation((W - size.X) / 2, Y, 0));
             spriteBatch.DrawString(font, msg, new Vector2(0, 0), Color.White);
+            spriteBatch.End();
+        }
+            public void DrawCenterTextY(string msg, float Y, float escala,Color Color)
+        {
+            var W = GraphicsDevice.Viewport.Width;
+            var size = font.MeasureString(msg) * escala;
+            spriteBatch.Begin(SpriteSortMode.Deferred,null, 
+            null, 
+            DepthStencilState.Default, 
+            null, null,
+                Matrix.CreateScale(escala) * Matrix.CreateTranslation((W - size.X) / 2, Y, 0));
+            spriteBatch.DrawString(font, msg, new Vector2(0, 0), Color);
             spriteBatch.End();
         }
 
