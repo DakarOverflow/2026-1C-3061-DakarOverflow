@@ -39,8 +39,15 @@ public class CurvaDerechaTierra : CurvaDerecha, IAssetLoader
     {
         var roadColormap = content.Load<Texture2D>(AssetPaths.ContentFolder3D + "road-tiles/Textures/colormap");
         var suburbanColormap = content.Load<Texture2D>(AssetPaths.ContentFolder3D + "buildings/suburban/Textures/colormap");
+        var towerdefenseColormap = content.Load<Texture2D>(AssetPaths.ContentFolder3D + "tower-defense-kit/Textures/colormap");
+        
+        // BASE
         CurvaDerechaTierra.LoadModel(content, "road-tiles/road-square", AssetPaths.ContentFolder3D + "road-tiles/road-square", AssetPaths.ContentFolderEffects + "BasicShader", Color.DarkGreen);
-        CurvaDerechaTierra.LoadModel(content, "road-tiles/road-curve", AssetPaths.ContentFolder3D + "road-tiles/road-curve", AssetPaths.ContentFolderEffects + "TexturedShader", roadColormap);
+        
+        // RUTA
+        CurvaDerechaTierra.LoadModel(content, "tower-defense-kit/tile-corner-large", AssetPaths.ContentFolder3D + "tower-defense-kit/tile-corner-large", AssetPaths.ContentFolderEffects + "TexturedShader", towerdefenseColormap);
+        
+        // DECO
         CurvaDerechaTierra.LoadModel(content, "buildings/suburban/building-type-s", AssetPaths.ContentFolder3D + "buildings/suburban/building-type-s", AssetPaths.ContentFolderEffects + "TexturedShader", suburbanColormap);
     }
 
@@ -52,7 +59,7 @@ public class CurvaDerechaTierra : CurvaDerecha, IAssetLoader
     {
         NextTileOffset = Vector3.Transform(new Vector3(1200f, 0f, 0f), Matrix.CreateRotationY(rotation));
         
-        //Piso y Autopista 
+        // BASE 
         AddObject(modelMap.GetValueOrDefault("road-tiles/road-square", null), 
             new Vector3(12f),
             Vector3.Zero,
@@ -60,11 +67,13 @@ public class CurvaDerechaTierra : CurvaDerecha, IAssetLoader
             MathHelper.Pi
         );
 
+        // RUTA
         AddObject(
-            modelMap.GetValueOrDefault("road-tiles/road-curve", null), 
-            new Vector3(5f, 5f, 5f),
-            new Vector3(-100f, 12f, 100f),
-            rotation + MathHelper.PiOver2
+            modelMap.GetValueOrDefault("tower-defense-kit/tile-corner-large", null), 
+            new Vector3(5f, 1f, 5f), // Escalado
+            new Vector3(5f, -5f, 0f), // Posicion en Y
+            rotation
         );
+        // DECO
     }
 }

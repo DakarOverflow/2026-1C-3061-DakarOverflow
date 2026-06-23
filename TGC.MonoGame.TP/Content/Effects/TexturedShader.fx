@@ -37,6 +37,17 @@ sampler2D shadowSampler = sampler_state
     AddressV = Clamp;
 };
 
+Texture2D OverlayTexture;
+sampler2D overlaySampler = sampler_state
+{
+    Texture = (OverlayTexture);
+    MagFilter = Linear;
+    MinFilter = Linear;
+    AddressU = Wrap;
+    AddressV = Wrap;
+};
+
+bool UseOverlay;
 struct VertexShaderInput
 {
 	float4 Position : POSITION0;
@@ -162,10 +173,24 @@ float GetShadowFactor(float4 lightPosition)
 
 float4 MainPS(VertexShaderOutput input) : COLOR
 {
-    float4 pixelColor = tex2D(textureSampler, input.TextureCoordinate);
+    float4 baseColor = tex2D(textureSampler, input.TextureCoordinate);
+    float4 finalColor = baseColor;
+
+    float2 overlayUV;
+    overlayUV.x = input.worldPosition.x * 0.00225f;
+    overlayUV.y = input.worldPosition.z * 0.00225f;
+    float4 overlayColor = tex2D(overlaySampler, overlayUV);
+    float brightness = (overlayColor.r + overlayColor.g + overlayColor.b) / 3.0f;
+    overlayColor.a = (brightness < 0.05f) ? 0.0f : 1.0f;
+
+    if(UseOverlay)
+    {
+        finalColor = lerp(baseColor, overlayColor, overlayColor.a);
+    }
+
     if (!UseLighting)
     {
-        return pixelColor;
+        return finalColor;
     }
 
     float3 ambientColor = float3(0.2, 0.25, 0.35);
@@ -190,7 +215,7 @@ float4 MainPS(VertexShaderOutput input) : COLOR
     float3 diffuseLight = saturate(dot(L, N)) * diffuseColor * kd * shadowFactor;
     float3 specularLight = pow(saturate(dot(halfVector, N)), shininess) * specularColor * ks * step(0.0, dot(N, L)) * shadowFactor;
     
-    return float4((ambientLight + diffuseLight) * pixelColor.xyz + specularLight, pixelColor.a);
+    return float4((ambientLight + diffuseLight) * finalColor.xyz + specularLight, finalColor.a);
 }
 
 technique TexturedDrawing

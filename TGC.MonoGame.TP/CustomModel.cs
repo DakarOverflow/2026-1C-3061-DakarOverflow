@@ -16,12 +16,15 @@ public class CustomModel
     private Color _diffusionColor;
     private Texture2D _texture;
 
+    private Texture2D _overlayTexture;
+
     public CustomModel(Model model, Effect effect, Color diffusionColor)
     {
         _model = model;
         _effect = effect;
         _diffusionColor = diffusionColor;
         _texture = null;
+        _overlayTexture = null;
 
         ApplyEffectToMeshParts();
     }
@@ -32,6 +35,18 @@ public class CustomModel
         _effect = effect;
         _texture = texture;
         _diffusionColor = Color.White;
+        _overlayTexture = null;
+
+        ApplyEffectToMeshParts();
+    }
+
+        public CustomModel(Model model, Effect effect, Texture2D texture, Texture2D overlayTexture)
+    {
+        _model = model;
+        _effect = effect;
+        _texture = texture;
+        _diffusionColor = Color.White;
+        _overlayTexture = overlayTexture;
 
         ApplyEffectToMeshParts();
     }
@@ -119,6 +134,7 @@ public class CustomModel
         if (_texture != null)
         {
             _effect.Parameters["ModelTexture"]?.SetValue(_texture);
+            _effect.Parameters["UseOverlay"]?.SetValue(_overlayTexture != null);
             activeTechnique = useLighting
                 ? _effect.Techniques["TexturedDrawing"]
                 : _effect.Techniques["TexturedUnlitDrawing"] ?? _effect.Techniques["TexturedDrawing"];
@@ -127,6 +143,11 @@ public class CustomModel
         {
             _effect.Parameters["DiffuseColor"]?.SetValue(_diffusionColor.ToVector3());
             activeTechnique = _effect.Techniques["BasicColorDrawing"] ?? _effect.Techniques["TexturedDrawing"];
+        }
+
+        if(_overlayTexture != null)
+        {
+            _effect.Parameters["OverlayTexture"]?.SetValue(_overlayTexture);
         }
 
         if (activeTechnique != null)
