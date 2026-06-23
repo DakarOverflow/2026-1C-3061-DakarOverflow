@@ -71,7 +71,7 @@ public class CurvaIzquierdaTierra : CurvaIzquierda, IAssetLoader
         AddObject(
             modelMap.GetValueOrDefault("tower-defense-kit/tile-corner-large", null), 
             new Vector3(5f, 1f, 5f), // Escala
-            new Vector3(250f, -5f, 250f), // Posicion
+            new Vector3(-100f, -5f, 100f), // Posicion
             rotation - MathHelper.PiOver2
         );
 
