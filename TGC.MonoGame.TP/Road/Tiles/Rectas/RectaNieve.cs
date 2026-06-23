@@ -346,7 +346,7 @@ public class RectaNieve : Recta, IAssetLoader
                 break;
             case CollectibleType.FuelTank:
                 AddObject(Collectible.CreateCollectibleOfType(CollectibleType.FuelTank,
-                    this.Position + Vector3.Transform(new Vector3(-80f, 50f, 380f), Matrix.CreateRotationY(rotation)), 100f));
+                    this.Position + Vector3.Transform(new Vector3(-80f, 50f, 380f), Matrix.CreateRotationY(rotation)), 40f));
                 break;
             case CollectibleType.Wrench:
                 AddObject(Collectible.CreateCollectibleOfType(CollectibleType.Wrench,

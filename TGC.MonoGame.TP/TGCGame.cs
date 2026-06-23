@@ -66,6 +66,7 @@ public class TGCGame : Game
 
     public SpriteFont font;
     public SpriteBatch spriteBatch;
+    private Texture2D _blankTexture;
 
     public enum Scene
 {
@@ -141,9 +142,10 @@ Matrix _worldMainCarHud;
         _worldMenuCar3 =  Matrix.CreateTranslation(-500f,-100f,0f ) *  Matrix.CreateScale(0.1f) ;
 
    
-        _worldFuelTank =   Matrix.CreateScale(0.2f) * Matrix.CreateTranslation(-_graphics.PreferredBackBufferWidth/35,_graphics.PreferredBackBufferHeight/18,0f ) * Matrix.CreateRotationX(MathHelper.PiOver4);
-        _worldWrench = Matrix.CreateScale(0.8f) * Matrix.CreateRotationX(MathHelper.PiOver4) * Matrix.CreateTranslation(-_graphics.PreferredBackBufferWidth/39,_graphics.PreferredBackBufferHeight/20,0f )  ;
-        _worldCoin = Matrix.CreateScale(0.4f)* Matrix.CreateRotationZ(MathHelper.PiOver4)  * Matrix.CreateTranslation(-10f,_graphics.PreferredBackBufferHeight/18,0f )  ;
+        // Modelos de Coleccionables para el HUD
+        _worldFuelTank = Matrix.CreateScale(0.15f) * Matrix.CreateTranslation(- _graphics.PreferredBackBufferWidth/17 , - _graphics.PreferredBackBufferHeight/17 , 0f);
+        _worldWrench = Matrix.CreateScale(0.4f) * Matrix.CreateTranslation(- _graphics.PreferredBackBufferWidth/19 , - _graphics.PreferredBackBufferHeight/17 , 0f);
+        _worldCoin = Matrix.CreateScale(0.4f)* Matrix.CreateRotationZ(MathHelper.PiOver4)  * Matrix.CreateTranslation(-10f, _graphics.PreferredBackBufferHeight/18, 0f)  ;
         // _worldMainCarHud = Matrix.CreateScale(0.1f)*  Matrix.CreateRotationX(MathHelper.PiOver2)  * Matrix.CreateTranslation(-100f,_graphics.PreferredBackBufferHeight/18,0f ) ;
         #endregion 
 
@@ -178,6 +180,9 @@ Matrix _worldMainCarHud;
         // Fuente
         font = Content.Load<SpriteFont>(AssetPaths.ContentFolderSpriteFonts + "CascadiaCode/CascadiaCodePL");
         spriteBatch = new SpriteBatch(GraphicsDevice);
+        
+        _blankTexture = new Texture2D(GraphicsDevice, 1, 1);
+        _blankTexture.SetData(new[] { Color.White });
 
         _debugEffect = Content.Load<Effect>(AssetPaths.ContentFolderEffects + "BasicShader");
         _shadowMap = new RenderTarget2D(GraphicsDevice, ShadowMapSize, ShadowMapSize, false, SurfaceFormat.Single, DepthFormat.Depth24);
@@ -786,8 +791,8 @@ Matrix _worldMainCarHud;
         // UI
         // =========================
         // DrawLeftText("Velocidad: " +string.Format("{0:N2}",_playerVehicle._speed), 10, 1,100); 
-        DrawLeftText("Nafta: " +Convert.ToString(Math.Round(_playerVehicle.CurrentFuel)), 300, 1,100);
-        DrawLeftText("Vida: " +Convert.ToString(Math.Round(_playerVehicle.CurrentHealth)), 500, 1,100); 
+        DrawFuelBar();
+        DrawHealthBar();
         DrawLeftText("Puntos: " +Convert.ToString(_playerVehicle.Score), 800, 1,100); 
 
         FuelTank.DrawUnlit(_worldFuelTank , _cameraMenu.View, _cameraMenu.Projection);
@@ -1001,4 +1006,68 @@ Matrix _worldMainCarHud;
             spriteBatch.DrawString(font, msg, new Vector2(0, 0), Color.White);
             spriteBatch.End();
         }
+
+    public void DrawFuelBar()
+    {
+        float fuelPercentage = Math.Max(0, _playerVehicle.CurrentFuel / _playerVehicle.MaxFuel);
+        int barWidth = 20;
+        int barHeight = 150;
+        
+        // Proyectamos la posicion real del modelo 3D a coordenadas de pixeles en 2D
+        Vector3 screenPos = GraphicsDevice.Viewport.Project(Vector3.Zero, _cameraMenu.Projection, _cameraMenu.View, _worldFuelTank);
+        
+        // Usamos la proyeccion matematica para centrar la barra. 
+        // ¡Esto funciona a cualquier resolucion de pantalla!
+        int x = (int)screenPos.X - (barWidth / 2);
+        int y = (int)screenPos.Y - barHeight - 50; // Subimos la barra para que no tape el bidon
+
+        spriteBatch.Begin(SpriteSortMode.Deferred, null, null, DepthStencilState.Default, null, null, null);
+        
+        // Fondo gris (tanque vacio)
+        spriteBatch.Draw(_blankTexture, new Rectangle(x, y, barWidth, barHeight), Color.DarkGray);
+        
+        // Relleno (tanque lleno, se dibuja de abajo hacia arriba)
+        Color fuelColor = fuelPercentage > 0.2f ? Color.Orange : Color.Red;
+        int fillHeight = (int)(barHeight * fuelPercentage);
+        spriteBatch.Draw(_blankTexture, new Rectangle(x, y + barHeight - fillHeight, barWidth, fillHeight), fuelColor);
+        
+        // Borde negro
+        spriteBatch.Draw(_blankTexture, new Rectangle(x, y, barWidth, 2), Color.Black);
+        spriteBatch.Draw(_blankTexture, new Rectangle(x, y + barHeight - 2, barWidth, 2), Color.Black);
+        spriteBatch.Draw(_blankTexture, new Rectangle(x, y, 2, barHeight), Color.Black);
+        spriteBatch.Draw(_blankTexture, new Rectangle(x + barWidth - 2, y, 2, barHeight), Color.Black);
+        
+        spriteBatch.End();
+    }
+
+    public void DrawHealthBar()
+    {
+        float healthPercentage = Math.Max(0, _playerVehicle.CurrentHealth / _playerVehicle.MaxHealth);
+        int barWidth = 20;
+        int barHeight = 150;
+        
+        // Proyectamos la posicion real del modelo 3D del martillo a coordenadas de pixeles en 2D
+        Vector3 screenPos = GraphicsDevice.Viewport.Project(Vector3.Zero, _cameraMenu.Projection, _cameraMenu.View, _worldWrench);
+        
+        int x = (int)screenPos.X - (barWidth / 2);
+        int y = (int)screenPos.Y - barHeight - 50; // Subimos la barra para que no tape el martillo
+
+        spriteBatch.Begin(SpriteSortMode.Deferred, null, null, DepthStencilState.Default, null, null, null);
+        
+        // Fondo gris (vacio)
+        spriteBatch.Draw(_blankTexture, new Rectangle(x, y, barWidth, barHeight), Color.DarkGray);
+        
+        // Relleno (se dibuja de abajo hacia arriba)
+        Color healthColor = healthPercentage > 0.3f ? Color.LimeGreen : Color.Red;
+        int fillHeight = (int)(barHeight * healthPercentage);
+        spriteBatch.Draw(_blankTexture, new Rectangle(x, y + barHeight - fillHeight, barWidth, fillHeight), healthColor);
+        
+        // Borde negro
+        spriteBatch.Draw(_blankTexture, new Rectangle(x, y, barWidth, 2), Color.Black);
+        spriteBatch.Draw(_blankTexture, new Rectangle(x, y + barHeight - 2, barWidth, 2), Color.Black);
+        spriteBatch.Draw(_blankTexture, new Rectangle(x, y, 2, barHeight), Color.Black);
+        spriteBatch.Draw(_blankTexture, new Rectangle(x + barWidth - 2, y, 2, barHeight), Color.Black);
+        
+        spriteBatch.End();
+    }
 }

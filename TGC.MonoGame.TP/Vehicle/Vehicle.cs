@@ -33,7 +33,9 @@ public class Vehicle
 
     // Combustible, salud y puntaje
     public float CurrentFuel { get; private set; }
+    public float MaxFuel => _stats.FuelCapacity;
     public float CurrentHealth { get; private set; }
+    public float MaxHealth => _stats.MaxHealth;
     public int Score { get; private set; }
 
     // Colisiones
