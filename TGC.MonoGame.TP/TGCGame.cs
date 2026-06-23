@@ -598,13 +598,19 @@ Matrix _worldMainCarHud;
                 if (!obstacle.IsActive)
                     continue;
 
-                if (_playerVehicle.BoundingBox
+                if (_playerVehicle.OBB
                     .Intersects(obstacle.BoundingBox))
                 {
-                    Vector3 obstacleCenter = (obstacle.BoundingBox.Min + obstacle.BoundingBox.Max) / 2f;
-                    Vector3 vehicleCenter = (_playerVehicle.BoundingBox.Min + _playerVehicle.BoundingBox.Max) / 2f;
+                    Vector3 vehicleCenter = _playerVehicle.OBB.Center;
+                    Vector3 closestPointOnObstacle = Vector3.Clamp(vehicleCenter, obstacle.BoundingBox.Min, obstacle.BoundingBox.Max);
 
-                    Vector3 diff = obstacleCenter - vehicleCenter;
+                    Vector3 diff = closestPointOnObstacle - vehicleCenter;
+                    if (diff == Vector3.Zero) 
+                    {
+                        Vector3 obstacleCenter = (obstacle.BoundingBox.Min + obstacle.BoundingBox.Max) / 2f;
+                        diff = obstacleCenter - vehicleCenter;
+                    }
+
                     Vector3 diffLocal = Vector3.Transform(diff, Matrix.CreateRotationY(-_playerVehicle.RotationY));
                     
                     if (obstacle.IsFatalOnFrontalCollision && Math.Abs(diffLocal.Z) > Math.Abs(diffLocal.X))
@@ -755,7 +761,7 @@ Matrix _worldMainCarHud;
         // =========================
         if(_showHitboxes)
         {
-            DrawBoundingBox(_playerVehicle.BoundingBox, _cameraInUse, Color.Red);
+            DrawOrientedBoundingBox(_playerVehicle.OBB, _cameraInUse, Color.Red);
 
             // Dibujar las cajas de los coleccionables activos
             foreach (var bb in _road.GetCollectibleHitboxes())
@@ -893,6 +899,46 @@ Matrix _worldMainCarHud;
         new(corners[2], color), new(corners[6], color),
         new(corners[3], color), new(corners[7], color),
     };
+
+        _debugEffect.Parameters["World"].SetValue(Matrix.Identity);
+        _debugEffect.Parameters["View"].SetValue(camera.GetView());
+        _debugEffect.Parameters["Projection"].SetValue(camera.GetProjection());
+        _debugEffect.Parameters["DiffuseColor"].SetValue(color.ToVector3());
+
+        _debugEffect.CurrentTechnique = _debugEffect.Techniques["DebugLineDrawing"];
+
+        foreach (EffectPass pass in _debugEffect.CurrentTechnique.Passes)
+        {
+            pass.Apply();
+
+            GraphicsDevice.DrawUserPrimitives(PrimitiveType.LineList, vertices, 0, vertices.Length / 2);
+        }
+    }
+
+    private void DrawOrientedBoundingBox(OrientedBoundingBox obb, Camera camera, Color color)
+    {
+        Vector3[] corners = obb.GetCorners();
+
+        VertexPositionColor[] vertices =
+        {
+        // cara inferior
+        new(corners[0], color), new(corners[1], color),
+        new(corners[1], color), new(corners[2], color),
+        new(corners[2], color), new(corners[3], color),
+        new(corners[3], color), new(corners[0], color),
+
+        // cara superior
+        new(corners[4], color), new(corners[5], color),
+        new(corners[5], color), new(corners[6], color),
+        new(corners[6], color), new(corners[7], color),
+        new(corners[7], color), new(corners[4], color),
+
+        // uniones
+        new(corners[0], color), new(corners[4], color),
+        new(corners[1], color), new(corners[5], color),
+        new(corners[2], color), new(corners[6], color),
+        new(corners[3], color), new(corners[7], color),
+        };
 
         _debugEffect.Parameters["World"].SetValue(Matrix.Identity);
         _debugEffect.Parameters["View"].SetValue(camera.GetView());

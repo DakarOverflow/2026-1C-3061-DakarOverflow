@@ -38,6 +38,7 @@ public class Vehicle
 
     // Colisiones
     public BoundingBox BoundingBox { get; private set; }
+    public OrientedBoundingBox OBB { get; private set; }
 
     public const float ScaleFactor = 0.5f;
 
@@ -260,6 +261,10 @@ public class Vehicle
     // ==========================================
     private void UpdateBoundingBox()
     {
+        Vector3 center = Position + _boundingBoxOffset;
+        Matrix orientation = Matrix.CreateRotationY(RotationY);
+        OBB = new OrientedBoundingBox(center, _boundingBoxHalfSize, orientation);
+
         BoundingBox = new BoundingBox(Position - _boundingBoxHalfSize + _boundingBoxOffset
             , Position + _boundingBoxHalfSize + _boundingBoxOffset);
     }

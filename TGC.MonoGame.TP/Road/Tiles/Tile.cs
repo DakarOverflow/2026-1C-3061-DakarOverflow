@@ -268,7 +268,7 @@ public abstract class Tile
         {
             if (obj is Collectible collectible && collectible.IsActive)
             {
-                if (player.BoundingBox.Intersects(collectible.BoundingBox))
+                if (player.OBB.Intersects(collectible.BoundingBox))
                 {
                     collectible.PickUp(player);
                 }
