@@ -10,6 +10,7 @@ namespace TGC.MonoGame.TP
         {
             using (var game = new TGCGame())
                 game.Run();
+                
         }
     }
 }

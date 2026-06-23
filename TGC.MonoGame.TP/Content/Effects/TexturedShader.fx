@@ -21,6 +21,18 @@ sampler2D textureSampler = sampler_state
     AddressV = Clamp;
 };
 
+Texture2D OverlayTexture;
+sampler2D overlaySampler = sampler_state
+{
+    Texture = (OverlayTexture);
+    MagFilter = Linear;
+    MinFilter = Linear;
+    AddressU = Wrap;
+    AddressV = Wrap;
+};
+
+bool UseOverlay;
+
 struct VertexShaderInput
 {
 	float4 Position : POSITION0;
@@ -31,6 +43,8 @@ struct VertexShaderOutput
 {
 	float4 Position : SV_POSITION;
     float2 TextureCoordinate : TEXCOORD0;
+
+    float3 WorldPosition : TEXCOORD1;
 };
 
 VertexShaderOutput MainVS(in VertexShaderInput input)
@@ -43,12 +57,30 @@ VertexShaderOutput MainVS(in VertexShaderInput input)
     
     output.TextureCoordinate = input.TextureCoordinate;
 
+    output.WorldPosition = worldPosition.xyz;
+
     return output;
 }
 
 float4 MainPS(VertexShaderOutput input) : COLOR
 {
-    return tex2D(textureSampler, input.TextureCoordinate);
+    float4 baseColor = tex2D(textureSampler, input.TextureCoordinate);
+
+    if(!UseOverlay)
+    {
+        return baseColor;
+    }
+
+    float2 overlayUV;
+    overlayUV.x = input.WorldPosition.x * 0.00225f;
+    overlayUV.y = input.WorldPosition.z * 0.00225f;
+    float4 overlayColor = tex2D(overlaySampler, overlayUV);
+
+    float brightness = (overlayColor.r + overlayColor.g + overlayColor.b) / 3.0f;
+
+    overlayColor.a = (brightness < 0.05f) ? 0.0f : 1.0f;
+
+    return lerp(baseColor, overlayColor, overlayColor.a);
 }
 
 technique TexturedDrawing

@@ -29,6 +29,16 @@ public class CurvaIzquierdaNieveAsfalto : CurvaIzquierda, IAssetLoader
         ));
     }
 
+    private static void LoadModel(ContentManager content, string key, string path, string effect, Texture2D texture, Texture2D overlayTexture)
+    {
+        CurvaIzquierdaNieveAsfalto.modelMap.Add(key, new CustomModel(
+            content.Load<Model>(path),
+            content.Load<Effect>(effect),
+            texture,
+            overlayTexture
+        ));
+    }
+
     private static void LoadModel(ContentManager content, string path, string effect, Color color)
     {
         //Genera el modelo utilizando el path del mismo como key para el diccionario interno
@@ -39,8 +49,9 @@ public class CurvaIzquierdaNieveAsfalto : CurvaIzquierda, IAssetLoader
     {
         var roadColormap = content.Load<Texture2D>(AssetPaths.ContentFolder3D + "road-tiles/Textures/colormap");
         var suburbanColormap = content.Load<Texture2D>(AssetPaths.ContentFolder3D + "buildings/suburban/Textures/colormap");
+        var overlayTexture = content.Load<Texture2D>(AssetPaths.ContentFolder3D + "road-tiles/Textures/snow-texture-on-black-background");
         CurvaIzquierdaNieveAsfalto.LoadModel(content, "road-tiles/road-square", AssetPaths.ContentFolder3D + "road-tiles/road-square", AssetPaths.ContentFolderEffects + "BasicShader", Color.DarkGreen);
-        CurvaIzquierdaNieveAsfalto.LoadModel(content, "road-tiles/road-curve", AssetPaths.ContentFolder3D + "road-tiles/road-curve", AssetPaths.ContentFolderEffects + "TexturedShader", roadColormap);
+        CurvaIzquierdaNieveAsfalto.LoadModel(content, "road-tiles/road-curve", AssetPaths.ContentFolder3D + "road-tiles/road-curve", AssetPaths.ContentFolderEffects + "TexturedShader", roadColormap, overlayTexture);
         CurvaIzquierdaNieveAsfalto.LoadModel(content, "buildings/suburban/building-type-s", AssetPaths.ContentFolder3D + "buildings/suburban/building-type-s", AssetPaths.ContentFolderEffects + "TexturedShader", suburbanColormap);
     }
 

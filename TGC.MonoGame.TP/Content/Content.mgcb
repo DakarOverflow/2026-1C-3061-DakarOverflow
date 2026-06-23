@@ -3056,6 +3056,30 @@
 /processorParam:TextureFormat=Color
 /build:Models/road-tiles/Textures/colormap.png
 
+#begin Models/road-tiles/Textures/dirt-particles.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Models/road-tiles/Textures/dirt-particles.png;Models/road-tiles/Textures/dirt-particles
+
+#begin Models/road-tiles/Textures/snow-texture-on-black-background.jpg
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Models/road-tiles/Textures/snow-texture-on-black-background.jpg
+
 #begin Models/survival-kit/barrel.fbx
 /importer:FbxImporter
 /processor:ModelProcessor

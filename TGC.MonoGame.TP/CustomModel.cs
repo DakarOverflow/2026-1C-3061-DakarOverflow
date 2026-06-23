@@ -14,12 +14,15 @@ public class CustomModel
     private Color _diffusionColor;
     private Texture2D _texture;
 
+    private Texture2D _overlayTexture;
+
     public CustomModel(Model model, Effect effect, Color diffusionColor)
     {
         InnerModel = model;
         _effect = effect;
         _diffusionColor = diffusionColor;
         _texture = null;
+        _overlayTexture = null;
 
         ApplyEffectToMeshParts();
     }
@@ -30,6 +33,18 @@ public class CustomModel
         _effect = effect;
         _texture = texture;
         _diffusionColor = Color.White;
+        _overlayTexture = null;
+
+        ApplyEffectToMeshParts();
+    }
+
+        public CustomModel(Model model, Effect effect, Texture2D texture, Texture2D overlayTexture)
+    {
+        InnerModel = model;
+        _effect = effect;
+        _texture = texture;
+        _diffusionColor = Color.White;
+        _overlayTexture = overlayTexture;
 
         ApplyEffectToMeshParts();
     }
@@ -53,10 +68,16 @@ public class CustomModel
         if (_texture != null)
         {
             _effect.Parameters["ModelTexture"]?.SetValue(_texture);
+            _effect.Parameters["UseOverlay"]?.SetValue(_overlayTexture != null);
         }
         else
         {
             _effect.Parameters["DiffuseColor"]?.SetValue(_diffusionColor.ToVector3());
+        }
+
+        if(_overlayTexture != null)
+        {
+            _effect.Parameters["OverlayTexture"]?.SetValue(_overlayTexture);
         }
 
         var modelMeshesBaseTransforms = new Matrix[InnerModel.Bones.Count];
