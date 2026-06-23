@@ -279,6 +279,7 @@ public class Vehicle
     {
         CurrentHealth -= damage;
         if(CurrentHealth < 0) CurrentHealth = 0;
+        else SoundManager.GetInstance().SonarGolpe();
     }
 
     public void CollisionImpact(float damage, float speedMultiplier)

@@ -174,6 +174,8 @@ Matrix _worldMainCarHud;
         Services.AddService<GraphicsDeviceManager>(_graphics);
         Services.AddService<ContentManager>(Content);
 
+        SoundManager.Initialize(Content);
+
         base.Initialize();
     }
 
@@ -604,6 +606,7 @@ Matrix _worldMainCarHud;
         {
             _gameOver = true;
             _gameOverTimer = GameOverDelay;
+            SoundManager.GetInstance().SonarExplosion();
         }
         if (_gameOver && !_useFreeCamera)
         {
