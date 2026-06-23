@@ -21,6 +21,20 @@ public class TGCGame : Game
     // SHADDER PARA DEBUGUEAR
     private Effect _debugEffect;
     private bool _showHitboxes = false;
+    private RenderTarget2D _shadowMap;
+    private Matrix _lightViewProjection;
+    private const int ShadowMapSize = 2048;
+    private static readonly Vector3 LightDirection = Vector3.Normalize(new Vector3(1f, 1f, 1f));
+    private readonly RasterizerState _mainRasterizerState = new()
+    {
+        CullMode = CullMode.None
+    };
+    private readonly RasterizerState _shadowRasterizerState = new()
+    {
+        CullMode = CullMode.None,
+        DepthBias = 0f,
+        SlopeScaleDepthBias = 0f
+    };
 
     // CAMARAS
     private FreeCamera _freeCamera;
@@ -31,6 +45,7 @@ public class TGCGame : Game
 
     // TECLADO
     private KeyboardState _previousKeyboardState;
+    private MouseState _previousMouseState;
 
 
     // PLAYER
@@ -53,18 +68,19 @@ public class TGCGame : Game
     public SpriteBatch spriteBatch;
 
     public enum Scene
-    {
-        Menu,
-        Road,
-        GameOver
-    }
-    Scene _sceneNum = Scene.Menu;
+{
+   Menu,
+   Road,
+   GameOver
+}
+Scene _sceneNum = Scene.Menu;
 
     private bool _gameOver;
     private float _gameOverTimer;
     private const float GameOverDelay = 2f;
 
     //Para que sean accesibles globalmente
+    #region  Menu Objecs
     CustomModel lightModel;
     CustomModel mediumModel;
     CustomModel heavyModel;
@@ -79,8 +95,20 @@ public class TGCGame : Game
     Matrix _worldMenuCar2;
     Matrix _worldMenuCar3;
 
-    CameraStc _cameraMenu; 
+    CameraStc _cameraMenu;
 
+    float _worldMenuCar3Rotation;
+    #endregion
+
+
+CustomModel FuelTank;
+CustomModel Wrench;
+CustomModel Coin;
+Matrix _worldFuelTank;
+Matrix _worldWrench;
+Matrix _worldCoin;
+
+Matrix _worldMainCarHud;
     public TGCGame()
     {
         // Maneja la configuracion y la administracion del dispositivo grafico.
@@ -106,18 +134,24 @@ public class TGCGame : Game
     {
         _cameraMenu = new TargetCamera(GraphicsDevice.Viewport.AspectRatio, Vector3.UnitZ * 150, Vector3.UnitZ);
         // _worldMenuCar = Matrix.Identity;
+        # region UI Road
+
         _worldMenuCar = Matrix.CreateScale(0.3f)  ;
         _worldMenuCar2 =  Matrix.CreateTranslation(500f,-100f,0f ) *  Matrix.CreateScale(0.1f) ;
         _worldMenuCar3 =  Matrix.CreateTranslation(-500f,-100f,0f ) *  Matrix.CreateScale(0.1f) ;
+
+   
+        _worldFuelTank =   Matrix.CreateScale(0.2f) * Matrix.CreateTranslation(-_graphics.PreferredBackBufferWidth/35,_graphics.PreferredBackBufferHeight/18,0f ) * Matrix.CreateRotationX(MathHelper.PiOver4);
+        _worldWrench = Matrix.CreateScale(0.8f) * Matrix.CreateRotationX(MathHelper.PiOver4) * Matrix.CreateTranslation(-_graphics.PreferredBackBufferWidth/39,_graphics.PreferredBackBufferHeight/20,0f )  ;
+        _worldCoin = Matrix.CreateScale(0.4f)* Matrix.CreateRotationZ(MathHelper.PiOver4)  * Matrix.CreateTranslation(-10f,_graphics.PreferredBackBufferHeight/18,0f )  ;
+        // _worldMainCarHud = Matrix.CreateScale(0.1f)*  Matrix.CreateRotationX(MathHelper.PiOver2)  * Matrix.CreateTranslation(-100f,_graphics.PreferredBackBufferHeight/18,0f ) ;
+        #endregion 
 
         IsMouseVisible = false;
 
         _graphics.ApplyChanges();
 
-        GraphicsDevice.RasterizerState = new RasterizerState()
-        {   
-            CullMode = CullMode.CullClockwiseFace,
-        };
+        GraphicsDevice.RasterizerState = _mainRasterizerState;
 
         _freeCamera = new FreeCamera(
             new Vector3(110f, 10f, 110f),
@@ -146,11 +180,15 @@ public class TGCGame : Game
         spriteBatch = new SpriteBatch(GraphicsDevice);
 
         _debugEffect = Content.Load<Effect>(AssetPaths.ContentFolderEffects + "BasicShader");
+        _shadowMap = new RenderTarget2D(GraphicsDevice, ShadowMapSize, ShadowMapSize, false, SurfaceFormat.Single, DepthFormat.Depth24);
 
         var carKitColormap = Content.Load<Texture2D>(
             AssetPaths.ContentFolder3D +
             "car-kit/Textures/colormap"
         );
+
+        var survivalKitColormap = Content.Load<Texture2D>(AssetPaths.ContentFolder3D + "survival-kit/Textures/colormap");
+        var toyCarKitColormap = Content.Load<Texture2D>(AssetPaths.ContentFolder3D + "toy-car-kit/Textures/colormap");
 
         var skyboxEffect = Content.Load<Effect>(AssetPaths.ContentFolderEffects + "TexturedShader");
         var skyboxTextures = new Dictionary<string, Texture2D>
@@ -206,6 +244,43 @@ public class TGCGame : Game
             taxiModel,
             ambulanceModel,
         };
+
+        // UI 
+        FuelTank = new CustomModel(
+            Content.Load<Model>(
+                AssetPaths.ContentFolder3D +
+                "survival-kit/barrel"
+            ),
+            Content.Load<Effect>(
+                AssetPaths.ContentFolderEffects +
+                "TexturedShader"
+            ),
+            survivalKitColormap
+        );
+        Wrench = new CustomModel(
+            Content.Load<Model>(
+                AssetPaths.ContentFolder3D +
+                "survival-kit/tool-hammer"
+            ),
+            Content.Load<Effect>(
+                AssetPaths.ContentFolderEffects +
+                "TexturedShader"
+            ),
+            survivalKitColormap
+        );
+
+        Coin = new CustomModel(
+            Content.Load<Model>(
+                AssetPaths.ContentFolder3D +
+                "toy-car-kit/item-coin-gold"
+            ),
+            Content.Load<Effect>(
+                AssetPaths.ContentFolderEffects +
+                "TexturedShader"
+            ),
+            toyCarKitColormap
+        );
+
 
         //Debe ejecuitarse antes del new Road()
         Collectible.LoadLocalModels(Content);
@@ -394,7 +469,7 @@ public class TGCGame : Game
         }
 
         switch (_sceneNum){
-            case Scene.Menu:
+            case  Scene.Menu: 
 
             if (keyboardState.IsKeyDown(Keys.D1) &&
                 _previousKeyboardState.IsKeyUp(Keys.D1))
@@ -419,8 +494,11 @@ public class TGCGame : Game
 
             break;
 
-            default: 
-        
+            default:
+                if (_sceneNum == Scene.GameOver)
+                {
+                    return;
+                }
         // TOGGLE MOUSE
 
         if (keyboardState.IsKeyDown(Keys.M) &&
@@ -449,13 +527,14 @@ public class TGCGame : Game
         // =========================
         // UPDATE PLAYER
         // =========================
-
+        if (!_useFreeCamera){
         // Actualizo el coeficiente de fricción según el bioma actual
         _playerVehicle.FrictionCoefficient = _road.GetFrictionAtPosition(_playerVehicle.Position);
 
         _playerVehicle.Update(gameTime);
         _playerVehicle.UpdateSound(_instanciaSonidoMotor, _sonidoFrenado);
         CheckObstacleCollisions();
+        }
 
         // =========================
         // UPDATE WORLD
@@ -475,6 +554,8 @@ public class TGCGame : Game
                 gameTime,
                 _mouseCaptured
             );
+
+            CheckFreeCameraModelPicking();
         }
         else
         {
@@ -487,6 +568,7 @@ public class TGCGame : Game
         }
 
         _previousKeyboardState = keyboardState;
+        _previousMouseState = Mouse.GetState();
 
         // Cuando Termina el juego
         if (!_gameOver && _playerVehicle.CurrentHealth == 0)
@@ -494,7 +576,7 @@ public class TGCGame : Game
             _gameOver = true;
             _gameOverTimer = GameOverDelay;
         }
-        if (_gameOver)
+        if (_gameOver && !_useFreeCamera)
         {
             _gameOverTimer -= (float)gameTime.ElapsedGameTime.TotalSeconds;
 
@@ -504,9 +586,9 @@ public class TGCGame : Game
             }
         }
 
-
+        _worldMenuCar3Rotation =MathHelper.ToRadians(Convert.ToSingle(gameTime.ElapsedGameTime.TotalSeconds) *60f  * _playerVehicle._speed);
         base.Update(gameTime);
-            break;
+         break;
         }
     }
 
@@ -519,13 +601,19 @@ public class TGCGame : Game
                 if (!obstacle.IsActive)
                     continue;
 
-                if (_playerVehicle.BoundingBox
+                if (_playerVehicle.OBB
                     .Intersects(obstacle.BoundingBox))
                 {
-                    Vector3 obstacleCenter = (obstacle.BoundingBox.Min + obstacle.BoundingBox.Max) / 2f;
-                    Vector3 vehicleCenter = (_playerVehicle.BoundingBox.Min + _playerVehicle.BoundingBox.Max) / 2f;
+                    Vector3 vehicleCenter = _playerVehicle.OBB.Center;
+                    Vector3 closestPointOnObstacle = Vector3.Clamp(vehicleCenter, obstacle.BoundingBox.Min, obstacle.BoundingBox.Max);
 
-                    Vector3 diff = obstacleCenter - vehicleCenter;
+                    Vector3 diff = closestPointOnObstacle - vehicleCenter;
+                    if (diff == Vector3.Zero) 
+                    {
+                        Vector3 obstacleCenter = (obstacle.BoundingBox.Min + obstacle.BoundingBox.Max) / 2f;
+                        diff = obstacleCenter - vehicleCenter;
+                    }
+
                     Vector3 diffLocal = Vector3.Transform(diff, Matrix.CreateRotationY(-_playerVehicle.RotationY));
                     
                     if (obstacle.IsFatalOnFrontalCollision && Math.Abs(diffLocal.Z) > Math.Abs(diffLocal.X))
@@ -547,9 +635,63 @@ public class TGCGame : Game
         }
     }
 
+    private void CheckFreeCameraModelPicking()
+    {
+        MouseState mouseState = Mouse.GetState();
+
+        if (mouseState.LeftButton != ButtonState.Pressed ||
+            _previousMouseState.LeftButton != ButtonState.Released)
+        {
+            return;
+        }
+
+        Point screenPoint = _mouseCaptured
+            ? new Point(GraphicsDevice.Viewport.Width / 2, GraphicsDevice.Viewport.Height / 2)
+            : new Point(mouseState.X, mouseState.Y);
+        Ray ray = ModelRaycaster.CreateRayFromScreenPoint(screenPoint, GraphicsDevice, _freeCamera);
+        ModelRaycastHit? closestHit = null;
+        Tile closestTile = null;
+
+        foreach (var tile in _road.Tiles)
+        {
+            if (!tile.GetBoundingSphere().Intersects(ray).HasValue)
+            {
+                continue;
+            }
+
+            foreach (WorldObject obj in tile.WorldObjects)
+            {
+                if (!ModelRaycaster.TryIntersectObject(ray, obj, out ModelRaycastHit hit))
+                {
+                    continue;
+                }
+
+                if (!closestHit.HasValue || hit.Distance < closestHit.Value.Distance)
+                {
+                    closestHit = hit;
+                    closestTile = tile;
+                }
+            }
+        }
+
+        if (closestHit.HasValue && closestTile != null)
+        {
+            Vector3 localPoint = closestHit.Value.LocalPoint;
+            Vector3 worldPoint = closestHit.Value.WorldPoint;
+            Vector3 addObstacleOffset = Vector3.Transform(
+                worldPoint - closestTile.Position,
+                Matrix.CreateRotationY(-closestTile.Rotation)
+            );
+
+            Console.WriteLine($"Model local coordinates hit: X={localPoint.X:F3}, Y={localPoint.Y:F3}, Z={localPoint.Z:F3}");
+            Console.WriteLine($"World coordinates hit: X={worldPoint.X:F3}, Y={worldPoint.Y:F3}, Z={worldPoint.Z:F3}");
+            Console.WriteLine($"AddObstacle offset for this tile: new Vector3({addObstacleOffset.X:F3}f, {addObstacleOffset.Y:F3}f, {addObstacleOffset.Z:F3}f)");
+        }
+    }
+
     protected override void Draw(GameTime gameTime)
     {
-        GraphicsDevice.Clear(Color.CornflowerBlue);
+        ResetMainRenderState(true);
         //Cambio de esena
         switch (_sceneNum){
             case  Scene.Menu: 
@@ -560,20 +702,24 @@ public class TGCGame : Game
             DrawCenterTextY("2 Para _mediumVehicle",450,1);
             DrawCenterTextY("3 Para _heavyVehicle",500,1);
 
-            lightModel.Draw(_worldMenuCar, _cameraMenu.View, _cameraMenu.Projection);
-            heavyModel.Draw(_worldMenuCar2, _cameraMenu.View, _cameraMenu.Projection);
-            mediumModel.Draw(_worldMenuCar3 , _cameraMenu.View, _cameraMenu.Projection);
+            lightModel.DrawUnlit(_worldMenuCar, _cameraMenu.View, _cameraMenu.Projection);
+            heavyModel.DrawUnlit(_worldMenuCar2, _cameraMenu.View, _cameraMenu.Projection);
+            mediumModel.DrawUnlit(_worldMenuCar3 , _cameraMenu.View, _cameraMenu.Projection);
 
             _worldMenuCar *= Matrix.CreateRotationY(MathHelper.ToRadians(Convert.ToSingle(gameTime.ElapsedGameTime.TotalSeconds) *20f ));
             _worldMenuCar2 *= Matrix.CreateRotationX(MathHelper.ToRadians(Convert.ToSingle(gameTime.ElapsedGameTime.TotalSeconds) *40f )) * Matrix.CreateRotationY(MathHelper.ToRadians(Convert.ToSingle(gameTime.ElapsedGameTime.TotalSeconds) *40f )) ;
             _worldMenuCar3 *= Matrix.CreateRotationX(MathHelper.ToRadians(Convert.ToSingle(gameTime.ElapsedGameTime.TotalSeconds) *40f )) * Matrix.CreateRotationY(MathHelper.ToRadians(Convert.ToSingle(gameTime.ElapsedGameTime.TotalSeconds) *40f )) ;
             break;
 
-            case  Scene.GameOver: 
-                DrawCenterTextY("GAME OVER",10,10);
-            break;
-                
-            default: 
+            default:
+        // =========================
+        // SHADOW MAP
+        // =========================
+        UpdateLightViewProjection();
+        DrawShadowMap();
+        ResetMainRenderState(true);
+        ApplyShadowMap();
+
         // =========================
         // DRAW SKYBOX
         // =========================
@@ -583,6 +729,8 @@ public class TGCGame : Game
             var cameraPosition = Matrix.Invert(view).Translation;
             _skybox.Draw(view, projection, cameraPosition);
         }
+
+        ResetMainRenderState(false);
 
         // =========================
         // DRAW WORLD
@@ -616,7 +764,7 @@ public class TGCGame : Game
         // =========================
         if(_showHitboxes)
         {
-            DrawBoundingBox(_playerVehicle.BoundingBox, _cameraInUse, Color.Red);
+            DrawOrientedBoundingBox(_playerVehicle.OBB, _cameraInUse, Color.Red);
 
             // Dibujar las cajas de los coleccionables activos
             foreach (var bb in _road.GetCollectibleHitboxes())
@@ -636,19 +784,98 @@ public class TGCGame : Game
                 }
             }
         }
-
         base.Draw(gameTime);
         // =========================
         // UI
         // =========================
-        DrawLeftText("Velocidad: " +string.Format("{0:N2}",_playerVehicle._speed), 10, 1); 
-        DrawLeftText("Nafta: " +Convert.ToString(Math.Round(_playerVehicle.CurrentFuel)), 300, 1);
-        DrawLeftText("Vida: " +Convert.ToString(Math.Round(_playerVehicle.CurrentHealth)), 500, 1); 
-        DrawLeftText("Puntos: " +Convert.ToString(_playerVehicle.Score), 800, 1); 
+        // DrawLeftText("Velocidad: " +string.Format("{0:N2}",_playerVehicle._speed), 10, 1,100); 
+        DrawLeftText("Nafta: " +Convert.ToString(Math.Round(_playerVehicle.CurrentFuel)), 300, 1,100);
+        DrawLeftText("Vida: " +Convert.ToString(Math.Round(_playerVehicle.CurrentHealth)), 500, 1,100); 
+        DrawLeftText("Puntos: " +Convert.ToString(_playerVehicle.Score), 800, 1,100); 
 
-        break; 
+        FuelTank.DrawUnlit(_worldFuelTank , _cameraMenu.View, _cameraMenu.Projection);
+        Wrench.DrawUnlit(_worldWrench , _cameraMenu.View, _cameraMenu.Projection);
+        Coin.DrawUnlit(_worldCoin , _cameraMenu.View, _cameraMenu.Projection);
+        
+        switch (_playerVehicle.Type){
+            
+            case VehicleType.Light:
+                lightModel.DrawUnlit(_worldMainCarHud, _cameraMenu.View, _cameraMenu.Projection);
+            break;
+            case VehicleType.Medium:
+                mediumModel.DrawUnlit(_worldMainCarHud, _cameraMenu.View, _cameraMenu.Projection);
+            break;
+            case VehicleType.Heavy:
+                heavyModel.DrawUnlit(_worldMainCarHud, _cameraMenu.View, _cameraMenu.Projection);
+            break;
+            
+        }
+        _worldMainCarHud = Matrix.CreateScale(0.1f)*  Matrix.CreateRotationX(_worldMenuCar3Rotation)  * Matrix.CreateTranslation(100f,-_graphics.PreferredBackBufferHeight/18,0f );
+        if (_cameraInUse is FreeCamera)
+        {
+            DrawCenterText("+", 3, Color.White);
         }
 
+        if (_gameOver)
+        {
+            DrawCenterText("GAME OVER",10, Color.Red);
+        }
+        break; 
+        }
+       
+
+    }
+
+    private void UpdateLightViewProjection()
+    {
+        var center = _playerVehicle?.Position ?? Vector3.Zero;
+        var lightPosition = center + LightDirection * 1600f;
+        var lightView = Matrix.CreateLookAt(lightPosition, center, Vector3.Up);
+        var lightProjection = Matrix.CreateOrthographic(3200f, 3200f, 1f, 5000f);
+        _lightViewProjection = lightView * lightProjection;
+    }
+
+    private void DrawShadowMap()
+    {
+        var previousBlendState = GraphicsDevice.BlendState;
+        var previousDepthStencilState = GraphicsDevice.DepthStencilState;
+        var previousRasterizerState = GraphicsDevice.RasterizerState;
+
+        GraphicsDevice.SetRenderTarget(_shadowMap);
+        GraphicsDevice.BlendState = BlendState.Opaque;
+        GraphicsDevice.DepthStencilState = DepthStencilState.Default;
+        GraphicsDevice.Clear(ClearOptions.Target | ClearOptions.DepthBuffer, Color.White, 1f, 0);
+
+        GraphicsDevice.RasterizerState = _shadowRasterizerState;
+
+        _road.DrawDepth(_lightViewProjection);
+        _playerVehicle.DrawDepth(_lightViewProjection);
+
+        GraphicsDevice.RasterizerState = previousRasterizerState;
+        GraphicsDevice.DepthStencilState = previousDepthStencilState;
+        GraphicsDevice.BlendState = previousBlendState;
+        GraphicsDevice.SetRenderTarget(null);
+    }
+
+    private void ResetMainRenderState(bool clear)
+    {
+        GraphicsDevice.SetRenderTarget(null);
+        GraphicsDevice.Viewport = new Viewport(0, 0, _graphics.PreferredBackBufferWidth, _graphics.PreferredBackBufferHeight);
+        GraphicsDevice.BlendState = BlendState.Opaque;
+        GraphicsDevice.DepthStencilState = DepthStencilState.Default;
+        GraphicsDevice.RasterizerState = _mainRasterizerState;
+        GraphicsDevice.SamplerStates[0] = SamplerState.LinearClamp;
+
+        if (clear)
+        {
+            GraphicsDevice.Clear(ClearOptions.Target | ClearOptions.DepthBuffer, Color.CornflowerBlue, 1f, 0);
+        }
+    }
+
+    private void ApplyShadowMap()
+    {
+        _road.SetShadowMap(_shadowMap, _lightViewProjection);
+        _playerVehicle.SetShadowMap(_shadowMap, _lightViewProjection);
     }
 
     private void DrawBoundingBox(BoundingBox box, Camera camera, Color color)
@@ -691,23 +918,68 @@ public class TGCGame : Game
         }
     }
 
+    private void DrawOrientedBoundingBox(OrientedBoundingBox obb, Camera camera, Color color)
+    {
+        Vector3[] corners = obb.GetCorners();
+
+        VertexPositionColor[] vertices =
+        {
+        // cara inferior
+        new(corners[0], color), new(corners[1], color),
+        new(corners[1], color), new(corners[2], color),
+        new(corners[2], color), new(corners[3], color),
+        new(corners[3], color), new(corners[0], color),
+
+        // cara superior
+        new(corners[4], color), new(corners[5], color),
+        new(corners[5], color), new(corners[6], color),
+        new(corners[6], color), new(corners[7], color),
+        new(corners[7], color), new(corners[4], color),
+
+        // uniones
+        new(corners[0], color), new(corners[4], color),
+        new(corners[1], color), new(corners[5], color),
+        new(corners[2], color), new(corners[6], color),
+        new(corners[3], color), new(corners[7], color),
+        };
+
+        _debugEffect.Parameters["World"].SetValue(Matrix.Identity);
+        _debugEffect.Parameters["View"].SetValue(camera.GetView());
+        _debugEffect.Parameters["Projection"].SetValue(camera.GetProjection());
+        _debugEffect.Parameters["DiffuseColor"].SetValue(color.ToVector3());
+
+        _debugEffect.CurrentTechnique = _debugEffect.Techniques["DebugLineDrawing"];
+
+        foreach (EffectPass pass in _debugEffect.CurrentTechnique.Passes)
+        {
+            pass.Apply();
+
+            GraphicsDevice.DrawUserPrimitives(PrimitiveType.LineList, vertices, 0, vertices.Length / 2);
+        }
+    }
+
     protected override void UnloadContent()
     {
+        _shadowMap?.Dispose();
         Content.Unload();
 
         base.UnloadContent();
     }
 
-    public void DrawCenterText(string msg, float escala)
+    public void DrawCenterText(string msg, float escala, Color color)
     {
         var W = GraphicsDevice.Viewport.Width;
         var H = GraphicsDevice.Viewport.Height;
         var size = font.MeasureString(msg) * escala;
-        spriteBatch.Begin();
-        spriteBatch.DrawString(font, msg, new Vector2(0, 0), Color.White);
+        spriteBatch.Begin(SpriteSortMode.Deferred,null, 
+            null, 
+            DepthStencilState.Default, 
+            null, null,
+            Matrix.CreateScale(escala) * Matrix.CreateTranslation((W - size.X) / 2, (H - size.Y) / 2, 0));
+        spriteBatch.DrawString(font, msg, new Vector2(0, 0), color);
         spriteBatch.End();
     }
-    public void DrawLeftText(string msg, float X, float escala)
+    public void DrawLeftText(string msg, float X, float escala,float Y)
     {
             var W = GraphicsDevice.Viewport.Width;
             var H = GraphicsDevice.Viewport.Height;
@@ -716,14 +988,13 @@ public class TGCGame : Game
             null, 
             DepthStencilState.Default,
             null, null,
-                Matrix.CreateScale(escala) * Matrix.CreateTranslation(X, 0, 0) );
+                Matrix.CreateScale(escala) * Matrix.CreateTranslation(X, Y, 0) );
             spriteBatch.DrawString(font, msg, new Vector2(0, 0), Color.White);
             spriteBatch.End();
     }
     public void DrawCenterTextY(string msg, float Y, float escala)
         {
             var W = GraphicsDevice.Viewport.Width;
-            var H = GraphicsDevice.Viewport.Height;
             var size = font.MeasureString(msg) * escala;
             spriteBatch.Begin(SpriteSortMode.Deferred,null, 
             null, 

@@ -19,9 +19,45 @@ public abstract class Tile
         get => _obstacles;
     }
 
+    public IEnumerable<WorldObject> WorldObjects
+    {
+        get
+        {
+            foreach (var obj in _tileObjects)
+            {
+                yield return obj;
+            }
+
+            foreach (var obstacle in _obstacles)
+            {
+                if (obstacle.IsActive)
+                {
+                    yield return obstacle;
+                }
+            }
+        }
+    }
+
+    public BoundingSphere GetBoundingSphere()
+    {
+        BoundingSphere? sphere = null;
+
+        foreach (var obj in WorldObjects)
+        {
+            BoundingSphere objectSphere = ModelRaycaster.CreateWorldBoundingSphere(obj);
+            sphere = sphere.HasValue
+                ? BoundingSphere.CreateMerged(sphere.Value, objectSphere)
+                : objectSphere;
+        }
+
+        return sphere ?? new BoundingSphere(Position, 0f);
+    }
+
     public Vector3 Position;
 
     public Vector3 NextTileOffset;
+
+    public float Rotation;
 
     public float NextTileRotation;
 
@@ -112,10 +148,17 @@ public abstract class Tile
     )
     {
         Position = position;
+        Rotation = rotation;
         _tileObjects = new List<WorldObject>();
         this.biome = biome;
         NextTileRotation = rotation + this.GetRotationOffsetForNextTile();
         _obstacles = new List<Obstacle>();
+    }
+
+
+    private Vector3 GetWorldOffset(Vector3 localOffset)
+    {
+        return Vector3.Transform(localOffset, Matrix.CreateRotationY(Rotation));
     }
 
     public void AddObject(
@@ -127,14 +170,15 @@ public abstract class Tile
     {
         Matrix world =
             Matrix.CreateScale(scale) *
-            Matrix.CreateTranslation(offset) *
             Matrix.CreateRotationY(rotationY) *
+            Matrix.CreateTranslation(GetWorldOffset(offset)) *
             Matrix.CreateTranslation(Position);
 
         _tileObjects.Add(
             new WorldObject(model, world)
         );
     }
+
 
     public void AddObject(
         CustomModel model,
@@ -146,9 +190,9 @@ public abstract class Tile
     {
         Matrix world =
             Matrix.CreateScale(scale) *
-            Matrix.CreateTranslation(offset) *
             Matrix.CreateRotationY(rotationY) *
             Matrix.CreateRotationZ(rotationZ) *
+            Matrix.CreateTranslation(GetWorldOffset(offset)) *
             Matrix.CreateTranslation(Position);
 
         _tileObjects.Add(
@@ -175,8 +219,8 @@ public abstract class Tile
     {
         Matrix world =
             Matrix.CreateScale(scale) *
-            Matrix.CreateTranslation(offset) *
             Matrix.CreateRotationY(rotationY) *
+            Matrix.CreateTranslation(GetWorldOffset(offset)) *
             Matrix.CreateTranslation(Position);
 
         Vector3 finalPos = world.Translation;
@@ -229,7 +273,7 @@ public abstract class Tile
         {
             if (obj is Collectible collectible && collectible.IsActive)
             {
-                if (player.BoundingBox.Intersects(collectible.BoundingBox))
+                if (player.OBB.Intersects(collectible.BoundingBox))
                 {
                     collectible.PickUp(player);
                 }
@@ -244,6 +288,38 @@ public abstract class Tile
             if (obj is Collectible collectible && collectible.IsActive)
             {
                 yield return collectible.BoundingBox;
+            }
+        }
+    }
+
+    public void SetShadowMap(Texture2D shadowMap, Matrix lightViewProjection)
+    {
+        foreach (var obj in _tileObjects)
+        {
+            obj.SetShadowMap(shadowMap, lightViewProjection);
+        }
+
+        foreach (var obstacle in _obstacles)
+        {
+            if (obstacle.IsActive)
+            {
+                obstacle.SetShadowMap(shadowMap, lightViewProjection);
+            }
+        }
+    }
+
+    public void DrawDepth(Matrix lightViewProjection)
+    {
+        foreach (var obj in _tileObjects)
+        {
+            obj.DrawDepth(lightViewProjection);
+        }
+
+        foreach (var obstacle in _obstacles)
+        {
+            if (obstacle.IsActive)
+            {
+                obstacle.DrawDepth(lightViewProjection);
             }
         }
     }

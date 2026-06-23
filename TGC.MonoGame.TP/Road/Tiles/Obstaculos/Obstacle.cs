@@ -31,7 +31,7 @@ public class Obstacle : WorldObject
         bool isFatalOnFrontalCollision = false
     ) : base(model, world)
     {
-        Position = position;
+        Position = position + hitboxOffset;
 
         _hitboxSize = hitboxSize;
 
@@ -51,7 +51,6 @@ public class Obstacle : WorldObject
     private void UpdateBoundingBox()
     {
         Vector3 half = _hitboxSize / 2f;
-        half += _hitboxOffset;
 
         BoundingBox = new BoundingBox(
             Position - half,

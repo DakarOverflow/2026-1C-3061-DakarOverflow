@@ -38,6 +38,7 @@ public class Vehicle
 
     // Colisiones
     public BoundingBox BoundingBox { get; private set; }
+    public OrientedBoundingBox OBB { get; private set; }
 
     public float FrictionCoefficient { get; set; } = 1f;
 
@@ -264,6 +265,10 @@ public class Vehicle
     // ==========================================
     private void UpdateBoundingBox()
     {
+        Vector3 center = Position + _boundingBoxOffset;
+        Matrix orientation = Matrix.CreateRotationY(RotationY);
+        OBB = new OrientedBoundingBox(center, _boundingBoxHalfSize, orientation);
+
         BoundingBox = new BoundingBox(Position - _boundingBoxHalfSize + _boundingBoxOffset
             , Position + _boundingBoxHalfSize + _boundingBoxOffset);
     }
@@ -311,6 +316,24 @@ public class Vehicle
             Matrix.CreateRotationY(RotationY + ModelRotationOffset) *
             Matrix.CreateTranslation(Position);
     }
+    public void SetShadowMap(Texture2D shadowMap, Matrix lightViewProjection)
+    {
+        _bodyModel.SetShadowMap(shadowMap, lightViewProjection);
+        _frontLeftWheel.SetShadowMap(shadowMap, lightViewProjection);
+        _frontRightWheel.SetShadowMap(shadowMap, lightViewProjection);
+        _backLeftWheel.SetShadowMap(shadowMap, lightViewProjection);
+        _backRightWheel.SetShadowMap(shadowMap, lightViewProjection);
+    }
+
+    public void DrawDepth(Matrix lightViewProjection)
+    {
+        _bodyModel.DrawDepth(GetVisualWorld(), lightViewProjection);
+        _frontLeftWheel.DrawDepth(lightViewProjection);
+        _frontRightWheel.DrawDepth(lightViewProjection);
+        _backLeftWheel.DrawDepth(lightViewProjection);
+        _backRightWheel.DrawDepth(lightViewProjection);
+    }
+
     public void Draw(GameTime gameTime, Camera camera)
     {
         _bodyModel.Draw(

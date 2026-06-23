@@ -4,8 +4,8 @@ using Microsoft.Xna.Framework;
     public abstract class CameraStc
     {
         public const float DefaultFieldOfViewDegrees = MathHelper.PiOver4;
-        public const float DefaultNearPlaneDistance = 0.1f;
-        public const float DefaultFarPlaneDistance = 2000;
+        public const float DefaultNearPlaneDistance = 10f; //0.1f;
+        public const float DefaultFarPlaneDistance = 2000; //2000;
 
         public CameraStc(float aspectRatio, float nearPlaneDistance = DefaultNearPlaneDistance,
             float farPlaneDistance = DefaultFarPlaneDistance) : this(aspectRatio, nearPlaneDistance, farPlaneDistance,

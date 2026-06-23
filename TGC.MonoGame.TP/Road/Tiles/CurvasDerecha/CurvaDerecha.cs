@@ -28,8 +28,8 @@ public abstract class CurvaDerecha : Tile
     {
         return
         [
-            new Vector3(-150f,0f,100f),
-            new Vector3(-50f,0f,-200f)
+            new Vector3(-180f,15f,345f),
+            new Vector3(390f,15f,-15f)
         ];
     }
 }
