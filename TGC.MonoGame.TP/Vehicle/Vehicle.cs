@@ -33,11 +33,16 @@ public class Vehicle
 
     // Combustible, salud y puntaje
     public float CurrentFuel { get; private set; }
+    public float MaxFuel => _stats.FuelCapacity;
     public float CurrentHealth { get; private set; }
+    public float MaxHealth => _stats.MaxHealth;
     public int Score { get; private set; }
 
     // Colisiones
     public BoundingBox BoundingBox { get; private set; }
+    public OrientedBoundingBox OBB { get; private set; }
+
+    public float FrictionCoefficient { get; set; } = 1f;
 
     public const float ScaleFactor = 0.5f;
 
@@ -125,7 +130,8 @@ public class Vehicle
                 lerpFactor
             );
 
-            _speed -= _stats.BrakeForce * deltaTime;
+
+            _speed -= _stats.BrakeForce * FrictionCoefficient * deltaTime;
         }
         else if(!_exploded)
         {
@@ -137,7 +143,8 @@ public class Vehicle
                 lerpFactor
             );
 
-            _speed += _currentAcceleration * deltaTime;
+
+            _speed += _currentAcceleration * FrictionCoefficient * deltaTime;
         }
 
 
@@ -157,7 +164,7 @@ public class Vehicle
         // LIMITES VELOCIDAD
         // =========================
 
-        _speed = MathHelper.Clamp(_speed, _stats.MinSpeed, _stats.MaxSpeed);
+        _speed = MathHelper.Clamp(_speed, _stats.MinSpeed, _stats.MaxSpeed * MathHelper.Clamp(FrictionCoefficient, 0.1f, 1f));
 
         // =========================
         // GIRAR
@@ -171,7 +178,7 @@ public class Vehicle
             speedFactor
         );
 
-        float currentTurnSpeed = _stats.TurnSpeed * turnMultiplier;
+        float currentTurnSpeed = _stats.TurnSpeed * turnMultiplier * FrictionCoefficient;
 
         if (Math.Abs(_speed) > 5f)
         {
@@ -179,13 +186,13 @@ public class Vehicle
 
             if (keyboard.IsKeyDown(Keys.A) && !_exploded)
             {
-                RotationY += currentTurnSpeed * steeringDirection * deltaTime;
+                RotationY += currentTurnSpeed * steeringDirection * (deltaTime + (1-FrictionCoefficient) * 0.06f);
                 _wheelSteeringAngle = MathHelper.Lerp(_wheelSteeringAngle, MathHelper.ToRadians(25f), 0.1f);
             }
 
             else if (keyboard.IsKeyDown(Keys.D) && !_exploded)
             {
-                RotationY -= currentTurnSpeed * steeringDirection * deltaTime;
+                RotationY -= currentTurnSpeed * steeringDirection * (deltaTime + (1-FrictionCoefficient) * 0.06f);
                 _wheelSteeringAngle = MathHelper.Lerp(_wheelSteeringAngle, MathHelper.ToRadians(-25f), 0.1f);
             }
             else
@@ -216,14 +223,20 @@ public class Vehicle
 
         // Colisiones
         UpdateBoundingBox();
+
+        UpdateMotorSound();
     }
 
-    public void UpdateSound(SoundEffectInstance motorSound, SoundEffect breakingEffect)
+    private void UpdateMotorSound()
     {
-        // Si esta desacelerando reproducimos el sonido del freno
-        if (this._currentAcceleration < 0f && Keyboard.GetState().IsKeyDown(Keys.S))
+        var soundManager = SoundManager.GetInstance();
+        var motorSound = soundManager.MotorSoundInstance;
+        var brakeSound = soundManager.BrakeSoundInstance;
+
+        if (Keyboard.GetState().IsKeyDown(Keys.S) && brakeSound.State != SoundState.Playing)
         {
-            breakingEffect.Play();
+            // Si esta desacelerando reproducimos el sonido del freno
+            brakeSound.Play();
         }
 
         //Ajustamos el sonido del motor según la aceleración actual
@@ -260,6 +273,10 @@ public class Vehicle
     // ==========================================
     private void UpdateBoundingBox()
     {
+        Vector3 center = Position + _boundingBoxOffset;
+        Matrix orientation = Matrix.CreateRotationY(RotationY);
+        OBB = new OrientedBoundingBox(center, _boundingBoxHalfSize, orientation);
+
         BoundingBox = new BoundingBox(Position - _boundingBoxHalfSize + _boundingBoxOffset
             , Position + _boundingBoxHalfSize + _boundingBoxOffset);
     }
@@ -268,6 +285,7 @@ public class Vehicle
     {
         CurrentHealth -= damage;
         if(CurrentHealth < 0) CurrentHealth = 0;
+        else SoundManager.GetInstance().SonarGolpe();
     }
 
     public void CollisionImpact(float damage, float speedMultiplier)
@@ -307,6 +325,24 @@ public class Vehicle
             Matrix.CreateRotationY(RotationY + ModelRotationOffset) *
             Matrix.CreateTranslation(Position);
     }
+    public void SetShadowMap(Texture2D shadowMap, Matrix lightViewProjection)
+    {
+        _bodyModel.SetShadowMap(shadowMap, lightViewProjection);
+        _frontLeftWheel.SetShadowMap(shadowMap, lightViewProjection);
+        _frontRightWheel.SetShadowMap(shadowMap, lightViewProjection);
+        _backLeftWheel.SetShadowMap(shadowMap, lightViewProjection);
+        _backRightWheel.SetShadowMap(shadowMap, lightViewProjection);
+    }
+
+    public void DrawDepth(Matrix lightViewProjection)
+    {
+        _bodyModel.DrawDepth(GetVisualWorld(), lightViewProjection);
+        _frontLeftWheel.DrawDepth(lightViewProjection);
+        _frontRightWheel.DrawDepth(lightViewProjection);
+        _backLeftWheel.DrawDepth(lightViewProjection);
+        _backRightWheel.DrawDepth(lightViewProjection);
+    }
+
     public void Draw(GameTime gameTime, Camera camera)
     {
         _bodyModel.Draw(

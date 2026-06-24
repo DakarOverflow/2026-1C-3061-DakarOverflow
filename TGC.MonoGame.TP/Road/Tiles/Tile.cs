@@ -262,13 +262,18 @@ public abstract class Tile
         }
     }
 
+    public float GetFrictionCoefficient()
+    {
+        return this.biome.GetFrictionCoefficient();
+    }
+
     public void CheckCollisions(Vehicle player)
     {
         foreach (var obj in _tileObjects)
         {
             if (obj is Collectible collectible && collectible.IsActive)
             {
-                if (player.BoundingBox.Intersects(collectible.BoundingBox))
+                if (player.OBB.Intersects(collectible.BoundingBox))
                 {
                     collectible.PickUp(player);
                 }
@@ -283,6 +288,38 @@ public abstract class Tile
             if (obj is Collectible collectible && collectible.IsActive)
             {
                 yield return collectible.BoundingBox;
+            }
+        }
+    }
+
+    public void SetShadowMap(Texture2D shadowMap, Matrix lightViewProjection)
+    {
+        foreach (var obj in _tileObjects)
+        {
+            obj.SetShadowMap(shadowMap, lightViewProjection);
+        }
+
+        foreach (var obstacle in _obstacles)
+        {
+            if (obstacle.IsActive)
+            {
+                obstacle.SetShadowMap(shadowMap, lightViewProjection);
+            }
+        }
+    }
+
+    public void DrawDepth(Matrix lightViewProjection)
+    {
+        foreach (var obj in _tileObjects)
+        {
+            obj.DrawDepth(lightViewProjection);
+        }
+
+        foreach (var obstacle in _obstacles)
+        {
+            if (obstacle.IsActive)
+            {
+                obstacle.DrawDepth(lightViewProjection);
             }
         }
     }

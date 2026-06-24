@@ -34,6 +34,16 @@ public class WorldObject
     {
     }
 
+    public virtual void SetShadowMap(Texture2D shadowMap, Matrix lightViewProjection)
+    {
+        _model.SetShadowMap(shadowMap, lightViewProjection);
+    }
+
+    public virtual void DrawDepth(Matrix lightViewProjection)
+    {
+        _model.DrawDepth(_world, lightViewProjection);
+    }
+
     public virtual void Draw(
         GameTime gameTime,
         Matrix view,

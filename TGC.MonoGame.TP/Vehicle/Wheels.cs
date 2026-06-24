@@ -63,7 +63,7 @@ public class Wheel
         }
     }
 
-    public void Draw(Camera camera)
+    private Matrix GetWorld()
     {
         Matrix mirror =
             _isRightWheel
@@ -78,8 +78,23 @@ public class Wheel
             Matrix.CreateRotationY(VehicleRotation) *
             Matrix.CreateTranslation(WorldPosition);
 
+        return world;
+    }
+
+    public void SetShadowMap(Texture2D shadowMap, Matrix lightViewProjection)
+    {
+        _model.SetShadowMap(shadowMap, lightViewProjection);
+    }
+
+    public void DrawDepth(Matrix lightViewProjection)
+    {
+        _model.DrawDepth(GetWorld(), lightViewProjection);
+    }
+
+    public void Draw(Camera camera)
+    {
         _model.Draw(
-            world, 
+            GetWorld(),
             camera.GetView(), 
             camera.GetProjection());
     }

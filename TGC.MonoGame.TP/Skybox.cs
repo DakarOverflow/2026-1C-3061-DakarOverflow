@@ -140,7 +140,9 @@ public class Skybox
         _effect.Parameters["World"]?.SetValue(world);
         _effect.Parameters["View"]?.SetValue(view);
         _effect.Parameters["Projection"]?.SetValue(projection);
-
+        _effect.Parameters["CameraPosition"]?.SetValue(cameraPosition);
+        _effect.Parameters["UseLighting"]?.SetValue(false);
+        _effect.CurrentTechnique = _effect.Techniques["TexturedUnlitDrawing"] ?? _effect.CurrentTechnique;
         foreach (var face in _faces)
         {
             _effect.Parameters["ModelTexture"]?.SetValue(face.Texture);
