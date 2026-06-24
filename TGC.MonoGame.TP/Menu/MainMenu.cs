@@ -152,7 +152,7 @@ public class MainMenu
         else if (CurrentState == MenuState.Controls)
         {
             game.DrawCenterTextY("COMANDOS", 50f, 3, Color.White);
-            game.DrawCenterTextY("W A S D: Moverse", 150f, 1, Color.White);
+            game.DrawCenterTextY("A S D: Moverse", 150f, 1, Color.White);
             game.DrawCenterTextY("G: God Mode", 200f, 1, Color.LightBlue);
             game.DrawCenterTextY("H: Hitboxes", 250f, 1, Color.LightCoral);
             game.DrawCenterTextY("F: Modo Foto", 300f, 1, Color.LightGreen);
