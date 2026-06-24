@@ -56,9 +56,6 @@ public class TGCGame : Game
     private Vehicle _mediumVehicle;
     private Vehicle _heavyVehicle;
 
-    //Sonidos
-    private SoundEffectInstance _instanciaSonidoMotor;
-    private SoundEffect _sonidoFrenado;
     private Road _road;
     private Skybox _skybox;
     // COLECCIONABLES
@@ -456,13 +453,6 @@ Matrix _worldMainCarHud;
         // Vehículo inicial:
         _playerVehicle = _mediumVehicle;
 
-        var sonidoMotor = Content.Load<SoundEffect>(AssetPaths.ContentFolderSounds + "motor_auto");
-        _instanciaSonidoMotor = sonidoMotor.CreateInstance();
-        _instanciaSonidoMotor.IsLooped = true;
-        _instanciaSonidoMotor.Play();
-
-        _sonidoFrenado = Content.Load<SoundEffect>(AssetPaths.ContentFolderSounds + "auto_frenando");
-
         base.LoadContent();
     }
 
@@ -509,6 +499,7 @@ Matrix _worldMainCarHud;
             {
                 _currentDifficulty = GameDifficulty.EASY;
                 _sceneNum = Scene.Road;
+                SoundManager.GetInstance().StartMotorSound();
             }
 
             if (keyboardState.IsKeyDown(Keys.N) &&
@@ -516,6 +507,7 @@ Matrix _worldMainCarHud;
             {
                 _currentDifficulty = GameDifficulty.MEDIUM;
                 _sceneNum = Scene.Road;
+                SoundManager.GetInstance().StartMotorSound();
             }
 
             if (keyboardState.IsKeyDown(Keys.B) &&
@@ -523,6 +515,7 @@ Matrix _worldMainCarHud;
             {
                 _currentDifficulty = GameDifficulty.HARD;
                 _sceneNum = Scene.Road;
+                SoundManager.GetInstance().StartMotorSound();
             }
             break; 
 
@@ -567,7 +560,6 @@ Matrix _worldMainCarHud;
         _playerVehicle.FrictionCoefficient = _road.GetFrictionAtPosition(_playerVehicle.Position);
 
         _playerVehicle.Update(gameTime);
-        _playerVehicle.UpdateSound(_instanciaSonidoMotor, _sonidoFrenado);
         if(!_godMode) CheckObstacleCollisions();
         }
 
@@ -872,7 +864,7 @@ Matrix _worldMainCarHud;
         {
             DrawCenterText("GAME OVER",10, Color.Red);
             DrawCenterTextY("PUNTAJE: "+ _playerVehicle.Score.ToString() ,100, 10,Color.Yellow);
-            _instanciaSonidoMotor.Stop();
+            SoundManager.GetInstance().StopMotorSound();
         }
         break; 
         }

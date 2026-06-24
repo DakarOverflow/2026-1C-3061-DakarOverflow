@@ -33,6 +33,13 @@ public class SoundManager
 
 
 
+    private SoundEffect _motorSound;
+    private SoundEffectInstance _motorSoundInstance;
+    private bool _motorStarted;
+
+    private SoundEffect _brakeSound;
+    private SoundEffectInstance _brakeSoundInstance;
+
     private SoundEffect _recolectarMoneda;
     private SoundEffectInstance _recolectarMonedaInstance;
 
@@ -45,9 +52,17 @@ public class SoundManager
     private SoundEffect _explosion;
     private SoundEffect _golpe;
 
+    public SoundEffectInstance MotorSoundInstance => _motorSoundInstance;
+    public SoundEffectInstance BrakeSoundInstance => _brakeSoundInstance;
+
     public SoundManager(ContentManager content)
     {
-        //TODO: Traer los sonidos del auto acá 
+        _motorSound = content.Load<SoundEffect>(AssetPaths.ContentFolderSounds + "motor_auto");
+        _motorSoundInstance = _motorSound.CreateInstance();
+        _motorSoundInstance.IsLooped = true;
+
+        _brakeSound = content.Load<SoundEffect>(AssetPaths.ContentFolderSounds + "auto_frenando");
+        _brakeSoundInstance = _brakeSound.CreateInstance();
 
         _recolectarMoneda = content.Load<SoundEffect>(AssetPaths.ContentFolderSounds + "efectoMoneda");
         _recolectarMonedaInstance = _recolectarMoneda.CreateInstance();
@@ -85,5 +100,28 @@ public class SoundManager
     {
         _golpe.Play();
     }
-    
+
+    public void StartMotorSound()
+    {
+        if (_motorStarted)
+        {
+            return;
+        }
+
+        _motorStarted = true;
+        if (_motorSoundInstance.State != SoundState.Playing)
+        {
+            _motorSoundInstance.Play();
+        }
+    }
+
+    public void StopMotorSound()
+    {
+        if (_motorSoundInstance.State == SoundState.Playing)
+        {
+            _motorSoundInstance.Stop();
+        }
+
+        _motorStarted = false;
+    }
 }
