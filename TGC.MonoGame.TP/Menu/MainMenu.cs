@@ -174,21 +174,42 @@ public class MainMenu
         {
             game.DrawCenterTextY("SELECCIONA TU VEHICULO", height * 0.15f, 2, Color.White);
             game.DrawCenterTextY("Preciona 1, 2 o 3", height * 0.25f, 1, Color.White);
-            
-            game.DrawCenterTextY("1 para Auto Ligero", height * 0.7f, 1, Color.LightBlue);
-            game.DrawCenterTextY("2 para Auto Mediano", height * 0.8f, 1, Color.LightGreen);
-            game.DrawCenterTextY("3 para Auto Pesado", height * 0.9f, 1, Color.LightCoral);
 
-            Matrix scale = Matrix.CreateScale(0.1f);
+            Matrix scale = Matrix.CreateScale(0.08f);
             Matrix rotation = Matrix.CreateRotationY((float)gameTime.TotalGameTime.TotalSeconds);
             
-            Matrix transRight = Matrix.CreateTranslation(50f, -10f, 0f);
-            Matrix transCenter = Matrix.CreateTranslation(0f, -10f, 0f);
-            Matrix transLeft = Matrix.CreateTranslation(-50f, -10f, 0f);
+            Matrix transRight = Matrix.CreateTranslation(50f, -5f, 0f);
+            Matrix transCenter = Matrix.CreateTranslation(0f, -5f, 0f);
+            Matrix transLeft = Matrix.CreateTranslation(-50f, -5f, 0f);
             
-            _lightModel.DrawUnlit(scale * rotation * transRight, cameraMenu.View, cameraMenu.Projection);
+            _lightModel.DrawUnlit(scale * rotation * transLeft, cameraMenu.View, cameraMenu.Projection);
             _mediumModel.DrawUnlit(scale * rotation * transCenter, cameraMenu.View, cameraMenu.Projection);
-            _heavyModel.DrawUnlit(scale * rotation * transLeft, cameraMenu.View, cameraMenu.Projection);
+            _heavyModel.DrawUnlit(scale * rotation * transRight, cameraMenu.View, cameraMenu.Projection);
+
+            Vector3 screenRight = game.GraphicsDevice.Viewport.Project(new Vector3(50f, -5f, 0f), cameraMenu.Projection, cameraMenu.View, Matrix.Identity);
+            Vector3 screenCenter = game.GraphicsDevice.Viewport.Project(new Vector3(0f, -5f, 0f), cameraMenu.Projection, cameraMenu.View, Matrix.Identity);
+            Vector3 screenLeft = game.GraphicsDevice.Viewport.Project(new Vector3(-50f, -5f, 0f), cameraMenu.Projection, cameraMenu.View, Matrix.Identity);
+
+            float statY = screenCenter.Y + 80f;
+            float lineSpacing = 25f;
+            
+            // Light
+            game.DrawTextCenteredAtXY("1 - LIGERO", screenLeft.X, statY, 0.8f, Color.LightBlue);
+            game.DrawTextCenteredAtXY($"Velocidad: {VehiclePresets.Light.MaxSpeed}", screenLeft.X, statY + lineSpacing, 0.6f, Color.White);
+            game.DrawTextCenteredAtXY($"Tanque de Nafta: {VehiclePresets.Light.FuelCapacity}", screenLeft.X, statY + lineSpacing * 2, 0.6f, Color.White);
+            game.DrawTextCenteredAtXY($"Vida: {VehiclePresets.Light.MaxHealth}", screenLeft.X, statY + lineSpacing * 3, 0.6f, Color.White);
+
+            // Medium
+            game.DrawTextCenteredAtXY("2 - MEDIANO", screenCenter.X, statY, 0.8f, Color.LightGreen);
+            game.DrawTextCenteredAtXY($"Velocidad: {VehiclePresets.Medium.MaxSpeed}", screenCenter.X, statY + lineSpacing, 0.6f, Color.White);
+            game.DrawTextCenteredAtXY($"Tanque de Nafta: {VehiclePresets.Medium.FuelCapacity}", screenCenter.X, statY + lineSpacing * 2, 0.6f, Color.White);
+            game.DrawTextCenteredAtXY($"Vida: {VehiclePresets.Medium.MaxHealth}", screenCenter.X, statY + lineSpacing * 3, 0.6f, Color.White);
+
+            // Heavy
+            game.DrawTextCenteredAtXY("3 - PESADO", screenRight.X, statY, 0.8f, Color.LightCoral);
+            game.DrawTextCenteredAtXY($"Velocidad: {VehiclePresets.Heavy.MaxSpeed}", screenRight.X, statY + lineSpacing, 0.6f, Color.White);
+            game.DrawTextCenteredAtXY($"Tanque de Nafta: {VehiclePresets.Heavy.FuelCapacity}", screenRight.X, statY + lineSpacing * 2, 0.6f, Color.White);
+            game.DrawTextCenteredAtXY($"Vida: {VehiclePresets.Heavy.MaxHealth}", screenRight.X, statY + lineSpacing * 3, 0.6f, Color.White);
         }
         else if (CurrentState == MenuState.SelectingDifficulty)
         {

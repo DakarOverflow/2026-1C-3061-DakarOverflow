@@ -896,4 +896,16 @@ Scene _sceneNum = Scene.Menu;
         spriteBatch.DrawString(font, msg, new Vector2(0, 0), Color);
         spriteBatch.End();
     }
+    
+    public void DrawTextCenteredAtXY(string msg, float X, float Y, float escala, Color color)
+    {
+        var size = font.MeasureString(msg) * escala;
+        spriteBatch.Begin(SpriteSortMode.Deferred,null, 
+        null, 
+        DepthStencilState.Default, 
+        null, null,
+            Matrix.CreateScale(escala) * Matrix.CreateTranslation(X - (size.X / 2), Y, 0));
+        spriteBatch.DrawString(font, msg, new Vector2(0, 0), color);
+        spriteBatch.End();
+    }
 }
