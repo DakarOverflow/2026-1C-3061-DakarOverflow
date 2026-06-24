@@ -27,10 +27,7 @@ public class MainMenu
     private CustomModel _lightModel;
     private CustomModel _mediumModel;
     private CustomModel _heavyModel;
-
-    private Matrix _worldMenuCar;
-    private Matrix _worldMenuCar2;
-    private Matrix _worldMenuCar3;
+    private CustomModel _tileModel;
 
     public MenuState CurrentState { get; private set; } = MenuState.Home;
     public SelectedVehicle ChosenVehicle { get; private set; } = SelectedVehicle.None;
@@ -60,10 +57,12 @@ public class MainMenu
             content.Load<Effect>(AssetPaths.ContentFolderEffects + "TexturedShader"),
             carKitColormap
         );
-        
-        _worldMenuCar = Matrix.CreateTranslation(500f, -100f, 0f) * Matrix.CreateScale(0.1f);
-        _worldMenuCar2 = Matrix.CreateTranslation(0f, -100f, 0f) * Matrix.CreateScale(0.1f);
-        _worldMenuCar3 = Matrix.CreateTranslation(-500f, -100f, 0f) * Matrix.CreateScale(0.1f);
+        var tileColormap = content.Load<Texture2D>(AssetPaths.ContentFolder3D + "road-tiles/Textures/colormap");
+        _tileModel = new CustomModel(
+            content.Load<Model>(AssetPaths.ContentFolder3D + "road-tiles/road-straight"),
+            content.Load<Effect>(AssetPaths.ContentFolderEffects + "TexturedShader"),
+            tileColormap
+        );
     }
 
     public void Update(GameTime gameTime, TGCGame game)
@@ -142,45 +141,62 @@ public class MainMenu
 
     public void Draw(GameTime gameTime, TGCGame game, CameraStc cameraMenu)
     {
+        float height = game.GraphicsDevice.Viewport.Height;
+
         if (CurrentState == MenuState.Home)
         {
-            game.DrawCenterTextY("DAKAR OVERFLOW", 50f, 3, Color.White);
-            game.DrawCenterTextY("1. Jugar", 200f, 2, Color.LimeGreen);
-            game.DrawCenterTextY("2. Comandos", 250f, 2, Color.Yellow);
-            game.DrawCenterTextY("ESC - Salir", 300f, 2, Color.Red);
+            game.DrawCenterTextY("DAKAR OVERFLOW", height * 0.15f, 3, Color.White);
+            game.DrawCenterTextY("1. Jugar", height * 0.65f, 2, Color.LimeGreen);
+            game.DrawCenterTextY("2. Comandos", height * 0.75f, 2, Color.Yellow);
+            game.DrawCenterTextY("ESC - Salir", height * 0.85f, 2, Color.Red);
+
+            Matrix scale = Matrix.CreateScale(0.1f);
+            Matrix tileScale = Matrix.CreateScale(0.01f);
+            Matrix rotation = Matrix.CreateRotationY((float)gameTime.TotalGameTime.TotalSeconds * 0.5f);
+            Matrix centerTrans = Matrix.CreateTranslation(0f, -10f, 0f);
+            
+            // Dibujar el tile base (la calle)
+            _tileModel.DrawUnlit(tileScale * centerTrans, cameraMenu.View, cameraMenu.Projection);
+            // Dibujar un auto girando
+            _lightModel.DrawUnlit(scale * rotation * centerTrans, cameraMenu.View, cameraMenu.Projection);
         }
         else if (CurrentState == MenuState.Controls)
         {
-            game.DrawCenterTextY("COMANDOS", 50f, 3, Color.White);
-            game.DrawCenterTextY("A S D: Moverse", 150f, 1, Color.White);
-            game.DrawCenterTextY("G: God Mode", 200f, 1, Color.LightBlue);
-            game.DrawCenterTextY("H: Hitboxes", 250f, 1, Color.LightCoral);
-            game.DrawCenterTextY("F: Modo Foto", 300f, 1, Color.LightGreen);
+            game.DrawCenterTextY("COMANDOS", height * 0.15f, 3, Color.White);
+            game.DrawCenterTextY("W A S D: Moverse", height * 0.4f, 1, Color.White);
+            game.DrawCenterTextY("G: God Mode", height * 0.5f, 1, Color.LightBlue);
+            game.DrawCenterTextY("H: Hitboxes", height * 0.6f, 1, Color.LightCoral);
+            game.DrawCenterTextY("F: Modo Foto", height * 0.7f, 1, Color.LightGreen);
             
-            game.DrawCenterTextY("ESC - Volver", 400f, 1, Color.Gray);
+            game.DrawCenterTextY("ESC - Volver", height * 0.85f, 1, Color.Gray);
         }
         else if (CurrentState == MenuState.SelectingVehicle)
         {
-            game.DrawCenterTextY("SELECCIONA TU VEHICULO", 50f, 2, Color.White);
-            game.DrawCenterTextY("Preciona 1, 2 O 3", 100f, 1, Color.White);
+            game.DrawCenterTextY("SELECCIONA TU VEHICULO", height * 0.15f, 2, Color.White);
+            game.DrawCenterTextY("Preciona 1, 2 O 3", height * 0.25f, 1, Color.White);
             
-            game.DrawCenterTextY("1 Para Light Vehicle", 200f, 1, Color.LightBlue);
-            game.DrawCenterTextY("2 Para Medium Vehicle", 250f, 1, Color.LightGreen);
-            game.DrawCenterTextY("3 Para Heavy Vehicle", 300f, 1, Color.LightCoral);
+            game.DrawCenterTextY("1 Para Light Vehicle", height * 0.7f, 1, Color.LightBlue);
+            game.DrawCenterTextY("2 Para Medium Vehicle", height * 0.8f, 1, Color.LightGreen);
+            game.DrawCenterTextY("3 Para Heavy Vehicle", height * 0.9f, 1, Color.LightCoral);
 
+            Matrix scale = Matrix.CreateScale(0.1f);
             Matrix rotation = Matrix.CreateRotationY((float)gameTime.TotalGameTime.TotalSeconds);
             
-            _lightModel.DrawUnlit(rotation * _worldMenuCar, cameraMenu.View, cameraMenu.Projection);
-            _mediumModel.DrawUnlit(rotation * _worldMenuCar2, cameraMenu.View, cameraMenu.Projection);
-            _heavyModel.DrawUnlit(rotation * _worldMenuCar3, cameraMenu.View, cameraMenu.Projection);
+            Matrix transRight = Matrix.CreateTranslation(50f, -10f, 0f);
+            Matrix transCenter = Matrix.CreateTranslation(0f, -10f, 0f);
+            Matrix transLeft = Matrix.CreateTranslation(-50f, -10f, 0f);
+            
+            _lightModel.DrawUnlit(scale * rotation * transRight, cameraMenu.View, cameraMenu.Projection);
+            _mediumModel.DrawUnlit(scale * rotation * transCenter, cameraMenu.View, cameraMenu.Projection);
+            _heavyModel.DrawUnlit(scale * rotation * transLeft, cameraMenu.View, cameraMenu.Projection);
         }
         else if (CurrentState == MenuState.SelectingDifficulty)
         {
-            game.DrawCenterTextY("Dificultad", 50f, 3, Color.White);
-            game.DrawCenterTextY("M Para Facil", 150f, 1, Color.LimeGreen);
-            game.DrawCenterTextY("N Para Normal", 200f, 1, Color.Yellow);
-            game.DrawCenterTextY("B Para Dificil", 250f, 1, Color.Red);
-            game.DrawCenterTextY("ESC - Volver", 350f, 1, Color.Gray);
+            game.DrawCenterTextY("Dificultad", height * 0.15f, 3, Color.White);
+            game.DrawCenterTextY("M Para Facil", height * 0.4f, 1, Color.LimeGreen);
+            game.DrawCenterTextY("N Para Normal", height * 0.5f, 1, Color.Yellow);
+            game.DrawCenterTextY("B Para Dificil", height * 0.6f, 1, Color.Red);
+            game.DrawCenterTextY("ESC - Volver", height * 0.8f, 1, Color.Gray);
         }
     }
 }
