@@ -186,13 +186,13 @@ public class Vehicle
 
             if (keyboard.IsKeyDown(Keys.A) && !_exploded)
             {
-                RotationY += currentTurnSpeed * steeringDirection * (deltaTime + (1-FrictionCoefficient) * 0.05f);
+                RotationY += currentTurnSpeed * steeringDirection * (deltaTime + (1-FrictionCoefficient) * 0.06f);
                 _wheelSteeringAngle = MathHelper.Lerp(_wheelSteeringAngle, MathHelper.ToRadians(25f), 0.1f);
             }
 
             else if (keyboard.IsKeyDown(Keys.D) && !_exploded)
             {
-                RotationY -= currentTurnSpeed * steeringDirection * (deltaTime + (1-FrictionCoefficient) * 0.05f);
+                RotationY -= currentTurnSpeed * steeringDirection * (deltaTime + (1-FrictionCoefficient) * 0.06f);
                 _wheelSteeringAngle = MathHelper.Lerp(_wheelSteeringAngle, MathHelper.ToRadians(-25f), 0.1f);
             }
             else
