@@ -74,7 +74,7 @@ public class CurvaDerechaNieveAsfalto : CurvaDerecha, IAssetLoader
         AddObject(
             modelMap.GetValueOrDefault("road-tiles/road-curve", null), 
             new Vector3(5f, 5f, 5f),
-            new Vector3(-100f, 12f, 100f),
+            new Vector3(100f, 12f, 100f),
             rotation + MathHelper.PiOver2
         );
         //Edificios 

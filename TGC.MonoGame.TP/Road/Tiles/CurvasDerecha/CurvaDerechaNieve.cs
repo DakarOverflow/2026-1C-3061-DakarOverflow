@@ -71,7 +71,7 @@ public class CurvaDerechaNieve : CurvaDerecha, IAssetLoader
         AddObject(
             modelMap.GetValueOrDefault("tower-defense-kit/snow-tile-corner-large", null), 
             new Vector3(5f, 1f, 5f), // Escalado
-            new Vector3(5f, -5f, 0f), // Posicion
+            new Vector3(100f, -5f, 100f), // Posicion
             rotation
         );
 

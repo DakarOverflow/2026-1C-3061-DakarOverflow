@@ -75,7 +75,7 @@ public class CurvaDerechaTierraNieve : CurvaDerecha, IAssetLoader
         AddObject(
             modelMap.GetValueOrDefault("tower-defense-kit/tile-corner-large", null), 
             new Vector3(5f, 5f, 5f),
-            new Vector3(-100f, 12f, 100f),
+            new Vector3(100f, 12f, 100f),
             rotation + MathHelper.PiOver2
         );
         //Edificios 
