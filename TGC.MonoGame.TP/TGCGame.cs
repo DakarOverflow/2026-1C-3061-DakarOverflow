@@ -560,6 +560,7 @@ Matrix _worldMainCarHud;
         _playerVehicle.FrictionCoefficient = _road.GetFrictionAtPosition(_playerVehicle.Position);
 
         _playerVehicle.Update(gameTime);
+        SoundManager.GetInstance().Update(gameTime);
         if(!_godMode) CheckObstacleCollisions();
         }
 

@@ -2,6 +2,7 @@ using System;
 using ImGuiNET;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Audio;
+using Microsoft.Xna.Framework.Media;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -55,14 +56,30 @@ public class SoundManager
     public SoundEffectInstance MotorSoundInstance => _motorSoundInstance;
     public SoundEffectInstance BrakeSoundInstance => _brakeSoundInstance;
 
+    
+    private Song _backgroundSong;
+    
+    private SoundEffect _motorStartSound;
+    private SoundEffectInstance _motorStartInstance;
+    private bool _waitingForStartComplete;
     public SoundManager(ContentManager content)
     {
+        // Motor (no iniciar automáticamente para evitar sonido en el menú)
         _motorSound = content.Load<SoundEffect>(AssetPaths.ContentFolderSounds + "motor_auto");
         _motorSoundInstance = _motorSound.CreateInstance();
         _motorSoundInstance.IsLooped = true;
 
         _brakeSound = content.Load<SoundEffect>(AssetPaths.ContentFolderSounds + "auto_frenando");
         _brakeSoundInstance = _brakeSound.CreateInstance();
+
+        _motorStartSound = content.Load<SoundEffect>(AssetPaths.ContentFolderSounds + "arranqueMotor");
+        _motorStartInstance = _motorStartSound.CreateInstance();
+        _motorStartInstance.Volume = 1f;
+        
+        _backgroundSong = content.Load<Song>(AssetPaths.ContentFolderSounds + "cancionFondo");
+        MediaPlayer.IsRepeating = true;
+        MediaPlayer.Volume = 0.5f;
+        MediaPlayer.Play(_backgroundSong);
 
         _recolectarMoneda = content.Load<SoundEffect>(AssetPaths.ContentFolderSounds + "efectoMoneda");
         _recolectarMonedaInstance = _recolectarMoneda.CreateInstance();
@@ -109,7 +126,13 @@ public class SoundManager
         }
 
         _motorStarted = true;
-        if (_motorSoundInstance.State != SoundState.Playing)
+        if (_motorStartInstance != null)
+        {
+            _motorStartInstance.Volume = 1.0f;
+            _motorStartInstance.Play();
+            _waitingForStartComplete = true;
+        }
+        else if (_motorSoundInstance.State != SoundState.Playing)
         {
             _motorSoundInstance.Play();
         }
@@ -123,5 +146,20 @@ public class SoundManager
         }
 
         _motorStarted = false;
+    }
+
+    public void Update(GameTime gameTime)
+    {
+        if (_waitingForStartComplete && _motorStartInstance != null)
+        {
+            if (_motorStartInstance.State != SoundState.Playing)
+            {
+                _waitingForStartComplete = false;
+                if (_motorSoundInstance.State != SoundState.Playing)
+                {
+                    _motorSoundInstance.Play();
+                }
+            }
+        }
     }
 }
