@@ -95,9 +95,9 @@ public class RectaTierraNieve : Recta, IAssetLoader
 
         AddObject(
             modelMap.GetValueOrDefault("tower-defense-kit/tile-straight", null),
-            new Vector3(12f, 5f, 5f),
-            new Vector3(0f, 12f, 0f),
-            rotation + MathHelper.PiOver2
+            new Vector3(5.5f, 1f, 12f), // Escalado
+            new Vector3(0f, -5f, 0f), // Posicion en eje Y
+            rotation
         );
 
         // EDIFICIO 1
