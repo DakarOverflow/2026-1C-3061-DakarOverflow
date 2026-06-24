@@ -375,13 +375,15 @@ Scene _sceneNum = Scene.Menu;
 
         // EXIT
 
-        if (keyboardState.IsKeyDown(Keys.Escape))
+        if (keyboardState.IsKeyDown(Keys.Escape) && _sceneNum != Scene.Menu)
         {
             Exit();
-        }        switch (_sceneNum)
+        }
+        
+        switch (_sceneNum)
         {
             case Scene.Menu:
-                _mainMenu.Update(gameTime);
+                _mainMenu.Update(gameTime, this);
                 if (_mainMenu.IsFinished)
                 {
                     switch (_mainMenu.ChosenVehicle)
