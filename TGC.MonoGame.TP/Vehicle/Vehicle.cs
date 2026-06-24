@@ -223,14 +223,20 @@ public class Vehicle
 
         // Colisiones
         UpdateBoundingBox();
+
+        UpdateMotorSound();
     }
 
-    public void UpdateSound(SoundEffectInstance motorSound, SoundEffect breakingEffect)
+    private void UpdateMotorSound()
     {
-        // Si esta desacelerando reproducimos el sonido del freno
-        if (this._currentAcceleration < 0f && Keyboard.GetState().IsKeyDown(Keys.S))
+        var soundManager = SoundManager.GetInstance();
+        var motorSound = soundManager.MotorSoundInstance;
+        var brakeSound = soundManager.BrakeSoundInstance;
+
+        if (Keyboard.GetState().IsKeyDown(Keys.S) && brakeSound.State != SoundState.Playing)
         {
-            breakingEffect.Play();
+            // Si esta desacelerando reproducimos el sonido del freno
+            brakeSound.Play();
         }
 
         //Ajustamos el sonido del motor según la aceleración actual
