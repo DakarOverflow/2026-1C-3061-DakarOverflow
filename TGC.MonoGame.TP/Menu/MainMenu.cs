@@ -163,7 +163,7 @@ public class MainMenu
         else if (CurrentState == MenuState.Controls)
         {
             game.DrawCenterTextY("COMANDOS", height * 0.15f, 3, Color.White);
-            game.DrawCenterTextY("W A S D: Moverse", height * 0.4f, 1, Color.White);
+            game.DrawCenterTextY("A S D: Moverse", height * 0.4f, 1, Color.White);
             game.DrawCenterTextY("G: God Mode", height * 0.5f, 1, Color.LightBlue);
             game.DrawCenterTextY("H: Hitboxes", height * 0.6f, 1, Color.LightCoral);
             game.DrawCenterTextY("F: Modo Foto", height * 0.7f, 1, Color.LightGreen);
@@ -173,11 +173,11 @@ public class MainMenu
         else if (CurrentState == MenuState.SelectingVehicle)
         {
             game.DrawCenterTextY("SELECCIONA TU VEHICULO", height * 0.15f, 2, Color.White);
-            game.DrawCenterTextY("Preciona 1, 2 O 3", height * 0.25f, 1, Color.White);
+            game.DrawCenterTextY("Preciona 1, 2 o 3", height * 0.25f, 1, Color.White);
             
-            game.DrawCenterTextY("1 Para Light Vehicle", height * 0.7f, 1, Color.LightBlue);
-            game.DrawCenterTextY("2 Para Medium Vehicle", height * 0.8f, 1, Color.LightGreen);
-            game.DrawCenterTextY("3 Para Heavy Vehicle", height * 0.9f, 1, Color.LightCoral);
+            game.DrawCenterTextY("1 para Auto Ligero", height * 0.7f, 1, Color.LightBlue);
+            game.DrawCenterTextY("2 para Auto Mediano", height * 0.8f, 1, Color.LightGreen);
+            game.DrawCenterTextY("3 para Auto Pesado", height * 0.9f, 1, Color.LightCoral);
 
             Matrix scale = Matrix.CreateScale(0.1f);
             Matrix rotation = Matrix.CreateRotationY((float)gameTime.TotalGameTime.TotalSeconds);
@@ -192,10 +192,10 @@ public class MainMenu
         }
         else if (CurrentState == MenuState.SelectingDifficulty)
         {
-            game.DrawCenterTextY("Dificultad", height * 0.15f, 3, Color.White);
-            game.DrawCenterTextY("M Para Facil", height * 0.4f, 1, Color.LimeGreen);
-            game.DrawCenterTextY("N Para Normal", height * 0.5f, 1, Color.Yellow);
-            game.DrawCenterTextY("B Para Dificil", height * 0.6f, 1, Color.Red);
+            game.DrawCenterTextY("DIFICULTAD", height * 0.15f, 3, Color.White);
+            game.DrawCenterTextY("M para Facil", height * 0.4f, 1, Color.LimeGreen);
+            game.DrawCenterTextY("N para Normal", height * 0.5f, 1, Color.Yellow);
+            game.DrawCenterTextY("B para Dificil", height * 0.6f, 1, Color.Red);
             game.DrawCenterTextY("ESC - Volver", height * 0.8f, 1, Color.Gray);
         }
     }
