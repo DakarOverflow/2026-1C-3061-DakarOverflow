@@ -50,12 +50,13 @@ TGC, Tgcito  |  Apellido, Nombre
 
 ## Capturas
 
-![screenshot1](https://github.com/tgc-utn/tgc-monogame-tp/blob/master/TGC.MonoGame.TP/Icon.bmp)
-![screenshot2](https://github.com/tgc-utn/tgc-monogame-tp/blob/master/TGC.MonoGame.TP/Icon.bmp)
-![screenshot3](https://github.com/tgc-utn/tgc-monogame-tp/blob/master/TGC.MonoGame.TP/Icon.bmp)
-![screenshot4](https://github.com/tgc-utn/tgc-monogame-tp/blob/master/TGC.MonoGame.TP/Icon.bmp)
-![screenshot5](https://github.com/tgc-utn/tgc-monogame-tp/blob/master/TGC.MonoGame.TP/Icon.bmp)
+![screenshot](/Imagenes/Menu1.png)
+![screenshot](/Imagenes/MenuAutos.png)
+![screenshot](/Imagenes/MenuComandos.png)
+![screenshot](/Imagenes/MenuDificultad.png)
 
 ## Game Play
 
-[![Watch the video](https://img.youtube.com/vi/pgEwUC0jvH4/0.jpg)](https://www.youtube.com/playlist?list=PLRM4L32DjvnazuMl8wZlbpEYL5Qh63ulG)
+![Gameplay](/Imagenes/gamplay1.gif)
+![Gameplay](/Imagenes/gamplay1.mp4)
+![Gameplay](/Imagenes/gamplay2.mp4)
