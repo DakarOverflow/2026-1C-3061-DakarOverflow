@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -100,19 +100,11 @@ Scene _sceneNum = Scene.Menu;
 
     CameraStc _cameraMenu;
 
-    float _worldMenuCar3Rotation;
     GameDifficulty _currentDifficulty = GameDifficulty.EASY;
     #endregion
 
 
-CustomModel FuelTank;
-CustomModel Wrench;
-CustomModel Coin;
-Matrix _worldFuelTank;
-Matrix _worldWrench;
-Matrix _worldCoin;
-
-Matrix _worldMainCarHud;
+    private HUD _hud;
     public TGCGame()
     {
         // Maneja la configuracion y la administracion del dispositivo grafico.
@@ -145,11 +137,6 @@ Matrix _worldMainCarHud;
         _worldMenuCar3 =  Matrix.CreateTranslation(-500f,-100f,0f ) *  Matrix.CreateScale(0.1f) ;
 
    
-        // Modelos de Coleccionables para el HUD
-        _worldFuelTank = Matrix.CreateScale(0.15f) * Matrix.CreateTranslation(- _graphics.PreferredBackBufferWidth/17 , - _graphics.PreferredBackBufferHeight/17 , 0f);
-        _worldWrench = Matrix.CreateScale(0.4f) * Matrix.CreateTranslation(- _graphics.PreferredBackBufferWidth/19 , - _graphics.PreferredBackBufferHeight/17 , 0f);
-        _worldCoin = Matrix.CreateScale(0.2f) * Matrix.CreateRotationZ(MathHelper.PiOver4) * Matrix.CreateTranslation(_graphics.PreferredBackBufferWidth/20f, _graphics.PreferredBackBufferHeight/19f, 0f);
-        // _worldMainCarHud = Matrix.CreateScale(0.1f)*  Matrix.CreateRotationX(MathHelper.PiOver2)  * Matrix.CreateTranslation(-100f,_graphics.PreferredBackBufferHeight/18,0f ) ;
         #endregion 
 
         IsMouseVisible = false;
@@ -256,40 +243,9 @@ Matrix _worldMainCarHud;
         };
 
         // UI 
-        FuelTank = new CustomModel(
-            Content.Load<Model>(
-                AssetPaths.ContentFolder3D +
-                "survival-kit/barrel"
-            ),
-            Content.Load<Effect>(
-                AssetPaths.ContentFolderEffects +
-                "TexturedShader"
-            ),
-            survivalKitColormap
-        );
-        Wrench = new CustomModel(
-            Content.Load<Model>(
-                AssetPaths.ContentFolder3D +
-                "survival-kit/tool-hammer"
-            ),
-            Content.Load<Effect>(
-                AssetPaths.ContentFolderEffects +
-                "TexturedShader"
-            ),
-            survivalKitColormap
-        );
-
-        Coin = new CustomModel(
-            Content.Load<Model>(
-                AssetPaths.ContentFolder3D +
-                "toy-car-kit/item-coin-gold"
-            ),
-            Content.Load<Effect>(
-                AssetPaths.ContentFolderEffects +
-                "TexturedShader"
-            ),
-            toyCarKitColormap
-        );
+        _hud = new HUD();
+        _hud.LoadContent(Content, GraphicsDevice, font, _blankTexture);
+        _hud.Initialize(_graphics.PreferredBackBufferWidth, _graphics.PreferredBackBufferHeight);
 
 
         //Debe ejecuitarse antes del new Road()
@@ -622,7 +578,6 @@ Matrix _worldMainCarHud;
             }
         }
 
-        _worldMenuCar3Rotation =MathHelper.ToRadians(Convert.ToSingle(gameTime.ElapsedGameTime.TotalSeconds) *60f  * _playerVehicle._speed);
         base.Update(gameTime);
          break;
         }
@@ -838,31 +793,11 @@ Matrix _worldMainCarHud;
         // DrawLeftText("Velocidad: " +string.Format("{0:N2}",_playerVehicle._speed), 10, 1,100); 
 
         if (!_useFreeCamera){
-        if (_godMode) DrawLeftText("GOD MODE",10f,1,0);
-    
-        DrawFuelBar();
-        DrawHealthBar();
-        DrawScoreUI();
-
-        FuelTank.DrawUnlit(_worldFuelTank , _cameraMenu.View, _cameraMenu.Projection);
-        Wrench.DrawUnlit(_worldWrench , _cameraMenu.View, _cameraMenu.Projection);
-        Coin.DrawUnlit(_worldCoin , _cameraMenu.View, _cameraMenu.Projection);
+            if (_godMode) DrawLeftText("GOD MODE",10f,1,0);
         
-        switch (_playerVehicle.Type){
-            
-            case VehicleType.Light:
-                lightModel.DrawUnlit(_worldMainCarHud, _cameraMenu.View, _cameraMenu.Projection);
-            break;
-            case VehicleType.Medium:
-                mediumModel.DrawUnlit(_worldMainCarHud, _cameraMenu.View, _cameraMenu.Projection);
-            break;
-            case VehicleType.Heavy:
-                heavyModel.DrawUnlit(_worldMainCarHud, _cameraMenu.View, _cameraMenu.Projection);
-            break;
-            
+            _hud.Draw(spriteBatch, GraphicsDevice, _playerVehicle, _cameraMenu);
         }
-        }
-        _worldMainCarHud = Matrix.CreateScale(0.1f)*  Matrix.CreateRotationX(_worldMenuCar3Rotation)  * Matrix.CreateTranslation(100f,-_graphics.PreferredBackBufferHeight/18,0f );
+        
         if (_cameraInUse is FreeCamera)
         {
             DrawCenterText("+", 3, Color.White);
@@ -1058,107 +993,16 @@ Matrix _worldMainCarHud;
             spriteBatch.DrawString(font, msg, new Vector2(0, 0), Color.White);
             spriteBatch.End();
         }
-            public void DrawCenterTextY(string msg, float Y, float escala,Color Color)
-        {
-            var W = GraphicsDevice.Viewport.Width;
-            var size = font.MeasureString(msg) * escala;
-            spriteBatch.Begin(SpriteSortMode.Deferred,null, 
-            null, 
-            DepthStencilState.Default, 
-            null, null,
-                Matrix.CreateScale(escala) * Matrix.CreateTranslation((W - size.X) / 2, Y, 0));
-            spriteBatch.DrawString(font, msg, new Vector2(0, 0), Color);
-            spriteBatch.End();
-        }
-
-    //UI
-    public void DrawFuelBar()
+    public void DrawCenterTextY(string msg, float Y, float escala,Color Color)
     {
-        float fuelPercentage = Math.Max(0, _playerVehicle.CurrentFuel / _playerVehicle.MaxFuel);
-        int barWidth = 20;
-        int barHeight = 150;
-        
-        // Proyectamos la posicion real del modelo 3D a coordenadas de pixeles en 2D
-        Vector3 screenPos = GraphicsDevice.Viewport.Project(Vector3.Zero, _cameraMenu.Projection, _cameraMenu.View, _worldFuelTank);
-        
-        // Usamos la proyeccion matematica para centrar la barra. 
-        // ¡Esto funciona a cualquier resolucion de pantalla!
-        int x = (int)screenPos.X - (barWidth / 2);
-        int y = (int)screenPos.Y - barHeight - 50; // Subimos la barra para que no tape el bidon
-
-        spriteBatch.Begin(SpriteSortMode.Deferred, null, null, DepthStencilState.Default, null, null, null);
-        
-        // Fondo gris (tanque vacio)
-        spriteBatch.Draw(_blankTexture, new Rectangle(x, y, barWidth, barHeight), Color.DarkGray);
-        
-        // Relleno (tanque lleno, se dibuja de abajo hacia arriba)
-        Color fuelColor = fuelPercentage > 0.2f ? Color.Orange : Color.Red;
-        int fillHeight = (int)(barHeight * fuelPercentage);
-        spriteBatch.Draw(_blankTexture, new Rectangle(x, y + barHeight - fillHeight, barWidth, fillHeight), fuelColor);
-        
-        // Borde negro
-        spriteBatch.Draw(_blankTexture, new Rectangle(x, y, barWidth, 2), Color.Black);
-        spriteBatch.Draw(_blankTexture, new Rectangle(x, y + barHeight - 2, barWidth, 2), Color.Black);
-        spriteBatch.Draw(_blankTexture, new Rectangle(x, y, 2, barHeight), Color.Black);
-        spriteBatch.Draw(_blankTexture, new Rectangle(x + barWidth - 2, y, 2, barHeight), Color.Black);
-        
-        spriteBatch.End();
-    }
-
-    public void DrawHealthBar()
-    {
-        float healthPercentage = Math.Max(0, _playerVehicle.CurrentHealth / _playerVehicle.MaxHealth);
-        int barWidth = 20;
-        int barHeight = 150;
-        
-        // Proyectamos la posicion real del modelo 3D del martillo a coordenadas de pixeles en 2D
-        Vector3 screenPos = GraphicsDevice.Viewport.Project(Vector3.Zero, _cameraMenu.Projection, _cameraMenu.View, _worldWrench);
-        
-        int x = (int)screenPos.X - (barWidth / 2);
-        int y = (int)screenPos.Y - barHeight - 50; // Subimos la barra para que no tape el martillo
-
-        spriteBatch.Begin(SpriteSortMode.Deferred, null, null, DepthStencilState.Default, null, null, null);
-        
-        // Fondo gris (vacio)
-        spriteBatch.Draw(_blankTexture, new Rectangle(x, y, barWidth, barHeight), Color.DarkGray);
-        
-        // Relleno (se dibuja de abajo hacia arriba)
-        Color healthColor = healthPercentage > 0.3f ? Color.LimeGreen : Color.Red;
-        int fillHeight = (int)(barHeight * healthPercentage);
-        spriteBatch.Draw(_blankTexture, new Rectangle(x, y + barHeight - fillHeight, barWidth, fillHeight), healthColor);
-        
-        // Borde negro
-        spriteBatch.Draw(_blankTexture, new Rectangle(x, y, barWidth, 2), Color.Black);
-        spriteBatch.Draw(_blankTexture, new Rectangle(x, y + barHeight - 2, barWidth, 2), Color.Black);
-        spriteBatch.Draw(_blankTexture, new Rectangle(x, y, 2, barHeight), Color.Black);
-        spriteBatch.Draw(_blankTexture, new Rectangle(x + barWidth - 2, y, 2, barHeight), Color.Black);
-        
-        spriteBatch.End();
-    }
-
-    public void DrawScoreUI()
-    {
-        // Proyectamos la posicion real de la moneda 3D a coordenadas de pixeles en 2D
-        Vector3 screenPos = GraphicsDevice.Viewport.Project(Vector3.Zero, _cameraMenu.Projection, _cameraMenu.View, _worldCoin);
-        
-        // Ubicamos el texto a la derecha de la moneda
-        int x = (int)screenPos.X + 40;
-        int y = (int)screenPos.Y - 20; // Centrado verticalmente con la moneda
-        
-        string scoreText = _playerVehicle.Score.ToString();
-        
-        spriteBatch.Begin(SpriteSortMode.Deferred, null, null, DepthStencilState.Default, null, null, null);
-        
-        // Efecto de borde negro (dibujamos el texto desplazado en 4 direcciones)
-        Vector2 position = new Vector2(x, y);
-        spriteBatch.DrawString(font, scoreText, position + new Vector2(2, 0), Color.Black);
-        spriteBatch.DrawString(font, scoreText, position + new Vector2(-2, 0), Color.Black);
-        spriteBatch.DrawString(font, scoreText, position + new Vector2(0, 2), Color.Black);
-        spriteBatch.DrawString(font, scoreText, position + new Vector2(0, -2), Color.Black);
-        
-        // Texto blanco por encima
-        spriteBatch.DrawString(font, scoreText, position, Color.White);
-        
+        var W = GraphicsDevice.Viewport.Width;
+        var size = font.MeasureString(msg) * escala;
+        spriteBatch.Begin(SpriteSortMode.Deferred,null, 
+        null, 
+        DepthStencilState.Default, 
+        null, null,
+            Matrix.CreateScale(escala) * Matrix.CreateTranslation((W - size.X) / 2, Y, 0));
+        spriteBatch.DrawString(font, msg, new Vector2(0, 0), Color);
         spriteBatch.End();
     }
 }
