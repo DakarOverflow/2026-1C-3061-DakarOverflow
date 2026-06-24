@@ -34,15 +34,15 @@ public class DirtySnowBiome : Biome
     {
         if(type == TileType.STRAIGHT_LINE)
         {
-            return new RectaNieveAsfalto(position,rotation, this);
+            return new RectaTierraNieve(position,rotation, this);
         }
         else if(type == TileType.LEFT_CURVE)
         {
-            return new CurvaIzquierdaNieveAsfalto(position,rotation, this);
+            return new CurvaIzquierdaTierraNieve(position,rotation, this);
         }
         else if(type == TileType.RIGHT_CURVE)
         {
-            return new CurvaDerechaNieveAsfalto(position,rotation, this);
+            return new CurvaDerechaTierraNieve(position,rotation, this);
         }
         throw new ArgumentException("Tipo de tile no válido para el bioma de nieve-asfalto");
     }
