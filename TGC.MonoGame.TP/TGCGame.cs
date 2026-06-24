@@ -104,13 +104,7 @@ Scene _sceneNum = Scene.Menu;
     #endregion
 
 
-CustomModel FuelTank;
-CustomModel Wrench;
-CustomModel Coin;
-Matrix _worldFuelTank;
-Matrix _worldWrench;
-Matrix _worldCoin;
-
+    private HUD _hud;
     public TGCGame()
     {
         // Maneja la configuracion y la administracion del dispositivo grafico.
@@ -143,10 +137,6 @@ Matrix _worldCoin;
         _worldMenuCar3 =  Matrix.CreateTranslation(-500f,-100f,0f ) *  Matrix.CreateScale(0.1f) ;
 
    
-        // Modelos de Coleccionables para el HUD
-        _worldFuelTank = Matrix.CreateScale(0.15f) * Matrix.CreateTranslation(- _graphics.PreferredBackBufferWidth/17 , - _graphics.PreferredBackBufferHeight/17 , 0f);
-        _worldWrench = Matrix.CreateScale(0.4f) * Matrix.CreateTranslation(- _graphics.PreferredBackBufferWidth/19 , - _graphics.PreferredBackBufferHeight/17 , 0f);
-        _worldCoin = Matrix.CreateScale(0.2f) * Matrix.CreateRotationZ(MathHelper.PiOver4) * Matrix.CreateTranslation(_graphics.PreferredBackBufferWidth/20f, _graphics.PreferredBackBufferHeight/19f, 0f);
         #endregion 
 
         IsMouseVisible = false;
@@ -253,40 +243,9 @@ Matrix _worldCoin;
         };
 
         // UI 
-        FuelTank = new CustomModel(
-            Content.Load<Model>(
-                AssetPaths.ContentFolder3D +
-                "survival-kit/barrel"
-            ),
-            Content.Load<Effect>(
-                AssetPaths.ContentFolderEffects +
-                "TexturedShader"
-            ),
-            survivalKitColormap
-        );
-        Wrench = new CustomModel(
-            Content.Load<Model>(
-                AssetPaths.ContentFolder3D +
-                "survival-kit/tool-hammer"
-            ),
-            Content.Load<Effect>(
-                AssetPaths.ContentFolderEffects +
-                "TexturedShader"
-            ),
-            survivalKitColormap
-        );
-
-        Coin = new CustomModel(
-            Content.Load<Model>(
-                AssetPaths.ContentFolder3D +
-                "toy-car-kit/item-coin-gold"
-            ),
-            Content.Load<Effect>(
-                AssetPaths.ContentFolderEffects +
-                "TexturedShader"
-            ),
-            toyCarKitColormap
-        );
+        _hud = new HUD();
+        _hud.LoadContent(Content, GraphicsDevice, font, _blankTexture);
+        _hud.Initialize(_graphics.PreferredBackBufferWidth, _graphics.PreferredBackBufferHeight);
 
 
         //Debe ejecuitarse antes del new Road()
@@ -834,17 +793,9 @@ Matrix _worldCoin;
         // DrawLeftText("Velocidad: " +string.Format("{0:N2}",_playerVehicle._speed), 10, 1,100); 
 
         if (!_useFreeCamera){
-        if (_godMode) DrawLeftText("GOD MODE",10f,1,0);
-    
-        DrawFuelBar();
-        DrawHealthBar();
-        DrawScoreUI();
-
-        FuelTank.DrawUnlit(_worldFuelTank , _cameraMenu.View, _cameraMenu.Projection);
-        Wrench.DrawUnlit(_worldWrench , _cameraMenu.View, _cameraMenu.Projection);
-        Coin.DrawUnlit(_worldCoin , _cameraMenu.View, _cameraMenu.Projection);
+            if (_godMode) DrawLeftText("GOD MODE",10f,1,0);
         
-        DrawSpeedometer();
+            _hud.Draw(spriteBatch, GraphicsDevice, _playerVehicle, _cameraMenu);
         }
         
         if (_cameraInUse is FreeCamera)
@@ -1042,171 +993,16 @@ Matrix _worldCoin;
             spriteBatch.DrawString(font, msg, new Vector2(0, 0), Color.White);
             spriteBatch.End();
         }
-            public void DrawCenterTextY(string msg, float Y, float escala,Color Color)
-        {
-            var W = GraphicsDevice.Viewport.Width;
-            var size = font.MeasureString(msg) * escala;
-            spriteBatch.Begin(SpriteSortMode.Deferred,null, 
-            null, 
-            DepthStencilState.Default, 
-            null, null,
-                Matrix.CreateScale(escala) * Matrix.CreateTranslation((W - size.X) / 2, Y, 0));
-            spriteBatch.DrawString(font, msg, new Vector2(0, 0), Color);
-            spriteBatch.End();
-        }
-
-    //UI
-    public void DrawFuelBar()
+    public void DrawCenterTextY(string msg, float Y, float escala,Color Color)
     {
-        float fuelPercentage = Math.Max(0, _playerVehicle.CurrentFuel / _playerVehicle.MaxFuel);
-        int barWidth = 20;
-        int barHeight = 150;
-        
-        // Proyectamos la posicion real del modelo 3D a coordenadas de pixeles en 2D
-        Vector3 screenPos = GraphicsDevice.Viewport.Project(Vector3.Zero, _cameraMenu.Projection, _cameraMenu.View, _worldFuelTank);
-        
-        // Usamos la proyeccion matematica para centrar la barra. 
-        // ¡Esto funciona a cualquier resolucion de pantalla!
-        int x = (int)screenPos.X - (barWidth / 2);
-        int y = (int)screenPos.Y - barHeight - 50; // Subimos la barra para que no tape el bidon
-
-        spriteBatch.Begin(SpriteSortMode.Deferred, null, null, DepthStencilState.Default, null, null, null);
-        
-        // Fondo gris (tanque vacio)
-        spriteBatch.Draw(_blankTexture, new Rectangle(x, y, barWidth, barHeight), Color.DarkGray);
-        
-        // Relleno (tanque lleno, se dibuja de abajo hacia arriba)
-        Color fuelColor = fuelPercentage > 0.2f ? Color.Orange : Color.Red;
-        int fillHeight = (int)(barHeight * fuelPercentage);
-        spriteBatch.Draw(_blankTexture, new Rectangle(x, y + barHeight - fillHeight, barWidth, fillHeight), fuelColor);
-        
-        // Borde negro
-        spriteBatch.Draw(_blankTexture, new Rectangle(x, y, barWidth, 2), Color.Black);
-        spriteBatch.Draw(_blankTexture, new Rectangle(x, y + barHeight - 2, barWidth, 2), Color.Black);
-        spriteBatch.Draw(_blankTexture, new Rectangle(x, y, 2, barHeight), Color.Black);
-        spriteBatch.Draw(_blankTexture, new Rectangle(x + barWidth - 2, y, 2, barHeight), Color.Black);
-        
-        spriteBatch.End();
-    }
-
-    public void DrawHealthBar()
-    {
-        float healthPercentage = Math.Max(0, _playerVehicle.CurrentHealth / _playerVehicle.MaxHealth);
-        int barWidth = 20;
-        int barHeight = 150;
-        
-        // Proyectamos la posicion real del modelo 3D del martillo a coordenadas de pixeles en 2D
-        Vector3 screenPos = GraphicsDevice.Viewport.Project(Vector3.Zero, _cameraMenu.Projection, _cameraMenu.View, _worldWrench);
-        
-        int x = (int)screenPos.X - (barWidth / 2);
-        int y = (int)screenPos.Y - barHeight - 50; // Subimos la barra para que no tape el martillo
-
-        spriteBatch.Begin(SpriteSortMode.Deferred, null, null, DepthStencilState.Default, null, null, null);
-        
-        // Fondo gris (vacio)
-        spriteBatch.Draw(_blankTexture, new Rectangle(x, y, barWidth, barHeight), Color.DarkGray);
-        
-        // Relleno (se dibuja de abajo hacia arriba)
-        Color healthColor = healthPercentage > 0.3f ? Color.LimeGreen : Color.Red;
-        int fillHeight = (int)(barHeight * healthPercentage);
-        spriteBatch.Draw(_blankTexture, new Rectangle(x, y + barHeight - fillHeight, barWidth, fillHeight), healthColor);
-        
-        // Borde negro
-        spriteBatch.Draw(_blankTexture, new Rectangle(x, y, barWidth, 2), Color.Black);
-        spriteBatch.Draw(_blankTexture, new Rectangle(x, y + barHeight - 2, barWidth, 2), Color.Black);
-        spriteBatch.Draw(_blankTexture, new Rectangle(x, y, 2, barHeight), Color.Black);
-        spriteBatch.Draw(_blankTexture, new Rectangle(x + barWidth - 2, y, 2, barHeight), Color.Black);
-        
-        spriteBatch.End();
-    }
-
-    public void DrawScoreUI()
-    {
-        // Proyectamos la posicion real de la moneda 3D a coordenadas de pixeles en 2D
-        Vector3 screenPos = GraphicsDevice.Viewport.Project(Vector3.Zero, _cameraMenu.Projection, _cameraMenu.View, _worldCoin);
-        
-        // Ubicamos el texto a la derecha de la moneda
-        int x = (int)screenPos.X + 40;
-        int y = (int)screenPos.Y - 20; // Centrado verticalmente con la moneda
-        
-        string scoreText = _playerVehicle.Score.ToString();
-        
-        spriteBatch.Begin(SpriteSortMode.Deferred, null, null, DepthStencilState.Default, null, null, null);
-        
-        // Efecto de borde negro (dibujamos el texto desplazado en 4 direcciones)
-        Vector2 position = new Vector2(x, y);
-        spriteBatch.DrawString(font, scoreText, position + new Vector2(2, 0), Color.Black);
-        spriteBatch.DrawString(font, scoreText, position + new Vector2(-2, 0), Color.Black);
-        spriteBatch.DrawString(font, scoreText, position + new Vector2(0, 2), Color.Black);
-        spriteBatch.DrawString(font, scoreText, position + new Vector2(0, -2), Color.Black);
-        
-        // Texto blanco por encima
-        spriteBatch.DrawString(font, scoreText, position, Color.White);
-        
-        spriteBatch.End();
-    }
-
-    public void DrawSpeedometer()
-    {
-        int W = GraphicsDevice.Viewport.Width;
-        int H = GraphicsDevice.Viewport.Height;
-        
-        Vector2 center = new Vector2(W - 150, H - 80);
-        float radius = 100f;
-        
-        spriteBatch.Begin(SpriteSortMode.Deferred, null, null, DepthStencilState.Default, null, null, null);
-        
-        // 1. Dibujar el fondo del dial (semicírculo oscuro)
-        for (int i = 0; i <= 180; i += 2)
-        {
-            float a = MathHelper.ToRadians(180 + i);
-            Vector2 tickPos = center + new Vector2((float)Math.Cos(a), (float)Math.Sin(a)) * (radius - 20);
-            spriteBatch.Draw(_blankTexture, tickPos, null, new Color(0, 0, 0, 100), a, Vector2.Zero, new Vector2(20, 2), SpriteEffects.None, 0);
-        }
-
-        // 2. Dibujar las marcas (Ticks) del velocímetro
-        int maxSpeedDisplay = 200; 
-        for (int i = 0; i <= maxSpeedDisplay; i += 20)
-        {
-            // Mapear de 0-200 km/h a 180-360 grados
-            float a = MathHelper.ToRadians(180 + (180f * (i / (float)maxSpeedDisplay)));
-            Vector2 tickPos = center + new Vector2((float)Math.Cos(a), (float)Math.Sin(a)) * radius;
-            
-            // Marcas principales vs secundarias
-            int tickLength = (i % 40 == 0) ? 15 : 8;
-            int tickThickness = (i % 40 == 0) ? 3 : 1;
-            Color tickColor = (i > 150) ? Color.Red : Color.White;
-            
-            spriteBatch.Draw(_blankTexture, tickPos, null, tickColor, a, new Vector2(1, 0.5f), new Vector2(tickLength, tickThickness), SpriteEffects.None, 0);
-            
-            // Texto de marcas principales
-            if (i % 40 == 0)
-            {
-                Vector2 textPos = center + new Vector2((float)Math.Cos(a), (float)Math.Sin(a)) * (radius - 30);
-                string markText = i.ToString();
-                Vector2 textSize = font.MeasureString(markText) * 0.3f;
-                spriteBatch.DrawString(font, markText, textPos - textSize / 2, Color.LightGray, 0, Vector2.Zero, 0.3f, SpriteEffects.None, 0);
-            }
-        }
-
-        // 3. Dibujar la aguja
-        // La velocidad máxima real ronda los 2000. Dividimos por 10f para mapearla a 200 km/h visuales.
-        float speedMapped = Math.Min(Math.Max(Math.Abs(_playerVehicle._speed) / 10f, 0), maxSpeedDisplay); 
-        float needleAngle = MathHelper.ToRadians(180 + (180f * (speedMapped / maxSpeedDisplay)));
-        
-        spriteBatch.Draw(_blankTexture, center, null, Color.Red, needleAngle, new Vector2(0, 0.5f), new Vector2(radius - 10, 4), SpriteEffects.None, 0);
-        
-        // Círculo central (Base de la aguja)
-        spriteBatch.Draw(_blankTexture, new Rectangle((int)center.X - 8, (int)center.Y - 8, 16, 16), Color.DarkRed);
-
-        // 4. Dibujar Velocidad Digital
-        string speedText = ((int)speedMapped).ToString() + " km/h";
-        Vector2 speedTextSize = font.MeasureString(speedText) * 0.5f;
-        
-        // Bordecito negro
-        spriteBatch.DrawString(font, speedText, center + new Vector2(-speedTextSize.X / 2 + 1, 21), Color.Black, 0, Vector2.Zero, 0.5f, SpriteEffects.None, 0);
-        spriteBatch.DrawString(font, speedText, center + new Vector2(-speedTextSize.X / 2, 20), Color.White, 0, Vector2.Zero, 0.5f, SpriteEffects.None, 0);
-
+        var W = GraphicsDevice.Viewport.Width;
+        var size = font.MeasureString(msg) * escala;
+        spriteBatch.Begin(SpriteSortMode.Deferred,null, 
+        null, 
+        DepthStencilState.Default, 
+        null, null,
+            Matrix.CreateScale(escala) * Matrix.CreateTranslation((W - size.X) / 2, Y, 0));
+        spriteBatch.DrawString(font, msg, new Vector2(0, 0), Color);
         spriteBatch.End();
     }
 }
