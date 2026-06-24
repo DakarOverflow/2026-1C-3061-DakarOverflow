@@ -50,8 +50,9 @@ public class CurvaIzquierdaTierraNieve : CurvaIzquierda, IAssetLoader
         var roadColormap = content.Load<Texture2D>(AssetPaths.ContentFolder3D + "road-tiles/Textures/colormap");
         var suburbanColormap = content.Load<Texture2D>(AssetPaths.ContentFolder3D + "buildings/suburban/Textures/colormap");
         var overlayTexture = content.Load<Texture2D>(AssetPaths.ContentFolder3D + "road-tiles/Textures/snow-texture-on-black-background");
+        var towerdefenseColormap = content.Load<Texture2D>(AssetPaths.ContentFolder3D + "tower-defense-kit/Textures/colormap");
         CurvaIzquierdaTierraNieve.LoadModel(content, "road-tiles/road-square", AssetPaths.ContentFolder3D + "road-tiles/road-square", AssetPaths.ContentFolderEffects + "BasicShader", Color.DarkGreen);
-        CurvaIzquierdaTierraNieve.LoadModel(content, "road-tiles/road-curve", AssetPaths.ContentFolder3D + "road-tiles/road-curve", AssetPaths.ContentFolderEffects + "TexturedShader", roadColormap, overlayTexture);
+        CurvaIzquierdaTierraNieve.LoadModel(content, "tower-defense-kit/tile-corner-large", AssetPaths.ContentFolder3D + "tower-defense-kit/tile-corner-large", AssetPaths.ContentFolderEffects + "TexturedShader", towerdefenseColormap, overlayTexture);
         CurvaIzquierdaTierraNieve.LoadModel(content, "buildings/suburban/building-type-s", AssetPaths.ContentFolder3D + "buildings/suburban/building-type-s", AssetPaths.ContentFolderEffects + "TexturedShader", suburbanColormap);
     }
 
@@ -73,10 +74,10 @@ public class CurvaIzquierdaTierraNieve : CurvaIzquierda, IAssetLoader
 
 
         AddObject(
-            modelMap.GetValueOrDefault("road-tiles/road-curve", null), 
-            new Vector3(5f, 5f, 5f),
-            new Vector3(-100f, 12f, 100f),
-            rotation //Rotar 2pi = rotar 0
+            modelMap.GetValueOrDefault("tower-defense-kit/tile-corner-large", null), 
+            new Vector3(5f, 1f, 5f), // Escala
+            new Vector3(-100f, -5f, 100f), // Posicion
+            rotation - MathHelper.PiOver2
         );
         //Edificios 
         AddObject( 
