@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -100,7 +100,6 @@ Scene _sceneNum = Scene.Menu;
 
     CameraStc _cameraMenu;
 
-    float _worldMenuCar3Rotation;
     GameDifficulty _currentDifficulty = GameDifficulty.EASY;
     #endregion
 
@@ -112,7 +111,6 @@ Matrix _worldFuelTank;
 Matrix _worldWrench;
 Matrix _worldCoin;
 
-Matrix _worldMainCarHud;
     public TGCGame()
     {
         // Maneja la configuracion y la administracion del dispositivo grafico.
@@ -149,7 +147,6 @@ Matrix _worldMainCarHud;
         _worldFuelTank = Matrix.CreateScale(0.15f) * Matrix.CreateTranslation(- _graphics.PreferredBackBufferWidth/17 , - _graphics.PreferredBackBufferHeight/17 , 0f);
         _worldWrench = Matrix.CreateScale(0.4f) * Matrix.CreateTranslation(- _graphics.PreferredBackBufferWidth/19 , - _graphics.PreferredBackBufferHeight/17 , 0f);
         _worldCoin = Matrix.CreateScale(0.2f) * Matrix.CreateRotationZ(MathHelper.PiOver4) * Matrix.CreateTranslation(_graphics.PreferredBackBufferWidth/20f, _graphics.PreferredBackBufferHeight/19f, 0f);
-        // _worldMainCarHud = Matrix.CreateScale(0.1f)*  Matrix.CreateRotationX(MathHelper.PiOver2)  * Matrix.CreateTranslation(-100f,_graphics.PreferredBackBufferHeight/18,0f ) ;
         #endregion 
 
         IsMouseVisible = false;
@@ -622,7 +619,6 @@ Matrix _worldMainCarHud;
             }
         }
 
-        _worldMenuCar3Rotation =MathHelper.ToRadians(Convert.ToSingle(gameTime.ElapsedGameTime.TotalSeconds) *60f  * _playerVehicle._speed);
         base.Update(gameTime);
          break;
         }
@@ -848,21 +844,9 @@ Matrix _worldMainCarHud;
         Wrench.DrawUnlit(_worldWrench , _cameraMenu.View, _cameraMenu.Projection);
         Coin.DrawUnlit(_worldCoin , _cameraMenu.View, _cameraMenu.Projection);
         
-        switch (_playerVehicle.Type){
-            
-            case VehicleType.Light:
-                lightModel.DrawUnlit(_worldMainCarHud, _cameraMenu.View, _cameraMenu.Projection);
-            break;
-            case VehicleType.Medium:
-                mediumModel.DrawUnlit(_worldMainCarHud, _cameraMenu.View, _cameraMenu.Projection);
-            break;
-            case VehicleType.Heavy:
-                heavyModel.DrawUnlit(_worldMainCarHud, _cameraMenu.View, _cameraMenu.Projection);
-            break;
-            
+        DrawSpeedometer();
         }
-        }
-        _worldMainCarHud = Matrix.CreateScale(0.1f)*  Matrix.CreateRotationX(_worldMenuCar3Rotation)  * Matrix.CreateTranslation(100f,-_graphics.PreferredBackBufferHeight/18,0f );
+        
         if (_cameraInUse is FreeCamera)
         {
             DrawCenterText("+", 3, Color.White);
@@ -1159,6 +1143,70 @@ Matrix _worldMainCarHud;
         // Texto blanco por encima
         spriteBatch.DrawString(font, scoreText, position, Color.White);
         
+        spriteBatch.End();
+    }
+
+    public void DrawSpeedometer()
+    {
+        int W = GraphicsDevice.Viewport.Width;
+        int H = GraphicsDevice.Viewport.Height;
+        
+        Vector2 center = new Vector2(W - 150, H - 80);
+        float radius = 100f;
+        
+        spriteBatch.Begin(SpriteSortMode.Deferred, null, null, DepthStencilState.Default, null, null, null);
+        
+        // 1. Dibujar el fondo del dial (semicírculo oscuro)
+        for (int i = 0; i <= 180; i += 2)
+        {
+            float a = MathHelper.ToRadians(180 + i);
+            Vector2 tickPos = center + new Vector2((float)Math.Cos(a), (float)Math.Sin(a)) * (radius - 20);
+            spriteBatch.Draw(_blankTexture, tickPos, null, new Color(0, 0, 0, 100), a, Vector2.Zero, new Vector2(20, 2), SpriteEffects.None, 0);
+        }
+
+        // 2. Dibujar las marcas (Ticks) del velocímetro
+        int maxSpeedDisplay = 200; 
+        for (int i = 0; i <= maxSpeedDisplay; i += 20)
+        {
+            // Mapear de 0-200 km/h a 180-360 grados
+            float a = MathHelper.ToRadians(180 + (180f * (i / (float)maxSpeedDisplay)));
+            Vector2 tickPos = center + new Vector2((float)Math.Cos(a), (float)Math.Sin(a)) * radius;
+            
+            // Marcas principales vs secundarias
+            int tickLength = (i % 40 == 0) ? 15 : 8;
+            int tickThickness = (i % 40 == 0) ? 3 : 1;
+            Color tickColor = (i > 150) ? Color.Red : Color.White;
+            
+            spriteBatch.Draw(_blankTexture, tickPos, null, tickColor, a, new Vector2(1, 0.5f), new Vector2(tickLength, tickThickness), SpriteEffects.None, 0);
+            
+            // Texto de marcas principales
+            if (i % 40 == 0)
+            {
+                Vector2 textPos = center + new Vector2((float)Math.Cos(a), (float)Math.Sin(a)) * (radius - 30);
+                string markText = i.ToString();
+                Vector2 textSize = font.MeasureString(markText) * 0.3f;
+                spriteBatch.DrawString(font, markText, textPos - textSize / 2, Color.LightGray, 0, Vector2.Zero, 0.3f, SpriteEffects.None, 0);
+            }
+        }
+
+        // 3. Dibujar la aguja
+        // La velocidad máxima real ronda los 2000. Dividimos por 10f para mapearla a 200 km/h visuales.
+        float speedMapped = Math.Min(Math.Max(Math.Abs(_playerVehicle._speed) / 10f, 0), maxSpeedDisplay); 
+        float needleAngle = MathHelper.ToRadians(180 + (180f * (speedMapped / maxSpeedDisplay)));
+        
+        spriteBatch.Draw(_blankTexture, center, null, Color.Red, needleAngle, new Vector2(0, 0.5f), new Vector2(radius - 10, 4), SpriteEffects.None, 0);
+        
+        // Círculo central (Base de la aguja)
+        spriteBatch.Draw(_blankTexture, new Rectangle((int)center.X - 8, (int)center.Y - 8, 16, 16), Color.DarkRed);
+
+        // 4. Dibujar Velocidad Digital
+        string speedText = ((int)speedMapped).ToString() + " km/h";
+        Vector2 speedTextSize = font.MeasureString(speedText) * 0.5f;
+        
+        // Bordecito negro
+        spriteBatch.DrawString(font, speedText, center + new Vector2(-speedTextSize.X / 2 + 1, 21), Color.Black, 0, Vector2.Zero, 0.5f, SpriteEffects.None, 0);
+        spriteBatch.DrawString(font, speedText, center + new Vector2(-speedTextSize.X / 2, 20), Color.White, 0, Vector2.Zero, 0.5f, SpriteEffects.None, 0);
+
         spriteBatch.End();
     }
 }
