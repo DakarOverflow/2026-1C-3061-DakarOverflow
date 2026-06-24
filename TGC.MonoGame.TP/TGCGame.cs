@@ -8,6 +8,8 @@ using System.Linq;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Audio;
 
+using TGC.MonoGame.TP.Menu;
+
 namespace TGC.MonoGame.TP;
 
 /// <summary>
@@ -72,7 +74,6 @@ public class TGCGame : Game
 {
    Menu,
    Road,
-   Difficulty,
    GameOver
 }
 Scene _sceneNum = Scene.Menu;
@@ -84,26 +85,12 @@ Scene _sceneNum = Scene.Menu;
     bool _godMode = false;
     //Para que sean accesibles globalmente
     #region  Menu Objecs
-    CustomModel lightModel;
-    CustomModel mediumModel;
-    CustomModel heavyModel;
-    CustomModel lightBodyModel;
-    CustomModel mediumBodyModel;
-    CustomModel heavyBodyModel;
-    CustomModel lightWheelModel;
-    CustomModel mediumWheelModel;
-    CustomModel heavyWheelModel;
-
-    Matrix _worldMenuCar;
-    Matrix _worldMenuCar2;
-    Matrix _worldMenuCar3;
-
     CameraStc _cameraMenu;
 
     GameDifficulty _currentDifficulty = GameDifficulty.EASY;
     #endregion
 
-
+    private MainMenu _mainMenu;
     private HUD _hud;
     public TGCGame()
     {
@@ -130,14 +117,8 @@ Scene _sceneNum = Scene.Menu;
     {
         _cameraMenu = new TargetCamera(GraphicsDevice.Viewport.AspectRatio, Vector3.UnitZ * 150, Vector3.UnitZ);
         // _worldMenuCar = Matrix.Identity;
-        # region UI Road
-
-        _worldMenuCar = Matrix.CreateScale(0.3f)  ;
-        _worldMenuCar2 =  Matrix.CreateTranslation(500f,-100f,0f ) *  Matrix.CreateScale(0.1f) ;
-        _worldMenuCar3 =  Matrix.CreateTranslation(-500f,-100f,0f ) *  Matrix.CreateScale(0.1f) ;
-
-   
-        #endregion 
+        // Modelos Autos Menu
+        // (Se movieron a MainMenu.cs)
 
         IsMouseVisible = false;
 
@@ -198,6 +179,9 @@ Scene _sceneNum = Scene.Menu;
             { "down", Content.Load<Texture2D>(AssetPaths.ContentFolderTextures + "barren_dn") }
         };
         _skybox = new Skybox(GraphicsDevice, skyboxEffect, skyboxTextures, 500f);
+
+        _mainMenu = new MainMenu();
+        _mainMenu.LoadContent(Content);
 
         var policeModel = new CustomModel(
             Content.Load<Model>(
@@ -265,49 +249,11 @@ Scene _sceneNum = Scene.Menu;
             obstacleModels
         );
 
-        //Modelos para el menú:
-        lightModel = new CustomModel(
-            Content.Load<Model>(
-                AssetPaths.ContentFolder3D +
-                "car-kit/race"
-            ),
-            Content.Load<Effect>(
-                AssetPaths.ContentFolderEffects +
-                "TexturedShader"
-            ),
-            carKitColormap
-        );
-
-        mediumModel = new CustomModel(
-            Content.Load<Model>(
-                AssetPaths.ContentFolder3D +
-                "car-kit/sedan-sports"
-            ),
-            Content.Load<Effect>(
-                AssetPaths.ContentFolderEffects +
-                "TexturedShader"
-            ),
-            carKitColormap
-        );
-
-        heavyModel = new CustomModel(
-            Content.Load<Model>(
-                AssetPaths.ContentFolder3D +
-                "car-kit/delivery"
-            ),
-            Content.Load<Effect>(
-                AssetPaths.ContentFolderEffects +
-                "TexturedShader"
-            ),
-            carKitColormap
-        );
-
-
         // =========================
         // PLAYER
         // =========================
 
-        lightBodyModel = new CustomModel(
+        var lightBodyModel = new CustomModel(
             Content.Load<Model>(
                 AssetPaths.ContentFolder3D +
                 "car-kit/light-vehicle-body"
@@ -319,7 +265,7 @@ Scene _sceneNum = Scene.Menu;
             carKitColormap
         );
 
-        mediumBodyModel = new CustomModel(
+        var mediumBodyModel = new CustomModel(
             Content.Load<Model>(
                 AssetPaths.ContentFolder3D +
                 "car-kit/medium-vehicle-body"
@@ -331,7 +277,7 @@ Scene _sceneNum = Scene.Menu;
             carKitColormap
         );
 
-        heavyBodyModel = new CustomModel(
+        var heavyBodyModel = new CustomModel(
             Content.Load<Model>(
                 AssetPaths.ContentFolder3D +
                 "car-kit/heavy-vehicle-body"
@@ -343,7 +289,7 @@ Scene _sceneNum = Scene.Menu;
             carKitColormap
         );
 
-        lightWheelModel = new CustomModel(
+        var lightWheelModel = new CustomModel(
             Content.Load<Model>(
                 AssetPaths.ContentFolder3D +
                 "car-kit/wheel-front-left-light"
@@ -355,7 +301,7 @@ Scene _sceneNum = Scene.Menu;
             carKitColormap
         );
 
-        mediumWheelModel = new CustomModel(
+        var mediumWheelModel = new CustomModel(
             Content.Load<Model>(
                 AssetPaths.ContentFolder3D +
                 "car-kit/wheel-front-left-medium"
@@ -367,7 +313,7 @@ Scene _sceneNum = Scene.Menu;
             carKitColormap
         );
 
-        heavyWheelModel = new CustomModel(
+        var heavyWheelModel = new CustomModel(
             Content.Load<Model>(
                 AssetPaths.ContentFolder3D +
                 "car-kit/wheel-front-left-heavy"
@@ -429,59 +375,28 @@ Scene _sceneNum = Scene.Menu;
 
         // EXIT
 
-        if (keyboardState.IsKeyDown(Keys.Escape))
+        if (keyboardState.IsKeyDown(Keys.Escape) && _sceneNum != Scene.Menu)
         {
             Exit();
         }
-
-        switch (_sceneNum){
-            case  Scene.Menu: 
-
-            if (keyboardState.IsKeyDown(Keys.D1) &&
-                _previousKeyboardState.IsKeyUp(Keys.D1))
-            {
-                _playerVehicle = _lightVehicle;
-                _sceneNum = Scene.Difficulty;
-            }
-
-            if (keyboardState.IsKeyDown(Keys.D2) &&
-                _previousKeyboardState.IsKeyUp(Keys.D2))
-            {
-                _playerVehicle = _mediumVehicle;
-                _sceneNum = Scene.Difficulty;
-            }
-
-            if (keyboardState.IsKeyDown(Keys.D3) &&
-                _previousKeyboardState.IsKeyUp(Keys.D3))
-            {
-                _playerVehicle = _heavyVehicle;
-                _sceneNum = Scene.Difficulty;
-            }
-
-            break;
-            case  Scene.Difficulty:
-            if (keyboardState.IsKeyDown(Keys.M) &&
-                _previousKeyboardState.IsKeyUp(Keys.M))
-            {
-                _currentDifficulty = GameDifficulty.EASY;
-                _sceneNum = Scene.Road;
-            }
-
-            if (keyboardState.IsKeyDown(Keys.N) &&
-                _previousKeyboardState.IsKeyUp(Keys.N))
-            {
-                _currentDifficulty = GameDifficulty.MEDIUM;
-                _sceneNum = Scene.Road;
-            }
-
-            if (keyboardState.IsKeyDown(Keys.B) &&
-                _previousKeyboardState.IsKeyUp(Keys.B))
-            {
-                _currentDifficulty = GameDifficulty.HARD;
-                _sceneNum = Scene.Road;
-            }
-            break; 
-
+        
+        switch (_sceneNum)
+        {
+            case Scene.Menu:
+                _mainMenu.Update(gameTime, this);
+                if (_mainMenu.IsFinished)
+                {
+                    switch (_mainMenu.ChosenVehicle)
+                    {
+                        case SelectedVehicle.Light: _playerVehicle = _lightVehicle; break;
+                        case SelectedVehicle.Medium: _playerVehicle = _mediumVehicle; break;
+                        case SelectedVehicle.Heavy: _playerVehicle = _heavyVehicle; break;
+                    }
+                    _currentDifficulty = _mainMenu.ChosenDifficulty;
+                    
+                    _sceneNum = Scene.Road;
+                }
+                break;
             default:
                 if (_sceneNum == Scene.GameOver)
                 {
@@ -683,36 +598,12 @@ Scene _sceneNum = Scene.Menu;
     protected override void Draw(GameTime gameTime)
     {
         ResetMainRenderState(true);
-        //Cambio de esena
-        switch (_sceneNum){
-            case  Scene.Menu: 
-
-            DrawCenterTextY("MENU",10,10);
-            DrawCenterTextY("Preciona 1, 2 O 3  para empezar",300,2);
-            DrawCenterTextY("1 Para _lightVehicle",400,1);
-            DrawCenterTextY("2 Para _mediumVehicle",450,1);
-            DrawCenterTextY("3 Para _heavyVehicle",500,1);
-            DrawCenterTextY("W A S D: moverse G:God mode H:hitboxs F:Modo Foto ",550,1);
-
-
-            lightModel.DrawUnlit(_worldMenuCar, _cameraMenu.View, _cameraMenu.Projection);
-            heavyModel.DrawUnlit(_worldMenuCar2, _cameraMenu.View, _cameraMenu.Projection);
-            mediumModel.DrawUnlit(_worldMenuCar3 , _cameraMenu.View, _cameraMenu.Projection);
-
-            _worldMenuCar *= Matrix.CreateRotationY(MathHelper.ToRadians(Convert.ToSingle(gameTime.ElapsedGameTime.TotalSeconds) *20f ));
-            _worldMenuCar2 *= Matrix.CreateRotationX(MathHelper.ToRadians(Convert.ToSingle(gameTime.ElapsedGameTime.TotalSeconds) *40f )) * Matrix.CreateRotationY(MathHelper.ToRadians(Convert.ToSingle(gameTime.ElapsedGameTime.TotalSeconds) *40f )) ;
-            _worldMenuCar3 *= Matrix.CreateRotationX(MathHelper.ToRadians(Convert.ToSingle(gameTime.ElapsedGameTime.TotalSeconds) *40f )) * Matrix.CreateRotationY(MathHelper.ToRadians(Convert.ToSingle(gameTime.ElapsedGameTime.TotalSeconds) *40f )) ;
-            break;
-
-            case  Scene.Difficulty: 
-
-            DrawCenterTextY("Dificultad",10,10);
-            DrawCenterTextY("M Para Facil",400,1);
-            DrawCenterTextY("N Para Normal",450,1);
-            DrawCenterTextY("B Para Dificil",500,1);
-
-            break;
-
+        switch (_sceneNum)
+        {
+            case Scene.Menu:
+                GraphicsDevice.Clear(Color.Black);
+                _mainMenu.Draw(gameTime, this, _cameraMenu);
+                break;
             default:
         // =========================
         // SHADOW MAP
