@@ -78,14 +78,5 @@ public class CurvaDerechaTierraNieve : CurvaDerecha, IAssetLoader
             new Vector3(100f, -5f, 100f), // Posicion en Y
             rotation
         );
-        //Edificios 
-        AddObject( 
-            modelMap.GetValueOrDefault("buildings/suburban/building-type-s", null), 
-            new Vector3(2f),
-            new Vector3(322f, 10f, 450f), rotation + MathHelper.Pi
-        );
-        
-
-    
     }
 }

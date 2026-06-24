@@ -78,13 +78,5 @@ public class CurvaIzquierdaTierraAsfalto : CurvaIzquierda, IAssetLoader
             new Vector3(-100f, 12f, 100f),
             rotation //Rotar 2pi = rotar 0
         );
-        //Edificios 
-        AddObject( 
-            modelMap.GetValueOrDefault("buildings/suburban/building-type-s", null), 
-            new Vector3(2f),
-            new Vector3(322f, 10f, 450f), rotation + MathHelper.Pi
-        );
-
-
     }
 }
