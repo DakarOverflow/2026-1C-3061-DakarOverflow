@@ -3207,7 +3207,7 @@
 /processorParam:TextureFormat=Color
 /build:Models/road-tiles/Textures/dirt-particles.png;Models/road-tiles/Textures/dirt-particles
 
-#begin Models/road-tiles/Textures/snow-texture-on-black-background.jpg
+#begin Models/road-tiles/Textures/snow-texture-on-black-background.png
 /importer:TextureImporter
 /processor:TextureProcessor
 /processorParam:ColorKeyColor=255,0,255,255
@@ -3217,7 +3217,7 @@
 /processorParam:ResizeToPowerOfTwo=False
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
-/build:Models/road-tiles/Textures/snow-texture-on-black-background.jpg
+/build:Models/road-tiles/Textures/snow-texture-on-black-background.png
 
 #begin Models/survival-kit/barrel.fbx
 /importer:FbxImporter
