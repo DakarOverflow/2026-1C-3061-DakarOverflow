@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -369,6 +369,10 @@ Scene _sceneNum = Scene.Menu;
         {
             Exit();
         }
+        //FULl SCREN
+        if (keyboardState.IsKeyDown(Keys.P) &&
+            _previousKeyboardState.IsKeyUp(Keys.P)) _graphics.ToggleFullScreen();
+        
         
         switch (_sceneNum)
         {
