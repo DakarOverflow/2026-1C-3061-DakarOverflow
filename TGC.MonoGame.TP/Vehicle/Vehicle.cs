@@ -1,5 +1,4 @@
 using System;
-using ImGuiNET;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Graphics;
@@ -46,7 +45,7 @@ public class Vehicle
 
     public const float ScaleFactor = 0.5f;
 
-    private readonly Vector3 _boundingBoxHalfSize = new Vector3(100f, 50f, 100f) * ScaleFactor;
+    private readonly Vector3 _boundingBoxHalfSize;
     private readonly Vector3 _boundingBoxOffset = new Vector3(0f, 40f, 0f) * ScaleFactor;
 
 
@@ -61,7 +60,7 @@ public class Vehicle
     private bool _exploded;
 
     // Constructor
-    public Vehicle(CustomModel bodyModel, CustomModel wheelModel, Vector3 initialPosition, VehicleStats stats, VehicleType type, Vector3 frontLeftWheelPosition, Vector3 backLeftWheelPosition)
+    public Vehicle(CustomModel bodyModel, CustomModel wheelModel, Vector3 initialPosition, VehicleStats stats, VehicleType type, Vector3 boundingBoxHalfSize, Vector3 frontLeftWheelPosition, Vector3 backLeftWheelPosition)
     {
         _bodyModel = bodyModel;
         Position = initialPosition;
@@ -70,6 +69,8 @@ public class Vehicle
         RotationY = 0f;
         _speed = 0f;
         _currentAcceleration = 0f;
+
+        _boundingBoxHalfSize = boundingBoxHalfSize * ScaleFactor;
 
         // Se inicializan los medidores en su máximo en base a los stats del tipo de vehículo seleccionado.
         CurrentFuel = _stats.FuelCapacity;

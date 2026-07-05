@@ -328,6 +328,7 @@ Scene _sceneNum = Scene.Menu;
             Vector3.Zero + new Vector3(0f,-34f,0f),
             VehiclePresets.Light,
             VehicleType.Light,
+            new Vector3(60f, 50f, 100f),
             new Vector3(40f,30f,66f),
             new Vector3(40f,30f,-83f)
         );
@@ -338,6 +339,7 @@ Scene _sceneNum = Scene.Menu;
             Vector3.Zero + new Vector3(0f,-34f,0f),
             VehiclePresets.Medium,
             VehicleType.Medium,
+            new Vector3(60f, 50f, 100f),
             new Vector3(40f,30f,66f),
             new Vector3(40f,30f,-67f)
         );
@@ -348,6 +350,7 @@ Scene _sceneNum = Scene.Menu;
             Vector3.Zero + new Vector3(0f,-34f,0f),
             VehiclePresets.Heavy,
             VehicleType.Heavy,
+            new Vector3(65f, 50f, 120f),
             new Vector3(40f,30f,103f),
             new Vector3(40f,30f,-62f)
         );
@@ -489,7 +492,7 @@ Scene _sceneNum = Scene.Menu;
         }
 
         base.Update(gameTime);
-         break;
+            break;
         }
     }
 
@@ -502,21 +505,19 @@ Scene _sceneNum = Scene.Menu;
                 if (!obstacle.IsActive)
                     continue;
 
-                if (_playerVehicle.OBB
-                    .Intersects(obstacle.BoundingBox))
+                if (_playerVehicle.OBB.Intersects(obstacle.OBB))
                 {
                     Vector3 vehicleCenter = _playerVehicle.OBB.Center;
-                    Vector3 closestPointOnObstacle = Vector3.Clamp(vehicleCenter, obstacle.BoundingBox.Min, obstacle.BoundingBox.Max);
+                    Vector3 closestPointOnObstacle = ClosestPointOnOBB(obstacle.OBB, vehicleCenter);
 
                     Vector3 diff = closestPointOnObstacle - vehicleCenter;
-                    if (diff == Vector3.Zero) 
+                    if (diff == Vector3.Zero)
                     {
-                        Vector3 obstacleCenter = (obstacle.BoundingBox.Min + obstacle.BoundingBox.Max) / 2f;
-                        diff = obstacleCenter - vehicleCenter;
+                        diff = obstacle.OBB.Center - vehicleCenter;
                     }
 
                     Vector3 diffLocal = Vector3.Transform(diff, Matrix.CreateRotationY(-_playerVehicle.RotationY));
-                    
+
                     if (obstacle.IsFatalOnFrontalCollision && Math.Abs(diffLocal.Z) > Math.Abs(diffLocal.X))
                     {
                         // Choque frontal o trasero con objeto fatal -> termina la partida
@@ -534,6 +535,26 @@ Scene _sceneNum = Scene.Menu;
                 }
             }
         }
+    }
+
+    private Vector3 ClosestPointOnOBB(OrientedBoundingBox obb, Vector3 point)
+    {
+        Vector3 d = point - obb.Center;
+        Vector3 closest = obb.Center;
+
+        Vector3[] axes = { obb.Orientation.Right, obb.Orientation.Up, obb.Orientation.Backward };
+        float[] extents = { obb.Extents.X, obb.Extents.Y, obb.Extents.Z };
+
+        for (int i = 0; i < 3; i++)
+        {
+            Vector3 axis = axes[i];
+            if (axis.LengthSquared() > 0.0001f) axis.Normalize();
+
+            float distance = MathHelper.Clamp(Vector3.Dot(d, axis), -extents[i], extents[i]);
+            closest += axis * distance;
+        }
+
+        return closest;
     }
 
     private void CheckFreeCameraModelPicking()
@@ -664,8 +685,8 @@ Scene _sceneNum = Scene.Menu;
             {
                 foreach (var obstacle in tile.Obstacles)
                 {
-                    DrawBoundingBox(
-                        obstacle.BoundingBox,
+                    DrawOrientedBoundingBox(
+                        obstacle.OBB,
                         _cameraInUse,
                         Color.Orange
                     );
@@ -697,7 +718,6 @@ Scene _sceneNum = Scene.Menu;
         }
         break; 
         }
-       
 
     }
 

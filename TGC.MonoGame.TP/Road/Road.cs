@@ -22,6 +22,11 @@ public class Road
         get => _tiles;
     }
 
+    private const float ObstacleForwardSpeed = 150f;
+    private const float ObstacleVisualYOffset = 20f;
+
+    private const float ObstacleModelRotationOffset = MathHelper.Pi;
+
     private readonly Random _randomGenerator;
 
     private readonly List<CustomModel> _obstacleModels;
@@ -130,11 +135,13 @@ public class Road
             carRotation += MathHelper.Pi;
         }
 
-        Matrix world = Matrix.CreateScale(Vehicle.ScaleFactor) * Matrix.CreateRotationY(carRotation) * Matrix.CreateTranslation(worldPoint);
+        Vector3 visualPoint = worldPoint + new Vector3(0f, ObstacleVisualYOffset, 0f);
 
-        // Hitbox similar a la del auto (200x100x200), daño alto (100) y son fatales de frente (true)
-        tile.AddObstacle(new Obstacle(obstacleModel, world, worldPoint, new Vector3(200f, 100f, 200f) * Vehicle.ScaleFactor,
-            new Vector3(0f, 40f, 0f) * Vehicle.ScaleFactor, 40f, 0f, true));
+        Matrix world = Matrix.CreateScale(Vehicle.ScaleFactor) * Matrix.CreateRotationY(carRotation + ObstacleModelRotationOffset) * Matrix.CreateTranslation(visualPoint);
+
+        // Hitbox similar a la del auto (200x100x200), daño medio (40) y son fatales de frente (true)
+        tile.AddObstacle(new Obstacle(obstacleModel, world, worldPoint, new Vector3(140f, 100f, 200f) * Vehicle.ScaleFactor,
+            new Vector3(0f, 80f, 0f) * Vehicle.ScaleFactor, 40f, 0f, true, carRotation, ObstacleForwardSpeed));
     }
 
     private CustomModel GetRandomObstacleModel()

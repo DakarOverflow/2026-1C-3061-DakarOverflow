@@ -28,8 +28,7 @@ public abstract class CurvaDerecha : Tile
     {
         return
         [
-            new Vector3(-180f,15f,345f),
-            new Vector3(390f,15f,-15f)
+            // para evitar problemas
         ];
     }
 }

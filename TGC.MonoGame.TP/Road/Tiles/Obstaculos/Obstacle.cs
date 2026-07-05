@@ -4,7 +4,7 @@ namespace TGC.MonoGame.TP;
 
 public class Obstacle : WorldObject
 {
-    public BoundingBox BoundingBox { get; private set; }
+    public OrientedBoundingBox OBB { get; private set; }
 
     public float Damage { get; }
 
@@ -18,7 +18,14 @@ public class Obstacle : WorldObject
 
     private readonly Vector3 _hitboxOffset;
 
-    public Vector3 Position { get; }
+    private readonly float _rotationY;
+
+    private readonly float _forwardSpeed;
+
+    // La orientación del hitbox es fija: es la misma rotación con la que se construyó el obstáculo
+    private readonly Matrix _hitboxOrientation;
+
+    public Vector3 Position { get; private set; }
 
     public Obstacle(
         CustomModel model,
@@ -28,7 +35,9 @@ public class Obstacle : WorldObject
         Vector3 hitboxOffset,
         float damage,
         float speedMultiplier,
-        bool isFatalOnFrontalCollision = false
+        bool isFatalOnFrontalCollision = false,
+        float rotationY = 0f,
+        float forwardSpeed = 0f
     ) : base(model, world)
     {
         Position = position + hitboxOffset;
@@ -43,19 +52,22 @@ public class Obstacle : WorldObject
 
         IsFatalOnFrontalCollision = isFatalOnFrontalCollision;
 
+        _rotationY = rotationY;
+
+        _forwardSpeed = forwardSpeed;
+
+        _hitboxOrientation = Matrix.CreateRotationY(_rotationY);
+
         IsActive = true;
 
-        UpdateBoundingBox();
+        UpdateOBB();
     }
 
-    private void UpdateBoundingBox()
+    private void UpdateOBB()
     {
         Vector3 half = _hitboxSize / 2f;
 
-        BoundingBox = new BoundingBox(
-            Position - half,
-            Position + half
-        );
+        OBB = new OrientedBoundingBox(Position, half, _hitboxOrientation);
     }
 
     public override void Update(GameTime gameTime)
@@ -63,7 +75,20 @@ public class Obstacle : WorldObject
         if (!IsActive)
             return;
 
-        UpdateBoundingBox();
+        if (_forwardSpeed != 0f)
+        {
+            float deltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
+
+            // OJO: misma rotación (sin negar) que se usa para orientar el modelo y el hitbox
+            Vector3 forward = Vector3.Transform(Vector3.Forward, Matrix.CreateRotationY(_rotationY));
+            Vector3 displacement = forward * _forwardSpeed * deltaTime;
+
+            Position += displacement;
+
+            setWorld(World * Matrix.CreateTranslation(displacement));
+        }
+
+        UpdateOBB();
     }
 
     public void Deactivate()
