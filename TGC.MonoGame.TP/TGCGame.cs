@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -466,9 +466,13 @@ Scene _sceneNum = Scene.Menu;
         // Actualizo el coeficiente de fricción según el bioma actual
         _playerVehicle.FrictionCoefficient = _road.GetFrictionAtPosition(_playerVehicle.Position);
 
-        _playerVehicle.Update(gameTime);
-        SoundManager.GetInstance().Update(gameTime);
-        if(!_godMode) CheckObstacleCollisions();
+            _playerVehicle.Update(gameTime);
+
+            _road.ConstrainVehicleToRoad(_playerVehicle);
+            _playerVehicle.RefreshCollisionVolumes();
+
+            SoundManager.GetInstance().Update(gameTime);
+            if(!_godMode) CheckObstacleCollisions();
         }
 
         // =========================

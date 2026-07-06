@@ -332,6 +332,21 @@ public class Vehicle
         _backLeftWheel.Detach(new Vector3(r.Next(-500,500), 800, r.Next(-500,500)));
         _backRightWheel.Detach(new Vector3(r.Next(-500,500), 800, r.Next(-500,500)));
     }
+
+    // ==========================================
+    // MÉTODOS PARA EL LÍMITE DEL MUNDO
+    // ==========================================
+    // Pequeña penalización al rozar el borde de la calle
+    public void ApplyOffRoadPenalty()
+    {
+        _speed *= 0.97f;
+    }
+
+    // Permite recalcular las hitboxes después de que algo externo (como Road) mueva Position
+    public void RefreshCollisionVolumes()
+    {
+        UpdateBoundingBox();
+    }
     // ==========================================
     // MÉTODOS PARA DIBUJAR EL VEHÍCULO
     // ==========================================
