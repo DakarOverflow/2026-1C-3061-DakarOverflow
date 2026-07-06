@@ -88,13 +88,18 @@ public class Road
         Camera camera
     )
     {
+        var frustum = new BoundingFrustum(camera.GetView() * camera.GetProjection());
+
         int start = Math.Max(0, this._tiles.Count - 10);
 
         for (int i = start; i < this._tiles.Count; i++)
         {
             Tile tile = this._tiles[i];
 
-            tile.Draw(gameTime, camera);
+            if (frustum.Intersects(tile.GetBoundingBox()))
+            {
+                tile.Draw(gameTime, camera);
+            }
         }
     }
 

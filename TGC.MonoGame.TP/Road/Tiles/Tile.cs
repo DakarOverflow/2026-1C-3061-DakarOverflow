@@ -38,19 +38,19 @@ public abstract class Tile
         }
     }
 
-    public BoundingSphere GetBoundingSphere()
+    public BoundingBox GetBoundingBox()
     {
-        BoundingSphere? sphere = null;
+        BoundingBox? box = null;
 
         foreach (var obj in WorldObjects)
         {
-            BoundingSphere objectSphere = ModelRaycaster.CreateWorldBoundingSphere(obj);
-            sphere = sphere.HasValue
-                ? BoundingSphere.CreateMerged(sphere.Value, objectSphere)
-                : objectSphere;
+            BoundingBox objectBox = ModelRaycaster.CreateWorldBoundingBox(obj);
+            box = box.HasValue
+                ? BoundingBox.CreateMerged(box.Value, objectBox)
+                : objectBox;
         }
 
-        return sphere ?? new BoundingSphere(Position, 0f);
+        return box ?? new BoundingBox(Position, Position);
     }
 
     public Vector3 Position;

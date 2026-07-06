@@ -607,7 +607,7 @@ Scene _sceneNum = Scene.Menu;
 
         foreach (var tile in _road.Tiles)
         {
-            if (!tile.GetBoundingSphere().Intersects(ray).HasValue)
+            if (!tile.GetBoundingBox().Intersects(ray).HasValue)
             {
                 continue;
             }
