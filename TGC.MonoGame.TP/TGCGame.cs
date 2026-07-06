@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -710,10 +710,26 @@ Scene _sceneNum = Scene.Menu;
             DrawCenterText("+", 3, Color.White);
         }
 
-        if (_gameOver &&  !_useFreeCamera)
+        if (_gameOver && !_useFreeCamera)
         {
-            DrawCenterText("GAME OVER",10, Color.Red);
-            DrawCenterTextY("PUNTAJE: "+ _playerVehicle.Score.ToString() ,100, 10,Color.Yellow);
+            var W = GraphicsDevice.Viewport.Width;
+            var H = GraphicsDevice.Viewport.Height;
+            
+            float scaleGameOver = 3f;
+            float scaleScore = 1.5f;
+            
+            var sizeGameOver = font.MeasureString("GAME OVER") * scaleGameOver;
+            var scoreText = "PUNTAJE: " + _playerVehicle.Score.ToString();
+            var sizeScore = font.MeasureString(scoreText) * scaleScore;
+            
+            float totalHeight = sizeGameOver.Y + sizeScore.Y + 20f;
+            float startY = (H - totalHeight) / 2f;
+            
+            float gameOverY = startY;
+            float scoreY = startY + sizeGameOver.Y + 20f;
+
+            DrawCenterTextY("GAME OVER", gameOverY, scaleGameOver, Color.Red);
+            DrawCenterTextY(scoreText, scoreY, scaleScore, Color.Yellow);
             SoundManager.GetInstance().StopMotorSound();
         }
         break; 
