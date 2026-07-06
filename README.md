@@ -60,3 +60,8 @@ TGC, Tgcito  |  Apellido, Nombre
 ![Gameplay](/Imagenes/gamplay1.gif)
 ![Gameplay](/Imagenes/gamplay1.mp4)
 ![Gameplay](/Imagenes/gamplay2.mp4)
+
+## Trailer
+
+[![Trailer](https://i3.ytimg.com/vi/O1mrJwI3H1E/maxresdefault.jpg)](https://youtu.be/O1mrJwI3H1E)
+
