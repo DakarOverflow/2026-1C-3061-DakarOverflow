@@ -44,7 +44,7 @@ public abstract class Tile
 
         foreach (var obj in WorldObjects)
         {
-            BoundingBox objectBox = ModelRaycaster.CreateWorldBoundingBox(obj);
+            BoundingBox objectBox = BoundingVolumeFactory.CreateWorldBoundingBox(obj);
             box = box.HasValue
                 ? BoundingBox.CreateMerged(box.Value, objectBox)
                 : objectBox;

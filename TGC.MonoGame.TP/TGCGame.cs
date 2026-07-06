@@ -489,8 +489,6 @@ Scene _sceneNum = Scene.Menu;
                 gameTime,
                 _mouseCaptured
             );
-
-            CheckFreeCameraModelPicking();
         }
         else
         {
@@ -588,59 +586,6 @@ Scene _sceneNum = Scene.Menu;
         return closest;
     }
 
-    private void CheckFreeCameraModelPicking()
-    {
-        MouseState mouseState = Mouse.GetState();
-
-        if (mouseState.LeftButton != ButtonState.Pressed ||
-            _previousMouseState.LeftButton != ButtonState.Released)
-        {
-            return;
-        }
-
-        Point screenPoint = _mouseCaptured
-            ? new Point(GraphicsDevice.Viewport.Width / 2, GraphicsDevice.Viewport.Height / 2)
-            : new Point(mouseState.X, mouseState.Y);
-        Ray ray = ModelRaycaster.CreateRayFromScreenPoint(screenPoint, GraphicsDevice, _freeCamera);
-        ModelRaycastHit? closestHit = null;
-        Tile closestTile = null;
-
-        foreach (var tile in _road.Tiles)
-        {
-            if (!tile.GetBoundingBox().Intersects(ray).HasValue)
-            {
-                continue;
-            }
-
-            foreach (WorldObject obj in tile.WorldObjects)
-            {
-                if (!ModelRaycaster.TryIntersectObject(ray, obj, out ModelRaycastHit hit))
-                {
-                    continue;
-                }
-
-                if (!closestHit.HasValue || hit.Distance < closestHit.Value.Distance)
-                {
-                    closestHit = hit;
-                    closestTile = tile;
-                }
-            }
-        }
-
-        if (closestHit.HasValue && closestTile != null)
-        {
-            Vector3 localPoint = closestHit.Value.LocalPoint;
-            Vector3 worldPoint = closestHit.Value.WorldPoint;
-            Vector3 addObstacleOffset = Vector3.Transform(
-                worldPoint - closestTile.Position,
-                Matrix.CreateRotationY(-closestTile.Rotation)
-            );
-
-            Console.WriteLine($"Model local coordinates hit: X={localPoint.X:F3}, Y={localPoint.Y:F3}, Z={localPoint.Z:F3}");
-            Console.WriteLine($"World coordinates hit: X={worldPoint.X:F3}, Y={worldPoint.Y:F3}, Z={worldPoint.Z:F3}");
-            Console.WriteLine($"AddObstacle offset for this tile: new Vector3({addObstacleOffset.X:F3}f, {addObstacleOffset.Y:F3}f, {addObstacleOffset.Z:F3}f)");
-        }
-    }
 
     protected override void Draw(GameTime gameTime)
     {
