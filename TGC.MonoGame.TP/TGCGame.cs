@@ -374,7 +374,28 @@ Scene _sceneNum = Scene.Menu;
         }
         //FULl SCREN
         if (keyboardState.IsKeyDown(Keys.P) &&
-            _previousKeyboardState.IsKeyUp(Keys.P)) _graphics.ToggleFullScreen();
+            _previousKeyboardState.IsKeyUp(Keys.P))
+        {
+            _graphics.IsFullScreen = !_graphics.IsFullScreen;
+            
+            var displayMode = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode;
+            if (_graphics.IsFullScreen)
+            {
+                _graphics.PreferredBackBufferWidth = displayMode.Width;
+                _graphics.PreferredBackBufferHeight = displayMode.Height;
+            }
+            else
+            {
+                _graphics.PreferredBackBufferWidth = displayMode.Width;
+                _graphics.PreferredBackBufferHeight = (int)(displayMode.Height * 0.90f);
+            }
+            _graphics.ApplyChanges();
+            
+            // Forzar actualización de resolución en las cámaras y el HUD
+            _freeCamera.OnClientSizeChanged(null, EventArgs.Empty);
+            _followCamera.OnClientSizeChanged(null, EventArgs.Empty);
+            _hud.Initialize(_graphics.PreferredBackBufferWidth, _graphics.PreferredBackBufferHeight);
+        }
         
         
         switch (_sceneNum)
