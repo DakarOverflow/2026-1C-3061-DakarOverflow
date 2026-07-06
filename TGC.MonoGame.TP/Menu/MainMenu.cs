@@ -36,6 +36,14 @@ public class MainMenu
 
     private KeyboardState _previousKeyboardState;
 
+    public void Reset()
+    {
+        CurrentState = MenuState.Home;
+        ChosenVehicle = SelectedVehicle.None;
+        ChosenDifficulty = GameDifficulty.EASY;
+        IsFinished = false;
+    }
+
     public void LoadContent(ContentManager content)
     {
         var carKitColormap = content.Load<Texture2D>(AssetPaths.ContentFolder3D + "car-kit/Textures/colormap");

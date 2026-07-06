@@ -89,6 +89,28 @@ public class Vehicle
         // Inicializar el atributo de colisiones.
     }
 
+    public void Reset(Vector3 initialPosition)
+    {
+        Position = initialPosition;
+        RotationY = 0f;
+        _speed = 0f;
+        _currentAcceleration = 0f;
+        _wheelSpin = 0f;
+        _wheelSteeringAngle = 0f;
+        _exploded = false;
+
+        CurrentFuel = _stats.FuelCapacity;
+        CurrentHealth = _stats.MaxHealth;
+        Score = 0;
+
+        _frontLeftWheel.Detached = false;
+        _frontRightWheel.Detached = false;
+        _backLeftWheel.Detached = false;
+        _backRightWheel.Detached = false;
+
+        UpdateBoundingBox();
+    }
+
     public void Update(GameTime gameTime)
     {
         float deltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;

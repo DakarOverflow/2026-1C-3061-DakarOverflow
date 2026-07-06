@@ -89,6 +89,7 @@ Scene _sceneNum = Scene.Menu;
 
     private MainMenu _mainMenu;
     private HUD _hud;
+    private List<CustomModel> _obstacleModels;
     public TGCGame()
     {
         // Maneja la configuracion y la administracion del dispositivo grafico.
@@ -216,7 +217,7 @@ Scene _sceneNum = Scene.Menu;
             carKitColormap
         );
 
-        var obstacleModels = new List<CustomModel>
+        _obstacleModels = new List<CustomModel>
         {
             policeModel,
             taxiModel,
@@ -243,7 +244,7 @@ Scene _sceneNum = Scene.Menu;
                 new Vector3(0f, -50f, 0f),
                 0f
             ),
-            obstacleModels
+            _obstacleModels
         );
 
         // =========================
@@ -419,6 +420,15 @@ Scene _sceneNum = Scene.Menu;
             default:
                 if (_sceneNum == Scene.GameOver)
                 {
+                    if (keyboardState.IsKeyDown(Keys.R) && _previousKeyboardState.IsKeyUp(Keys.R))
+                    {
+                        RestartGame();
+                    }
+                    else if (keyboardState.IsKeyDown(Keys.Enter) && _previousKeyboardState.IsKeyUp(Keys.Enter))
+                    {
+                        ReturnToMainMenu();
+                    }
+                    _previousKeyboardState = keyboardState;
                     return;
                 }
         // TOGGLE MOUSE
@@ -738,19 +748,24 @@ Scene _sceneNum = Scene.Menu;
             
             float scaleGameOver = 3f;
             float scaleScore = 1.5f;
+            float scaleHelp = 0.8f;
             
             var sizeGameOver = font.MeasureString("GAME OVER") * scaleGameOver;
             var scoreText = "PUNTAJE: " + _playerVehicle.Score.ToString();
             var sizeScore = font.MeasureString(scoreText) * scaleScore;
+            var helpText = "Presiona [R] para volver a jugar o [Enter] para volver al menu";
+            var sizeHelp = font.MeasureString(helpText) * scaleHelp;
             
-            float totalHeight = sizeGameOver.Y + sizeScore.Y + 20f;
+            float totalHeight = sizeGameOver.Y + sizeScore.Y + sizeHelp.Y + 50f;
             float startY = (H - totalHeight) / 2f;
             
             float gameOverY = startY;
             float scoreY = startY + sizeGameOver.Y + 20f;
+            float helpY = scoreY + sizeScore.Y + 30f;
 
             DrawCenterTextY("GAME OVER", gameOverY, scaleGameOver, Color.Red);
             DrawCenterTextY(scoreText, scoreY, scaleScore, Color.Yellow);
+            DrawCenterTextY(helpText, helpY, scaleHelp, Color.White);
             SoundManager.GetInstance().StopMotorSound();
         }
         break; 
@@ -959,5 +974,64 @@ Scene _sceneNum = Scene.Menu;
             Matrix.CreateScale(escala) * Matrix.CreateTranslation(X - (size.X / 2), Y, 0));
         spriteBatch.DrawString(font, msg, new Vector2(0, 0), color);
         spriteBatch.End();
+    }
+
+    private void RestartGame()
+    {
+        _gameOver = false;
+        _gameOverTimer = GameOverDelay;
+        _sceneNum = Scene.Road;
+
+        // Resetear vehículos a sus posiciones iniciales y restablecer estadísticas
+        _lightVehicle.Reset(Vector3.Zero + new Vector3(0f,-34f,0f));
+        _mediumVehicle.Reset(Vector3.Zero + new Vector3(0f,-34f,0f));
+        _heavyVehicle.Reset(Vector3.Zero + new Vector3(0f,-34f,0f));
+
+        switch (_mainMenu.ChosenVehicle)
+        {
+            case SelectedVehicle.Light: _playerVehicle = _lightVehicle; break;
+            case SelectedVehicle.Medium: _playerVehicle = _mediumVehicle; break;
+            case SelectedVehicle.Heavy: _playerVehicle = _heavyVehicle; break;
+        }
+
+        // Recrear calle
+        _road = new Road(
+            new AsphaltBiome(
+                null,
+                new GameMode(BiomeType.RANDOM, _currentDifficulty)
+            ).GenerateNewTileOf(
+                TileType.STRAIGHT_LINE,
+                new Vector3(0f, -50f, 0f),
+                0f
+            ),
+            _obstacleModels
+        );
+
+        // Re-inicializar cámaras
+        _freeCamera = new FreeCamera(
+            new Vector3(110f, 10f, 110f),
+            Vector3.Zero,
+            GraphicsDevice
+        );
+        _followCamera = new FollowCamera(GraphicsDevice);
+        _useFreeCamera = false;
+        _cameraInUse = _followCamera;
+
+        _mouseCaptured = true;
+        IsMouseVisible = false;
+
+        SoundManager.GetInstance().StartMotorSound();
+    }
+
+    private void ReturnToMainMenu()
+    {
+        _gameOver = false;
+        _gameOverTimer = GameOverDelay;
+        _sceneNum = Scene.Menu;
+
+        _mainMenu.Reset();
+
+        _mouseCaptured = true;
+        IsMouseVisible = false;
     }
 }
