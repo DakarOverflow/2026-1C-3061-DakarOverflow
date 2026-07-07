@@ -81,14 +81,9 @@ public class Wheel
         return world;
     }
 
-    public void SetShadowMap(Texture2D shadowMap, Matrix lightViewProjection)
+    public void DrawShadow(Effect shadowEffect, Matrix lightViewProjection, ShadowDiagnostics diagnostics = null)
     {
-        _model.SetShadowMap(shadowMap, lightViewProjection);
-    }
-
-    public void DrawDepth(Matrix lightViewProjection)
-    {
-        _model.DrawDepth(GetWorld(), lightViewProjection);
+        _model.DrawManyShadow(new[] { GetWorld() }, shadowEffect, lightViewProjection, diagnostics);
     }
 
     public void Draw(Camera camera)

@@ -6,6 +6,8 @@ public class Obstacle : WorldObject
 {
     public OrientedBoundingBox OBB { get; private set; }
 
+    public float BroadPhaseRadius { get; }
+
     public float Damage { get; }
 
     public float SpeedMultiplier { get; }
@@ -43,6 +45,8 @@ public class Obstacle : WorldObject
         Position = position + hitboxOffset;
 
         _hitboxSize = hitboxSize;
+
+        BroadPhaseRadius = hitboxSize.Length() * 0.5f;
 
         _hitboxOffset = hitboxOffset;
 

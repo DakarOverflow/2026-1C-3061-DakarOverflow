@@ -19,10 +19,9 @@ float4x4 Projection;
 float4x4 LightViewProjection;
 
 float3 DiffuseColor;
-
-float Time = 0;
-float ShadowBias = 0.003f;
-float ShadowStrength = 0.55f;
+bool UseShadowMap = false;
+float ShadowBias = 0.003;
+float ShadowStrength = 0.45;
 
 Texture2D ShadowMap;
 sampler2D shadowSampler = sampler_state
@@ -34,6 +33,8 @@ sampler2D shadowSampler = sampler_state
     AddressV = Clamp;
 };
 
+float Time = 0;
+
 struct VertexShaderInput
 {
 	float4 Position : POSITION0;
@@ -42,13 +43,7 @@ struct VertexShaderInput
 struct VertexShaderOutput
 {
 	float4 Position : SV_POSITION;
-    float4 lightPosition : TEXCOORD0;
-};
-
-struct ShadowVertexShaderOutput
-{
-    float4 Position : SV_POSITION;
-    float4 DepthPosition : TEXCOORD0;
+    float4 LightPosition : TEXCOORD0;
 };
 
 VertexShaderOutput MainVS(in VertexShaderInput input)
@@ -57,61 +52,41 @@ VertexShaderOutput MainVS(in VertexShaderInput input)
     float4 worldPosition = mul(input.Position, World);
     float4 viewPosition = mul(worldPosition, View);
     output.Position = mul(viewPosition, Projection);
-    output.lightPosition = mul(worldPosition, LightViewProjection);
+    output.LightPosition = mul(worldPosition, LightViewProjection);
 
     return output;
 }
 
-float NormalizeShadowDepth(float depth)
+float ComputeShadow(float4 lightPosition)
 {
-#if OPENGL
-    return depth * 0.5 + 0.5;
-#else
-    return depth;
-#endif
-}
-
-ShadowVertexShaderOutput ShadowVS(in VertexShaderInput input)
-{
-    ShadowVertexShaderOutput output = (ShadowVertexShaderOutput)0;
-    float4 lightPosition = mul(mul(input.Position, World), LightViewProjection);
-    output.Position = lightPosition;
-    output.DepthPosition = lightPosition;
-    return output;
-}
-
-float4 ShadowPS(ShadowVertexShaderOutput input) : COLOR
-{
-    float depth = NormalizeShadowDepth(input.DepthPosition.z / input.DepthPosition.w);
-    return float4(depth, depth, depth, 1.0);
-}
-
-float GetShadowFactor(float4 lightPosition)
-{
-    if (lightPosition.w <= 0.0)
+    if (UseShadowMap == false)
     {
         return 1.0;
     }
 
-    float3 projectionCoordinates = lightPosition.xyz / lightPosition.w;
-    float2 shadowTexCoord = projectionCoordinates.xy * float2(0.5, -0.5) + 0.5;
+    float3 projected = lightPosition.xyz / lightPosition.w;
+    float2 shadowUv = projected.xy * float2(0.5, -0.5) + 0.5;
 
-    float currentDepth = NormalizeShadowDepth(projectionCoordinates.z);
+    bool inBoundsX = (shadowUv.x >= 0.0) && (shadowUv.x <= 1.0);
+    bool inBoundsY = (shadowUv.y >= 0.0) && (shadowUv.y <= 1.0);
+    bool inBoundsZ = (projected.z >= 0.0) && (projected.z <= 1.0);
 
-    if (shadowTexCoord.x < 0.0 || shadowTexCoord.x > 1.0 || shadowTexCoord.y < 0.0 || shadowTexCoord.y > 1.0 || currentDepth < 0.0 || currentDepth > 1.0)
+    if (inBoundsX && inBoundsY && inBoundsZ)
     {
-        return 1.0;
+        float closestDepth = tex2D(shadowSampler, shadowUv).r;
+        if (projected.z - ShadowBias > closestDepth)
+        {
+            return 1.0 - ShadowStrength;
+        }
     }
 
-    currentDepth -= ShadowBias;
-    float closestDepth = tex2D(shadowSampler, shadowTexCoord).r;
-    return currentDepth <= closestDepth ? 1.0 : 1.0 - ShadowStrength;
+    return 1.0;
 }
 
 float4 MainPS(VertexShaderOutput input) : COLOR
 {
-    float shadowFactor = GetShadowFactor(input.lightPosition);
-    return float4(DiffuseColor * shadowFactor, 1.0);
+    float shadow = ComputeShadow(input.LightPosition);
+    return float4(DiffuseColor * shadow, 1.0);
 }
 
 float4 DebugPS(VertexShaderOutput input) : COLOR
@@ -136,12 +111,3 @@ technique DebugLineDrawing
 		PixelShader = compile PS_SHADERMODEL DebugPS();
 	}
 }
-
-technique ShadowMap
-{
-    pass P0
-    {
-        VertexShader = compile VS_SHADERMODEL ShadowVS();
-        PixelShader = compile PS_SHADERMODEL ShadowPS();
-    }
-};

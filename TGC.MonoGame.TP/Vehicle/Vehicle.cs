@@ -48,7 +48,6 @@ public class Vehicle
     private readonly Vector3 _boundingBoxHalfSize;
     private readonly Vector3 _boundingBoxOffset = new Vector3(0f, 40f, 0f) * ScaleFactor;
 
-
     // Ruedas
     private Wheel  _frontLeftWheel;
     private Wheel  _frontRightWheel;
@@ -130,7 +129,6 @@ public class Vehicle
         // Consumo de combustible progresivo
         CurrentFuel -= _stats.FuelConsumption * deltaTime;
 
-
         // =========================
         // ACELERAR / FRENAR
         // =========================
@@ -153,7 +151,6 @@ public class Vehicle
                 lerpFactor
             );
 
-
             _speed -= _stats.BrakeForce * FrictionCoefficient * deltaTime;
         }
         else if(!_exploded)
@@ -166,10 +163,8 @@ public class Vehicle
                 lerpFactor
             );
 
-
             _speed += _currentAcceleration * FrictionCoefficient * deltaTime;
         }
-
 
         _wheelSpin += _speed * deltaTime * 0.01f;
 
@@ -318,7 +313,6 @@ public class Vehicle
         _speed *= speedMultiplier;
     }
 
-
     private void Explode()
     {
         if(_exploded) return;
@@ -356,29 +350,21 @@ public class Vehicle
             Matrix.CreateRotationY(RotationY) *
             Matrix.CreateTranslation(Position);
     }
+    public void DrawShadow(Effect shadowEffect, Matrix lightViewProjection, ShadowDiagnostics diagnostics = null)
+    {
+        _bodyModel.DrawManyShadow(new[] { GetVisualWorld() }, shadowEffect, lightViewProjection, diagnostics);
+        _frontLeftWheel.DrawShadow(shadowEffect, lightViewProjection, diagnostics);
+        _frontRightWheel.DrawShadow(shadowEffect, lightViewProjection, diagnostics);
+        _backLeftWheel.DrawShadow(shadowEffect, lightViewProjection, diagnostics);
+        _backRightWheel.DrawShadow(shadowEffect, lightViewProjection, diagnostics);
+    }
+
     public Matrix GetVisualWorld()
     {
         return
             Matrix.CreateScale(ScaleFactor) *
             Matrix.CreateRotationY(RotationY + ModelRotationOffset) *
             Matrix.CreateTranslation(Position);
-    }
-    public void SetShadowMap(Texture2D shadowMap, Matrix lightViewProjection)
-    {
-        _bodyModel.SetShadowMap(shadowMap, lightViewProjection);
-        _frontLeftWheel.SetShadowMap(shadowMap, lightViewProjection);
-        _frontRightWheel.SetShadowMap(shadowMap, lightViewProjection);
-        _backLeftWheel.SetShadowMap(shadowMap, lightViewProjection);
-        _backRightWheel.SetShadowMap(shadowMap, lightViewProjection);
-    }
-
-    public void DrawDepth(Matrix lightViewProjection)
-    {
-        _bodyModel.DrawDepth(GetVisualWorld(), lightViewProjection);
-        _frontLeftWheel.DrawDepth(lightViewProjection);
-        _frontRightWheel.DrawDepth(lightViewProjection);
-        _backLeftWheel.DrawDepth(lightViewProjection);
-        _backRightWheel.DrawDepth(lightViewProjection);
     }
 
     public void Draw(GameTime gameTime, Camera camera)

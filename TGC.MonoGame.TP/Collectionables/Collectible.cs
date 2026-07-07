@@ -146,8 +146,10 @@ public class Collectible : WorldObject, IAssetLoader
     // Draw dibuja el coleccionable si está activo
     public override void Draw(GameTime gameTime, Matrix view, Matrix projection)
     {
-        if (!IsActive) return;
-        base.Draw(gameTime, view, projection);
+        if (IsActive)
+        {
+            base.Draw(gameTime, view, projection);
+        }
     }
 
     // --- PREPARACIÓN PARA COLISIONES ---

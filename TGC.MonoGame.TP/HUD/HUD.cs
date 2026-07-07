@@ -82,10 +82,12 @@ public class HUD
         _wrenchModel.DrawUnlit(_worldWrench, cameraMenu.View, cameraMenu.Projection);
         _coinModel.DrawUnlit(_worldCoin, cameraMenu.View, cameraMenu.Projection);
 
+        spriteBatch.Begin(SpriteSortMode.Deferred, null, null, DepthStencilState.Default, null, null, null);
         DrawFuelBar(spriteBatch, graphicsDevice, playerVehicle, cameraMenu);
         DrawHealthBar(spriteBatch, graphicsDevice, playerVehicle, cameraMenu);
         DrawScoreUI(spriteBatch, graphicsDevice, playerVehicle, cameraMenu);
         DrawSpeedometer(spriteBatch, graphicsDevice, playerVehicle);
+        spriteBatch.End();
     }
 
     private void DrawFuelBar(SpriteBatch spriteBatch, GraphicsDevice graphicsDevice, Vehicle playerVehicle, CameraStc cameraMenu)
@@ -99,8 +101,6 @@ public class HUD
         int x = (int)screenPos.X - (barWidth / 2);
         int y = (int)screenPos.Y - barHeight - 50;
 
-        spriteBatch.Begin(SpriteSortMode.Deferred, null, null, DepthStencilState.Default, null, null, null);
-        
         spriteBatch.Draw(_blankTexture, new Rectangle(x, y, barWidth, barHeight), Color.DarkGray);
         
         Color fuelColor = fuelPercentage > 0.2f ? Color.Orange : Color.Red;
@@ -112,7 +112,6 @@ public class HUD
         spriteBatch.Draw(_blankTexture, new Rectangle(x, y, 2, barHeight), Color.Black);
         spriteBatch.Draw(_blankTexture, new Rectangle(x + barWidth - 2, y, 2, barHeight), Color.Black);
         
-        spriteBatch.End();
     }
 
     private void DrawHealthBar(SpriteBatch spriteBatch, GraphicsDevice graphicsDevice, Vehicle playerVehicle, CameraStc cameraMenu)
@@ -126,8 +125,6 @@ public class HUD
         int x = (int)screenPos.X - (barWidth / 2);
         int y = (int)screenPos.Y - barHeight - 50;
 
-        spriteBatch.Begin(SpriteSortMode.Deferred, null, null, DepthStencilState.Default, null, null, null);
-        
         spriteBatch.Draw(_blankTexture, new Rectangle(x, y, barWidth, barHeight), Color.DarkGray);
         
         Color healthColor = healthPercentage > 0.3f ? Color.LimeGreen : Color.Red;
@@ -139,7 +136,6 @@ public class HUD
         spriteBatch.Draw(_blankTexture, new Rectangle(x, y, 2, barHeight), Color.Black);
         spriteBatch.Draw(_blankTexture, new Rectangle(x + barWidth - 2, y, 2, barHeight), Color.Black);
         
-        spriteBatch.End();
     }
 
     private void DrawScoreUI(SpriteBatch spriteBatch, GraphicsDevice graphicsDevice, Vehicle playerVehicle, CameraStc cameraMenu)
@@ -151,8 +147,6 @@ public class HUD
         
         string scoreText = playerVehicle.Score.ToString();
         
-        spriteBatch.Begin(SpriteSortMode.Deferred, null, null, DepthStencilState.Default, null, null, null);
-        
         Vector2 position = new Vector2(x, y);
         spriteBatch.DrawString(_font, scoreText, position + new Vector2(2, 0), Color.Black);
         spriteBatch.DrawString(_font, scoreText, position + new Vector2(-2, 0), Color.Black);
@@ -161,7 +155,6 @@ public class HUD
         
         spriteBatch.DrawString(_font, scoreText, position, Color.White);
         
-        spriteBatch.End();
     }
 
     private void DrawSpeedometer(SpriteBatch spriteBatch, GraphicsDevice graphicsDevice, Vehicle playerVehicle)
@@ -171,8 +164,6 @@ public class HUD
         
         Vector2 center = new Vector2(W - 150, H - 80);
         float radius = 100f;
-        
-        spriteBatch.Begin(SpriteSortMode.Deferred, null, null, DepthStencilState.Default, null, null, null);
         
         for (int i = 0; i <= 180; i += 2)
         {
@@ -215,7 +206,6 @@ public class HUD
         spriteBatch.DrawString(_font, speedText, center + new Vector2(-speedTextSize.X / 2 + 1, 21), Color.Black, 0, Vector2.Zero, 0.5f, SpriteEffects.None, 0);
         spriteBatch.DrawString(_font, speedText, center + new Vector2(-speedTextSize.X / 2, 20), Color.White, 0, Vector2.Zero, 0.5f, SpriteEffects.None, 0);
 
-        spriteBatch.End();
     }
 
     private Vector3 GetWorldPositionFromScreen(GraphicsDevice graphicsDevice, CameraStc cameraMenu, float screenX, float screenY)

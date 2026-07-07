@@ -12,20 +12,12 @@ float4x4 View;
 float4x4 Projection;
 float3 CameraPosition;
 float4x4 WorldInverseTranspose;
-float4x4 LightViewProjection;
 bool UseLighting = true;
-float ShadowBias = 0.0005f; // Reducido un poco para evitar que la sombra se separe del objeto
-float ShadowStrength = 0.55f;
 
-Texture2D ModelTexture;
-sampler2D textureSampler = sampler_state
-{
-    Texture = (ModelTexture);
-    MagFilter = Linear;
-    MinFilter = Linear;
-    AddressU = Clamp;
-    AddressV = Clamp;
-};
+float4x4 LightViewProjection;
+bool UseShadowMap = false;
+float ShadowBias = 0.003;
+float ShadowStrength = 0.45;
 
 Texture2D ShadowMap;
 sampler2D shadowSampler = sampler_state
@@ -33,6 +25,16 @@ sampler2D shadowSampler = sampler_state
     Texture = (ShadowMap);
     MagFilter = Point;
     MinFilter = Point;
+    AddressU = Clamp;
+    AddressV = Clamp;
+};
+
+Texture2D ModelTexture;
+sampler2D textureSampler = sampler_state
+{
+    Texture = (ModelTexture);
+    MagFilter = Linear;
+    MinFilter = Linear;
     AddressU = Clamp;
     AddressV = Clamp;
 };
@@ -70,12 +72,6 @@ struct VertexShaderOutput
     float4 lightPosition : TEXCOORD3;
 };
 
-struct ShadowVertexShaderOutput
-{
-    float4 Position : SV_POSITION;
-    float2 Depth : TEXCOORD0; // X = Z de clip space, Y = W de clip space
-};
-
 VertexShaderOutput MainVS(in VertexShaderInput input)
 {
 	VertexShaderOutput output = (VertexShaderOutput)0;
@@ -83,11 +79,11 @@ VertexShaderOutput MainVS(in VertexShaderInput input)
     float4 worldPosition = mul(input.Position, World);
     float4 viewPosition = mul(worldPosition, View);
     output.Position = mul(viewPosition, Projection);
-    output.lightPosition = mul(worldPosition, LightViewProjection);
 
     output.TextureCoordinate = input.TextureCoordinate;
     output.normal = normalize(mul(input.normal, (float3x3)WorldInverseTranspose));
     output.worldPosition = worldPosition.xyz;
+    output.lightPosition = mul(worldPosition, LightViewProjection);
     return output;
 }
 
@@ -98,77 +94,12 @@ VertexShaderOutput MainUnlitVS(in UnlitVertexShaderInput input)
     float4 worldPosition = mul(input.Position, World);
     float4 viewPosition = mul(worldPosition, View);
     output.Position = mul(viewPosition, Projection);
-    output.lightPosition = mul(worldPosition, LightViewProjection);
 
     output.TextureCoordinate = input.TextureCoordinate;
     output.normal = float3(0.0, 1.0, 0.0);
     output.worldPosition = worldPosition.xyz;
+    output.lightPosition = mul(worldPosition, LightViewProjection);
     return output;
-}
-
-// FIX: Función de conversión homogénea limpia y unificada para MonoGame
-float FinalizeDepth(float4 lightSpacePos)
-{
-#if OPENGL
-    // Convierte el rango nativo de OpenGL [-1, 1] al rango estándar de textura [0, 1]
-    return (lightSpacePos.z / lightSpacePos.w) * 0.5 + 0.5;
-#else
-    // DirectX ya devuelve nativamente [0, 1]
-    return lightSpacePos.z / lightSpacePos.w;
-#endif
-}
-
-ShadowVertexShaderOutput ShadowVS(in VertexShaderInput input)
-{
-    ShadowVertexShaderOutput output = (ShadowVertexShaderOutput)0;
-    float4 lightPosition = mul(mul(input.Position, World), LightViewProjection);
-    output.Position = lightPosition;
-    
-    // FIX: Pasamos Z y W de forma directa para evitar errores de interpolación no lineal
-    output.Depth = lightPosition.zw; 
-    return output;
-}
-
-float4 ShadowPS(ShadowVertexShaderOutput input) : COLOR
-{
-    // FIX: Reconstruimos la profundidad homogénea de forma segura en el Pixel Shader
-#if OPENGL
-    float depth = (input.Depth.x / input.Depth.y) * 0.5 + 0.5;
-#else
-    float depth = input.Depth.x / input.Depth.y;
-#endif
-    return float4(depth, depth, depth, 1.0);
-}
-
-float GetShadowFactor(float4 lightPosition)
-{
-    if (lightPosition.w <= 0.0)
-    {
-        return 1.0;
-    }
-
-    float3 projectionCoordinates = lightPosition.xyz / lightPosition.w;
-    
-    // Invertir Y para mapear espacio de proyección a coordenadas UV de textura
-    float2 shadowTexCoord = projectionCoordinates.xy * float2(0.5, -0.5) + 0.5;
-
-    // FIX: Usamos la nueva función unificada para leer la profundidad del píxel actual
-    float currentDepth = FinalizeDepth(lightPosition);
-
-    // Fuera de los límites del mapa de sombras = No hay sombra
-    if (shadowTexCoord.x < 0.0 || shadowTexCoord.x > 1.0 || shadowTexCoord.y < 0.0 || shadowTexCoord.y > 1.0 || currentDepth < 0.0 || currentDepth > 1.0)
-    {
-        return 1.0;
-    }
-
-    // Aplicar Bias para evitar el z-fighting (shadow acne)
-    currentDepth -= ShadowBias;
-    
-    // Leer el mapa de sombras grabado previamente
-    float closestDepth = tex2D(shadowSampler, shadowTexCoord).r;
-    
-    // Si la profundidad actual es mayor que la más cercana grabada, el píxel está en sombra
-    return currentDepth <= closestDepth ? 1.0 : (1.0 - ShadowStrength);
 }
 
 float4 MainPS(VertexShaderOutput input) : COLOR
@@ -180,22 +111,28 @@ float4 MainPS(VertexShaderOutput input) : COLOR
     overlayUV.x = input.worldPosition.x * 0.00225f;
     overlayUV.y = input.worldPosition.z * 0.00225f;
     float4 overlayColor = tex2D(overlaySampler, overlayUV);
+    
     float brightness = (overlayColor.r + overlayColor.g + overlayColor.b) / 3.0f;
-    overlayColor.a = (brightness < 0.05f) ? 0.0f : 1.0f;
+    
+    // --- FIX 1: Eliminate Ternary for Overlay Alpha ---
+    overlayColor.a = 1.0f;
+    if (brightness < 0.05f)
+    {
+        overlayColor.a = 0.0f;
+    }
 
-    if(UseOverlay)
+    if (UseOverlay == true)
     {
         finalColor = lerp(baseColor, overlayColor, overlayColor.a);
     }
 
-    if (!UseLighting)
+    if (UseLighting == false)
     {
         return finalColor;
     }
 
     float3 ambientColor = float3(0.2, 0.25, 0.35);
-    // FIX: Vector L corregido para que apunte HACIA la luz de forma correcta
-    float3 L = normalize(-float3(1.0, 1.0, 1.0)); 
+    float3 L = normalize(-float3(1.0, -1.0, 1.0)); 
     float3 diffuseColor = float3(0.8, 0.8, 0.8);
     float3 specularColor = float3(0.5, 0.5, 0.5);
     float3 N = normalize(input.normal);
@@ -207,16 +144,38 @@ float4 MainPS(VertexShaderOutput input) : COLOR
     float1 ks = 1;
     
     float3 ambientLight = ambientColor * ka;
+
+    float shadow = 1.0;
+    float3 projected = input.lightPosition.xyz / input.lightPosition.w;
+    float2 shadowUv = projected.xy * float2(0.5, -0.5) + 0.5;
+
+    if (UseShadowMap == true)
+    {
+        bool inBoundsX = (shadowUv.x >= 0.0) && (shadowUv.x <= 1.0);
+        bool inBoundsY = (shadowUv.y >= 0.0) && (shadowUv.y <= 1.0);
+        bool inBoundsZ = (projected.z >= 0.0) && (projected.z <= 1.0);
+
+        if (inBoundsX && inBoundsY && inBoundsZ)
+        {
+            float closestDepth = tex2D(shadowSampler, shadowUv).r;
+            
+            if (projected.z - ShadowBias > closestDepth)
+            {
+                shadow = 1.0 - ShadowStrength;
+            }
+            else
+            {
+                shadow = 1.0;
+            }
+        }
+    }
     
-    // Calculamos el factor de sombra
-    float shadowFactor = GetShadowFactor(input.lightPosition);
-    
-    // El factor de sombra afecta al difuso y al especular, pero NUNCA al ambiental
-    float3 diffuseLight = saturate(dot(L, N)) * diffuseColor * kd * shadowFactor;
-    float3 specularLight = pow(saturate(dot(halfVector, N)), shininess) * specularColor * ks * step(0.0, dot(N, L)) * shadowFactor;
+    float3 diffuseLight = saturate(dot(L, N)) * diffuseColor * kd * shadow;
+    float3 specularLight = pow(saturate(dot(halfVector, N)), shininess) * specularColor * ks * step(0.0, dot(N, L)) * shadow;
     
     return float4((ambientLight + diffuseLight) * finalColor.xyz + specularLight, finalColor.a);
 }
+
 
 technique TexturedDrawing
 {
@@ -234,13 +193,4 @@ technique TexturedUnlitDrawing
 		VertexShader = compile VS_SHADERMODEL MainUnlitVS();
 		PixelShader = compile PS_SHADERMODEL MainPS();
 	}
-};
-
-technique ShadowMap
-{
-    pass P0
-    {
-        VertexShader = compile VS_SHADERMODEL ShadowVS();
-        PixelShader = compile PS_SHADERMODEL ShadowPS();
-    }
 };

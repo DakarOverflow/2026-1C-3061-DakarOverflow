@@ -13,6 +13,7 @@ public abstract class Tile
     protected readonly List<WorldObject> _tileObjects;
 
     protected readonly List<Obstacle> _obstacles;
+    private BoundingBox? _cachedStaticBoundingBox;
 
     public IReadOnlyList<Obstacle> Obstacles
     {
@@ -40,9 +41,14 @@ public abstract class Tile
 
     public BoundingBox GetBoundingBox()
     {
+        if (_cachedStaticBoundingBox.HasValue)
+        {
+            return _cachedStaticBoundingBox.Value;
+        }
+
         BoundingBox? box = null;
 
-        foreach (var obj in WorldObjects)
+        foreach (var obj in _tileObjects)
         {
             BoundingBox objectBox = BoundingVolumeFactory.CreateWorldBoundingBox(obj);
             box = box.HasValue
@@ -50,7 +56,8 @@ public abstract class Tile
                 : objectBox;
         }
 
-        return box ?? new BoundingBox(Position, Position);
+        _cachedStaticBoundingBox = box ?? new BoundingBox(Position, Position);
+        return _cachedStaticBoundingBox.Value;
     }
 
     public Vector3 Position;
@@ -155,7 +162,6 @@ public abstract class Tile
         _obstacles = new List<Obstacle>();
     }
 
-
     private Vector3 GetWorldOffset(Vector3 localOffset)
     {
         return Vector3.Transform(localOffset, Matrix.CreateRotationY(Rotation));
@@ -177,8 +183,8 @@ public abstract class Tile
         _tileObjects.Add(
             new WorldObject(model, world)
         );
+        _cachedStaticBoundingBox = null;
     }
-
 
     public void AddObject(
         CustomModel model,
@@ -198,6 +204,7 @@ public abstract class Tile
         _tileObjects.Add(
             new WorldObject(model, world)
         );
+        _cachedStaticBoundingBox = null;
     }
 
     public void AddObstacle(Obstacle obstacle)
@@ -247,14 +254,20 @@ public abstract class Tile
     public void AddObject(WorldObject obj)
     {
         _tileObjects.Add(obj);
+        _cachedStaticBoundingBox = null;
     }
 
-    public void Update(GameTime gameTime)
+    public void Update(GameTime gameTime, bool updateInteractive)
     {
         foreach (var obj in _tileObjects)
         {
-            obj.Update(gameTime);
+            if (updateInteractive || obj is not Collectible)
+            {
+                obj.Update(gameTime);
+            }
         }
+
+        if (!updateInteractive) return;
 
         foreach (var obstacle in _obstacles)
         {
@@ -269,10 +282,20 @@ public abstract class Tile
 
     public void CheckCollisions(Vehicle player)
     {
+        float playerBroadPhaseRadius = player.OBB.Extents.Length();
+
         foreach (var obj in _tileObjects)
         {
             if (obj is Collectible collectible && collectible.IsActive)
             {
+                Vector3 collectibleCenter = (collectible.BoundingBox.Min + collectible.BoundingBox.Max) * 0.5f;
+                Vector3 collectibleHalfSize = (collectible.BoundingBox.Max - collectible.BoundingBox.Min) * 0.5f;
+                float broadPhaseRadius = playerBroadPhaseRadius + collectibleHalfSize.Length();
+                if (Vector3.DistanceSquared(player.OBB.Center, collectibleCenter) > broadPhaseRadius * broadPhaseRadius)
+                {
+                    continue;
+                }
+
                 if (player.OBB.Intersects(collectible.BoundingBox))
                 {
                     collectible.PickUp(player);
@@ -292,59 +315,41 @@ public abstract class Tile
         }
     }
 
-    public void SetShadowMap(Texture2D shadowMap, Matrix lightViewProjection)
-    {
-        foreach (var obj in _tileObjects)
-        {
-            obj.SetShadowMap(shadowMap, lightViewProjection);
-        }
-
-        foreach (var obstacle in _obstacles)
-        {
-            if (obstacle.IsActive)
-            {
-                obstacle.SetShadowMap(shadowMap, lightViewProjection);
-            }
-        }
-    }
-
-    public void DrawDepth(Matrix lightViewProjection)
-    {
-        foreach (var obj in _tileObjects)
-        {
-            obj.DrawDepth(lightViewProjection);
-        }
-
-        foreach (var obstacle in _obstacles)
-        {
-            if (obstacle.IsActive)
-            {
-                obstacle.DrawDepth(lightViewProjection);
-            }
-        }
-    }
-
-    public void Draw(
-        GameTime gameTime,
-        Camera camera
+    public void EnqueueDrawables(
+        Dictionary<CustomModel, List<Matrix>> batches,
+        bool drawInteractive
     )
     {
         foreach (var obj in _tileObjects)
         {
-            obj.DrawOn(
-                gameTime,
-                camera,
-                camera.GetProjection()
-            );
+            if (obj is Collectible collectible)
+            {
+                if (!drawInteractive || !collectible.IsActive) continue;
+            }
+
+            if (!batches.TryGetValue(obj.Model, out var worlds))
+            {
+                worlds = new List<Matrix>();
+                batches.Add(obj.Model, worlds);
+            }
+
+            worlds.Add(obj.World);
         }
 
-        foreach (var obstacle in _obstacles)
+        if (drawInteractive)
         {
-            obstacle.Draw(
-                gameTime,
-                camera.GetView(),
-                camera.GetProjection()
-            );
+            foreach (var obstacle in _obstacles)
+            {
+                if (!obstacle.IsActive) continue;
+
+                if (!batches.TryGetValue(obstacle.Model, out var worlds))
+                {
+                    worlds = new List<Matrix>();
+                    batches.Add(obstacle.Model, worlds);
+                }
+
+                worlds.Add(obstacle.World);
+            }
         }
     }
 }

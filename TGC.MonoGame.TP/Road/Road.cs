@@ -13,6 +13,8 @@ namespace TGC.MonoGame.TP;
 public class Road
 {
     private const float SQUARED_GENERATION_DISTANCE = 4000000f; //Generation distance: 2000
+    private const int RenderTileCount = 20;
+    private const int InteractiveTileCount = 10;
 
     private int _generalDirection = 0;
     private List<Tile> _tiles;
@@ -42,12 +44,12 @@ public class Road
 
     public virtual void UpdateFor(Vehicle car, GameTime gameTime)
     {
-        int start = Math.Max(0, this._tiles.Count - 10);
+        int start = GetStartIndexForLastTiles(InteractiveTileCount);
 
         for (int i = start; i < this._tiles.Count; i++)
         {
             Tile tile = this._tiles[i];
-            tile.Update(gameTime);
+            tile.Update(gameTime, true);
             tile.CheckCollisions(car);
         }
 
@@ -56,7 +58,7 @@ public class Road
 
     public IEnumerable<BoundingBox> GetCollectibleHitboxes()
     {
-        foreach (Tile tile in this._tiles)
+        foreach (Tile tile in GetLastTiles(InteractiveTileCount))
         {
             foreach (var bb in tile.GetActiveCollectibleHitboxes())
             {
@@ -65,23 +67,27 @@ public class Road
         }
     }
 
-    public void SetShadowMap(Texture2D shadowMap, Matrix lightViewProjection)
+    public virtual void DrawShadow(Camera camera, Effect shadowEffect, Matrix lightViewProjection, ShadowDiagnostics diagnostics = null)
     {
-        int start = Math.Max(0, this._tiles.Count - 10);
+        var frustum = new BoundingFrustum(camera.GetView() * camera.GetProjection());
+        Dictionary<CustomModel, List<Matrix>> batches = new Dictionary<CustomModel, List<Matrix>>();
+
+        int start = GetStartIndexForLastTiles(RenderTileCount);
+        int interactiveStart = GetStartIndexForLastTiles(InteractiveTileCount);
 
         for (int i = start; i < this._tiles.Count; i++)
         {
-            this._tiles[i].SetShadowMap(shadowMap, lightViewProjection);
+            Tile tile = this._tiles[i];
+
+            if (frustum.Intersects(tile.GetBoundingBox()))
+            {
+                tile.EnqueueDrawables(batches, i >= interactiveStart);
+            }
         }
-    }
 
-    public void DrawDepth(Matrix lightViewProjection)
-    {
-        int start = Math.Max(0, this._tiles.Count - 10);
-
-        for (int i = start; i < this._tiles.Count; i++)
+        foreach (var batch in batches)
         {
-            this._tiles[i].DrawDepth(lightViewProjection);
+            batch.Key.DrawManyShadow(batch.Value, shadowEffect, lightViewProjection, diagnostics);
         }
     }
 
@@ -91,8 +97,10 @@ public class Road
     )
     {
         var frustum = new BoundingFrustum(camera.GetView() * camera.GetProjection());
+        Dictionary<CustomModel, List<Matrix>> batches = new Dictionary<CustomModel, List<Matrix>>();
 
-        int start = Math.Max(0, this._tiles.Count - 10);
+        int start = GetStartIndexForLastTiles(RenderTileCount);
+        int interactiveStart = GetStartIndexForLastTiles(InteractiveTileCount);
 
         for (int i = start; i < this._tiles.Count; i++)
         {
@@ -100,9 +108,35 @@ public class Road
 
             if (frustum.Intersects(tile.GetBoundingBox()))
             {
-                tile.Draw(gameTime, camera);
+                tile.EnqueueDrawables(batches, i >= interactiveStart);
             }
         }
+
+        Matrix view = camera.GetView();
+        Matrix projection = camera.GetProjection();
+        foreach (var batch in batches)
+        {
+            batch.Key.DrawMany(batch.Value, view, projection);
+        }
+    }
+
+    public IEnumerable<Tile> GetInteractiveTiles()
+    {
+        return GetLastTiles(InteractiveTileCount);
+    }
+
+    private IEnumerable<Tile> GetLastTiles(int count)
+    {
+        int start = GetStartIndexForLastTiles(count);
+        for (int i = start; i < this._tiles.Count; i++)
+        {
+            yield return this._tiles[i];
+        }
+    }
+
+    private int GetStartIndexForLastTiles(int count)
+    {
+        return Math.Max(0, this._tiles.Count - count);
     }
 
     private void ExtendRoadIfCarNearEnd(Vehicle car)
@@ -177,7 +211,6 @@ public class Road
         float rightCurveChance = 0.2f;
         float leftCurveChance = 0.2f;
 
-
         if (_generalDirection >= 1)
         {
             rightCurveChance = 0f;
@@ -248,7 +281,7 @@ public class Road
 
     public void ConstrainVehicleToRoad(Vehicle car)
     {
-        int start = Math.Max(0, this._tiles.Count - 10);
+        int start = GetStartIndexForLastTiles(RenderTileCount);
 
         for (int i = start; i < this._tiles.Count; i++)
         {

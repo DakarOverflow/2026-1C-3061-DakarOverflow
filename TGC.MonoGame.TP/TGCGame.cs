@@ -22,20 +22,14 @@ public class TGCGame : Game
     private readonly GraphicsDeviceManager _graphics;
     // SHADDER PARA DEBUGUEAR
     private Effect _debugEffect;
+    private Effect _shadowMapEffect;
+    private RenderTarget2D _shadowMapRenderTarget;
+    private readonly ShadowDiagnostics _shadowDiagnostics = new();
+    private const int ShadowMapSize = 1024;
     private bool _showHitboxes = false;
-    private RenderTarget2D _shadowMap;
-    private Matrix _lightViewProjection;
-    private const int ShadowMapSize = 2048;
-    private static readonly Vector3 LightDirection = Vector3.Normalize(new Vector3(1f, 1f, 1f));
     private readonly RasterizerState _mainRasterizerState = new()
     {
         CullMode = CullMode.CullCounterClockwiseFace
-    };
-    private readonly RasterizerState _shadowRasterizerState = new()
-    {
-        CullMode = CullMode.CullCounterClockwiseFace,
-        DepthBias = 0f,
-        SlopeScaleDepthBias = 0f
     };
 
     // CAMARAS
@@ -160,7 +154,20 @@ Scene _sceneNum = Scene.Menu;
         _blankTexture.SetData(new[] { Color.White });
 
         _debugEffect = Content.Load<Effect>(AssetPaths.ContentFolderEffects + "BasicShader");
-        _shadowMap = new RenderTarget2D(GraphicsDevice, ShadowMapSize, ShadowMapSize, false, SurfaceFormat.Single, DepthFormat.Depth24);
+        _shadowMapEffect = Content.Load<Effect>(AssetPaths.ContentFolderEffects + "ShadowMap");
+        _shadowMapRenderTarget = new RenderTarget2D(
+            GraphicsDevice,
+            ShadowMapSize,
+            ShadowMapSize,
+            false,
+            SurfaceFormat.Color,
+            DepthFormat.Depth24,
+            0,
+            RenderTargetUsage.PreserveContents
+        );
+        ShadowMapping.SetDiagnostics(_shadowDiagnostics);
+        _shadowDiagnostics.LogStartup(GraphicsDevice, ShadowMapSize);
+        _shadowDiagnostics.LogContent(_shadowMapEffect, _shadowMapRenderTarget);
 
         var carKitColormap = Content.Load<Texture2D>(
             AssetPaths.ContentFolder3D +
@@ -536,12 +543,20 @@ Scene _sceneNum = Scene.Menu;
 
     private void CheckObstacleCollisions()
     {
-        foreach (var tile in _road.Tiles)
+        float playerBroadPhaseRadius = _playerVehicle.OBB.Extents.Length();
+
+        foreach (var tile in _road.GetInteractiveTiles())
         {
             foreach (var obstacle in tile.Obstacles)
             {
                 if (!obstacle.IsActive)
                     continue;
+
+                float broadPhaseRadius = playerBroadPhaseRadius + obstacle.BroadPhaseRadius;
+                if (Vector3.DistanceSquared(_playerVehicle.OBB.Center, obstacle.OBB.Center) > broadPhaseRadius * broadPhaseRadius)
+                {
+                    continue;
+                }
 
                 if (_playerVehicle.OBB.Intersects(obstacle.OBB))
                 {
@@ -606,13 +621,7 @@ Scene _sceneNum = Scene.Menu;
                 _mainMenu.Draw(gameTime, this, _cameraMenu);
                 break;
             default:
-        // =========================
-        // SHADOW MAP
-        // =========================
-        UpdateLightViewProjection();
-        DrawShadowMap();
-        ResetMainRenderState(true);
-        ApplyShadowMap();
+        RenderShadowMap();
 
         // =========================
         // DRAW SKYBOX
@@ -643,15 +652,6 @@ Scene _sceneNum = Scene.Menu;
             gameTime,
             _cameraInUse
         );
-
-        // =========================
-        // DRAW COLLECTIBLES
-        // =========================
-
-        foreach (var collectible in _collectibles)
-        {
-            collectible.Draw(gameTime, _cameraInUse.GetView(), _cameraInUse.GetProjection());
-        }
 
         // =========================
         // DRAW HITBOXES
@@ -727,35 +727,32 @@ Scene _sceneNum = Scene.Menu;
 
     }
 
-    private void UpdateLightViewProjection()
+    private void RenderShadowMap()
     {
-        var center = _playerVehicle?.Position ?? Vector3.Zero;
-        var lightPosition = center + LightDirection * 1600f;
-        var lightView = Matrix.CreateLookAt(lightPosition, center, Vector3.Up);
-        var lightProjection = Matrix.CreateOrthographic(3200f, 3200f, 1f, 5000f);
-        _lightViewProjection = lightView * lightProjection;
-    }
+        Vector3 target = _playerVehicle.Position;
+        Vector3 lightDirection = Vector3.Normalize(new Vector3(1f, -1f, 1f));
+        Vector3 lightPosition = target - lightDirection * 2200f + Vector3.Up * 600f;
 
-    private void DrawShadowMap()
-    {
-        var previousBlendState = GraphicsDevice.BlendState;
-        var previousDepthStencilState = GraphicsDevice.DepthStencilState;
-        var previousRasterizerState = GraphicsDevice.RasterizerState;
+        Matrix lightView = Matrix.CreateLookAt(lightPosition, target, Vector3.Up);
+        Matrix lightProjection = Matrix.CreateOrthographic(3200f, 3200f, 1f, 6000f);
+        Matrix lightViewProjection = lightView * lightProjection;
 
-        GraphicsDevice.SetRenderTarget(_shadowMap);
+        _shadowDiagnostics.BeginFrame();
+
+        GraphicsDevice.SetRenderTarget(_shadowMapRenderTarget);
+        GraphicsDevice.Viewport = new Viewport(0, 0, ShadowMapSize, ShadowMapSize);
+        GraphicsDevice.Clear(ClearOptions.Target | ClearOptions.DepthBuffer, Color.White, 1f, 0);
         GraphicsDevice.BlendState = BlendState.Opaque;
         GraphicsDevice.DepthStencilState = DepthStencilState.Default;
-        GraphicsDevice.Clear(ClearOptions.Target | ClearOptions.DepthBuffer, Color.White, 1f, 0);
+        GraphicsDevice.RasterizerState = RasterizerState.CullNone;
 
-        GraphicsDevice.RasterizerState = _shadowRasterizerState;
+        _road.DrawShadow(_cameraInUse, _shadowMapEffect, lightViewProjection, _shadowDiagnostics);
+        _playerVehicle.DrawShadow(_shadowMapEffect, lightViewProjection, _shadowDiagnostics);
 
-        _road.DrawDepth(_lightViewProjection);
-        _playerVehicle.DrawDepth(_lightViewProjection);
-
-        GraphicsDevice.RasterizerState = previousRasterizerState;
-        GraphicsDevice.DepthStencilState = previousDepthStencilState;
-        GraphicsDevice.BlendState = previousBlendState;
         GraphicsDevice.SetRenderTarget(null);
+        ShadowMapping.SetShadowMap(_shadowMapRenderTarget, lightViewProjection);
+        _shadowDiagnostics.EndFrame(lightViewProjection);
+        _shadowDiagnostics.TryLogShadowMapSample(_shadowMapRenderTarget);
     }
 
     private void ResetMainRenderState(bool clear)
@@ -771,12 +768,6 @@ Scene _sceneNum = Scene.Menu;
         {
             GraphicsDevice.Clear(ClearOptions.Target | ClearOptions.DepthBuffer, Color.CornflowerBlue, 1f, 0);
         }
-    }
-
-    private void ApplyShadowMap()
-    {
-        _road.SetShadowMap(_shadowMap, _lightViewProjection);
-        _playerVehicle.SetShadowMap(_shadowMap, _lightViewProjection);
     }
 
     private void DrawBoundingBox(BoundingBox box, Camera camera, Color color)
@@ -861,7 +852,6 @@ Scene _sceneNum = Scene.Menu;
 
     protected override void UnloadContent()
     {
-        _shadowMap?.Dispose();
         Content.Unload();
 
         base.UnloadContent();
