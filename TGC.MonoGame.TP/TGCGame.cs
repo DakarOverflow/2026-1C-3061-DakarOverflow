@@ -23,19 +23,17 @@ public class TGCGame : Game
     // SHADDER PARA DEBUGUEAR
     private Effect _debugEffect;
     private bool _showHitboxes = false;
-    private RenderTarget2D _shadowMap;
-    private Matrix _lightViewProjection;
-    private const int ShadowMapSize = 2048;
-    private static readonly Vector3 LightDirection = Vector3.Normalize(new Vector3(1f, 1f, 1f));
+    private ShadowMapRenderer _shadowMapRenderer;
+    private ShadowPostProcessor _shadowPostProcessor;
+    // DEBUG SHADOWS: T = activar/desactivar sombras, Y = ver el shadow map en pantalla
+    private bool _shadowsEnabled = true;
+    private bool _showShadowMap = false;
+    // DEBUG LIGHTING: U = ciclar vista (0=normal, 1=normales, 2=difuso, 3=fullbright)
+    private int _debugView = 0;
+    private Effect _texturedEffect;
     private readonly RasterizerState _mainRasterizerState = new()
     {
         CullMode = CullMode.CullCounterClockwiseFace
-    };
-    private readonly RasterizerState _shadowRasterizerState = new()
-    {
-        CullMode = CullMode.CullCounterClockwiseFace,
-        DepthBias = 0f,
-        SlopeScaleDepthBias = 0f
     };
 
     // CAMARAS
@@ -160,7 +158,10 @@ Scene _sceneNum = Scene.Menu;
         _blankTexture.SetData(new[] { Color.White });
 
         _debugEffect = Content.Load<Effect>(AssetPaths.ContentFolderEffects + "BasicShader");
-        _shadowMap = new RenderTarget2D(GraphicsDevice, ShadowMapSize, ShadowMapSize, false, SurfaceFormat.Single, DepthFormat.Depth24);
+        _texturedEffect = Content.Load<Effect>(AssetPaths.ContentFolderEffects + "TexturedShader");
+        _shadowMapRenderer = new ShadowMapRenderer(GraphicsDevice);
+        var shadowPostProcessEffect = Content.Load<Effect>(AssetPaths.ContentFolderEffects + "ShadowPostProcess");
+        _shadowPostProcessor = new ShadowPostProcessor(GraphicsDevice, shadowPostProcessEffect);
 
         var carKitColormap = Content.Load<Texture2D>(
             AssetPaths.ContentFolder3D +
@@ -330,7 +331,7 @@ Scene _sceneNum = Scene.Menu;
         _lightVehicle = new Vehicle(
             lightBodyModel,
             lightWheelModel,
-            Vector3.Zero + new Vector3(0f,-34f,0f),
+            Vector3.Zero + new Vector3(0f,-35f,0f),
             VehiclePresets.Light,
             VehicleType.Light,
             new Vector3(60f, 50f, 100f),
@@ -341,7 +342,7 @@ Scene _sceneNum = Scene.Menu;
         _mediumVehicle = new Vehicle(
             mediumBodyModel,
             mediumWheelModel,
-            Vector3.Zero + new Vector3(0f,-34f,0f),
+            Vector3.Zero + new Vector3(0f,-35f,0f),
             VehiclePresets.Medium,
             VehicleType.Medium,
             new Vector3(60f, 50f, 100f),
@@ -352,7 +353,7 @@ Scene _sceneNum = Scene.Menu;
         _heavyVehicle = new Vehicle(
             heavyBodyModel,
             heavyWheelModel,
-            Vector3.Zero + new Vector3(0f,-34f,0f),
+            Vector3.Zero + new Vector3(0f,-35f,0f),
             VehiclePresets.Heavy,
             VehicleType.Heavy,
             new Vector3(65f, 50f, 120f),
@@ -460,8 +461,14 @@ Scene _sceneNum = Scene.Menu;
             _useFreeCamera = !_useFreeCamera;
             _freeCamera._position = _playerVehicle.GetWorld().Translation + _freeCameraOffset ;
         }
-        //GOD MODE 
+        //GOD MODE
         if (keyboardState.IsKeyDown(Keys.G) &&_previousKeyboardState.IsKeyUp(Keys.G)) _godMode = !_godMode ;
+
+        // DEBUG SHADOWS: T = sombras on/off, Y = ver el shadow map
+        if (keyboardState.IsKeyDown(Keys.T) && _previousKeyboardState.IsKeyUp(Keys.T)) _shadowsEnabled = !_shadowsEnabled;
+        if (keyboardState.IsKeyDown(Keys.Y) && _previousKeyboardState.IsKeyUp(Keys.Y)) _showShadowMap = !_showShadowMap;
+        // DEBUG LIGHTING: U = ciclar vista de debug (0..3)
+        if (keyboardState.IsKeyDown(Keys.U) && _previousKeyboardState.IsKeyUp(Keys.U)) _debugView = (_debugView + 1) % 4;
         
 
         // =========================
@@ -607,55 +614,59 @@ Scene _sceneNum = Scene.Menu;
                 break;
             default:
         // =========================
-        // SHADOW MAP
+        // SOMBRAS COMO POST-PROCESADO
         // =========================
-        UpdateLightViewProjection();
-        DrawShadowMap();
-        ResetMainRenderState(true);
-        ApplyShadowMap();
+        var view = _cameraInUse.GetView();
+        var projection = _cameraInUse.GetProjection();
+        var cameraViewProjection = view * projection;
 
-        // =========================
-        // DRAW SKYBOX
-        // =========================
+        // Pass 1: profundidad de la escena desde la LUZ (shadow map)
+        _shadowMapRenderer.UpdateLightMatrices(_playerVehicle?.Position ?? Vector3.Zero);
+        _shadowMapRenderer.RenderDepth(lightViewProjection =>
         {
-            var view = _cameraInUse.GetView();
-            var projection = _cameraInUse.GetProjection();
+            _road.DrawDepth(lightViewProjection);
+            _playerVehicle.DrawDepth(lightViewProjection);
+        });
+
+        // Pass 2: profundidad de la escena desde la CÁMARA (para reconstruir la posición de mundo)
+        _shadowPostProcessor.RenderCameraDepth(cameraVp =>
+        {
+            _road.DrawDepth(cameraVp);
+            _playerVehicle.DrawDepth(cameraVp);
+        }, cameraViewProjection);
+
+        // Pass 3a: la escena se dibuja a una textura de color (SIN sombras)
+        _shadowPostProcessor.BeginSceneColor(Color.CornflowerBlue);
+        SetSceneRenderStates();
+        SetLightingParams();
+
+        // DRAW SKYBOX
+        {
             var cameraPosition = Matrix.Invert(view).Translation;
             _skybox.Draw(view, projection, cameraPosition);
         }
 
-        ResetMainRenderState(false);
+        SetSceneRenderStates();
 
-        // =========================
         // DRAW WORLD
-        // =========================
-
         _road.Draw(
             gameTime,
             _cameraInUse
         );
 
-        // =========================
         // DRAW PLAYER
-        // =========================
-
         _playerVehicle.Draw(
             gameTime,
             _cameraInUse
         );
 
-        // =========================
         // DRAW COLLECTIBLES
-        // =========================
-
         foreach (var collectible in _collectibles)
         {
-            collectible.Draw(gameTime, _cameraInUse.GetView(), _cameraInUse.GetProjection());
+            collectible.Draw(gameTime, view, projection);
         }
 
-        // =========================
         // DRAW HITBOXES
-        // =========================
         if(_showHitboxes)
         {
             DrawOrientedBoundingBox(_playerVehicle.OBB, _cameraInUse, Color.Red);
@@ -678,11 +689,29 @@ Scene _sceneNum = Scene.Menu;
                 }
             }
         }
+
+        // Pass 3b: full-screen quad que aplica las sombras sobre la imagen final (a pantalla)
+        _shadowPostProcessor.Apply(
+            _shadowMapRenderer.ShadowMap,
+            _shadowMapRenderer.LightViewProjection,
+            cameraViewProjection,
+            _shadowMapRenderer.Size,
+            _shadowsEnabled ? 0.55f : 0f,
+            0.0025f
+        );
+
         base.Draw(gameTime);
+
+        // DEBUG: preview del shadow map (tecla Y). El canal rojo = profundidad desde la luz.
+        if (_showShadowMap)
+        {
+            DrawShadowMapPreview();
+        }
+
         // =========================
         // UI
         // =========================
-        // DrawLeftText("Velocidad: " +string.Format("{0:N2}",_playerVehicle._speed), 10, 1,100); 
+        // DrawLeftText("Velocidad: " +string.Format("{0:N2}",_playerVehicle._speed), 10, 1,100);
 
         if (!_useFreeCamera){
             if (_godMode) DrawLeftText("GOD MODE",10f,1,0);
@@ -727,37 +756,6 @@ Scene _sceneNum = Scene.Menu;
 
     }
 
-    private void UpdateLightViewProjection()
-    {
-        var center = _playerVehicle?.Position ?? Vector3.Zero;
-        var lightPosition = center + LightDirection * 1600f;
-        var lightView = Matrix.CreateLookAt(lightPosition, center, Vector3.Up);
-        var lightProjection = Matrix.CreateOrthographic(3200f, 3200f, 1f, 5000f);
-        _lightViewProjection = lightView * lightProjection;
-    }
-
-    private void DrawShadowMap()
-    {
-        var previousBlendState = GraphicsDevice.BlendState;
-        var previousDepthStencilState = GraphicsDevice.DepthStencilState;
-        var previousRasterizerState = GraphicsDevice.RasterizerState;
-
-        GraphicsDevice.SetRenderTarget(_shadowMap);
-        GraphicsDevice.BlendState = BlendState.Opaque;
-        GraphicsDevice.DepthStencilState = DepthStencilState.Default;
-        GraphicsDevice.Clear(ClearOptions.Target | ClearOptions.DepthBuffer, Color.White, 1f, 0);
-
-        GraphicsDevice.RasterizerState = _shadowRasterizerState;
-
-        _road.DrawDepth(_lightViewProjection);
-        _playerVehicle.DrawDepth(_lightViewProjection);
-
-        GraphicsDevice.RasterizerState = previousRasterizerState;
-        GraphicsDevice.DepthStencilState = previousDepthStencilState;
-        GraphicsDevice.BlendState = previousBlendState;
-        GraphicsDevice.SetRenderTarget(null);
-    }
-
     private void ResetMainRenderState(bool clear)
     {
         GraphicsDevice.SetRenderTarget(null);
@@ -773,10 +771,31 @@ Scene _sceneNum = Scene.Menu;
         }
     }
 
-    private void ApplyShadowMap()
+    /// Setea los estados de render para dibujar la escena SIN cambiar el render target
+    /// (durante el pase de color el target es la textura del post-procesador, no la pantalla).
+    private void SetSceneRenderStates()
     {
-        _road.SetShadowMap(_shadowMap, _lightViewProjection);
-        _playerVehicle.SetShadowMap(_shadowMap, _lightViewProjection);
+        GraphicsDevice.BlendState = BlendState.Opaque;
+        GraphicsDevice.DepthStencilState = DepthStencilState.Default;
+        GraphicsDevice.RasterizerState = _mainRasterizerState;
+        GraphicsDevice.SamplerStates[0] = SamplerState.LinearClamp;
+    }
+
+    private void SetLightingParams()
+    {
+        _texturedEffect.Parameters["LightDirection"]?.SetValue(_shadowMapRenderer.LightDirection);
+        _texturedEffect.Parameters["DebugView"]?.SetValue((float)_debugView);
+    }
+
+    private void DrawShadowMapPreview()
+    {
+        const int previewSize = 320;
+        var destination = new Rectangle(10, 10, previewSize, previewSize);
+
+        // Opaque para poder ver una textura de un solo canal (Single) sin que el alpha la oculte.
+        spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Opaque, SamplerState.PointClamp, DepthStencilState.None, RasterizerState.CullNone);
+        spriteBatch.Draw(_shadowMapRenderer.ShadowMap, destination, Color.White);
+        spriteBatch.End();
     }
 
     private void DrawBoundingBox(BoundingBox box, Camera camera, Color color)
@@ -861,7 +880,8 @@ Scene _sceneNum = Scene.Menu;
 
     protected override void UnloadContent()
     {
-        _shadowMap?.Dispose();
+        _shadowMapRenderer?.Dispose();
+        _shadowPostProcessor?.Dispose();
         Content.Unload();
 
         base.UnloadContent();

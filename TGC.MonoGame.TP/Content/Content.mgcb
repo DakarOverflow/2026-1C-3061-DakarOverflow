@@ -25,6 +25,12 @@
 /processorParam:DebugMode=Auto
 /build:Effects/TexturedShader.fx
 
+#begin Effects/ShadowPostProcess.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:Effects/ShadowPostProcess.fx
+
 #begin Effects/TxPixel.fx
 /importer:EffectImporter
 /processor:EffectProcessor

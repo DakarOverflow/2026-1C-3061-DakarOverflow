@@ -39,7 +39,7 @@ public class RectaAsfalto : Recta, IAssetLoader
         var roadColormap = content.Load<Texture2D>(AssetPaths.ContentFolder3D + "road-tiles/Textures/colormap");
         var suburbanColormap = content.Load<Texture2D>(AssetPaths.ContentFolder3D + "buildings/suburban/Textures/colormap");
         RectaAsfalto.LoadModel(content, "road-tiles/road-square", AssetPaths.ContentFolder3D + "road-tiles/road-square",
-            AssetPaths.ContentFolderEffects + "BasicShader", Color.Gray);
+            AssetPaths.ContentFolderEffects + "TexturedShader", Color.Gray);
         RectaAsfalto.LoadModel(content, "road-tiles/road-straight", AssetPaths.ContentFolder3D + "road-tiles/road-straight",
             AssetPaths.ContentFolderEffects + "TexturedShader", roadColormap);
         RectaAsfalto.LoadModel(content, "road-tiles/light-curved", AssetPaths.ContentFolder3D + "road-tiles/light-curved",

@@ -50,7 +50,7 @@ public class RectaTierraNieve : Recta, IAssetLoader
         var suburbanColormap = content.Load<Texture2D>(AssetPaths.ContentFolder3D + "buildings/suburban/Textures/colormap");
         var overlayTexture = content.Load<Texture2D>(AssetPaths.ContentFolder3D + "road-tiles/Textures/snow-texture-on-black-background");
         var towerdefenseColormap = content.Load<Texture2D>(AssetPaths.ContentFolder3D + "tower-defense-kit/Textures/colormap");
-        RectaTierraNieve.LoadModel(content, "road-tiles/road-square", AssetPaths.ContentFolder3D + "road-tiles/road-square", AssetPaths.ContentFolderEffects + "BasicShader", Color.DarkGreen);
+        RectaTierraNieve.LoadModel(content, "road-tiles/road-square", AssetPaths.ContentFolder3D + "road-tiles/road-square", AssetPaths.ContentFolderEffects + "TexturedShader", Color.DarkGreen);
         RectaTierraNieve.LoadModel(content, "tower-defense-kit/tile-straight", AssetPaths.ContentFolder3D + "tower-defense-kit/tile-straight",  AssetPaths.ContentFolderEffects + "TexturedShader", towerdefenseColormap, overlayTexture);
 
         RectaTierraNieve.LoadModel(content, "road-tiles/light-curved", AssetPaths.ContentFolder3D + "road-tiles/light-curved",

@@ -41,7 +41,7 @@ public class RectaNieve : Recta, IAssetLoader
         var towerdefenseColormap = content.Load<Texture2D>(AssetPaths.ContentFolder3D + "tower-defense-kit/Textures/colormap");
         
         // BASE
-        RectaNieve.LoadModel(content, "road-tiles/road-square", AssetPaths.ContentFolder3D + "road-tiles/road-square", AssetPaths.ContentFolderEffects + "BasicShader", Color.WhiteSmoke);
+        RectaNieve.LoadModel(content, "road-tiles/road-square", AssetPaths.ContentFolder3D + "road-tiles/road-square", AssetPaths.ContentFolderEffects + "TexturedShader", Color.WhiteSmoke);
         
         // RUTA
         RectaNieve.LoadModel(content, "tower-defense-kit/snow-tile-straight", AssetPaths.ContentFolder3D + "tower-defense-kit/snow-tile-straight",  AssetPaths.ContentFolderEffects + "TexturedShader", towerdefenseColormap);

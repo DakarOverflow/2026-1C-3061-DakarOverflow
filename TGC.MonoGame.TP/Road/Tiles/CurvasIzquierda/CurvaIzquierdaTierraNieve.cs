@@ -51,7 +51,7 @@ public class CurvaIzquierdaTierraNieve : CurvaIzquierda, IAssetLoader
         var suburbanColormap = content.Load<Texture2D>(AssetPaths.ContentFolder3D + "buildings/suburban/Textures/colormap");
         var overlayTexture = content.Load<Texture2D>(AssetPaths.ContentFolder3D + "road-tiles/Textures/snow-texture-on-black-background");
         var towerdefenseColormap = content.Load<Texture2D>(AssetPaths.ContentFolder3D + "tower-defense-kit/Textures/colormap");
-        CurvaIzquierdaTierraNieve.LoadModel(content, "road-tiles/road-square", AssetPaths.ContentFolder3D + "road-tiles/road-square", AssetPaths.ContentFolderEffects + "BasicShader", Color.DarkGreen);
+        CurvaIzquierdaTierraNieve.LoadModel(content, "road-tiles/road-square", AssetPaths.ContentFolder3D + "road-tiles/road-square", AssetPaths.ContentFolderEffects + "TexturedShader", Color.DarkGreen);
         CurvaIzquierdaTierraNieve.LoadModel(content, "tower-defense-kit/tile-corner-large", AssetPaths.ContentFolder3D + "tower-defense-kit/tile-corner-large", AssetPaths.ContentFolderEffects + "TexturedShader", towerdefenseColormap, overlayTexture);
         CurvaIzquierdaTierraNieve.LoadModel(content, "buildings/suburban/building-type-s", AssetPaths.ContentFolder3D + "buildings/suburban/building-type-s", AssetPaths.ContentFolderEffects + "TexturedShader", suburbanColormap);
     }

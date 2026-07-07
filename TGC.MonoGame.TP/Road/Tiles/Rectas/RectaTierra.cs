@@ -41,7 +41,7 @@ public class RectaTierra : Recta, IAssetLoader
         var towerdefenseColormap = content.Load<Texture2D>(AssetPaths.ContentFolder3D + "tower-defense-kit/Textures/colormap");
 
         // BASE
-        RectaTierra.LoadModel(content, "road-tiles/road-square", AssetPaths.ContentFolder3D + "road-tiles/road-square", AssetPaths.ContentFolderEffects + "BasicShader", Color.DarkGreen);
+        RectaTierra.LoadModel(content, "road-tiles/road-square", AssetPaths.ContentFolder3D + "road-tiles/road-square", AssetPaths.ContentFolderEffects + "TexturedShader", Color.DarkGreen);
         
         // RUTA
         RectaTierra.LoadModel(content, "tower-defense-kit/tile-straight", AssetPaths.ContentFolder3D + "tower-defense-kit/tile-straight",  AssetPaths.ContentFolderEffects + "TexturedShader", towerdefenseColormap);
