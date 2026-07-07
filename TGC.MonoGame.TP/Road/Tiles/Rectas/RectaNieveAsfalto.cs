@@ -203,17 +203,25 @@ public class RectaNieveAsfalto : Recta, IAssetLoader
             0f
         );
         // Luces
-        AddObject(
+        AddObstacle(
             modelMap.GetValueOrDefault("road-tiles/light-curved", null),
             new Vector3(5f, 5f, 7f),
             new Vector3(229f, 22f, 300f),
-            rotation + MathHelper.PiOver2
+            rotation + MathHelper.PiOver2,
+            new Vector3(70f, 240f, 70f),
+            new Vector3(0f, 120f, 0f),
+            10f,
+            0f
         );
-        AddObject(
+        AddObstacle(
             modelMap.GetValueOrDefault("road-tiles/light-curved", null),
             new Vector3(5f, 5f, 7f),
             new Vector3(229f, 22f, -300f),
-            rotation + MathHelper.PiOver2
+            rotation + MathHelper.PiOver2,
+            new Vector3(70f, 240f, 70f),
+            new Vector3(0f, 120f, 0f),
+            10f,
+            0f
         );
         // Other side
         // EDIFICIO 1
@@ -320,17 +328,25 @@ public class RectaNieveAsfalto : Recta, IAssetLoader
             0f
         );
         // Luces
-        AddObject(
+        AddObstacle(
             modelMap.GetValueOrDefault("road-tiles/light-curved", null),
             new Vector3(5f, 5f, 7f),
             new Vector3(-229f, 22f, 300f),
-            rotation + MathHelper.PiOver2 + MathHelper.Pi
+            rotation + MathHelper.PiOver2 + MathHelper.Pi,
+            new Vector3(70f, 240f, 70f),
+            new Vector3(0f, 120f, 0f),
+            10f,
+            0f
         );
-        AddObject(
+        AddObstacle(
             modelMap.GetValueOrDefault("road-tiles/light-curved", null),
             new Vector3(5f, 5f, 7f),
             new Vector3(-229f, 22f, -300f),
-            rotation + MathHelper.PiOver2 + MathHelper.Pi
+            rotation + MathHelper.PiOver2 + MathHelper.Pi,
+            new Vector3(70f, 240f, 70f),
+            new Vector3(0f, 120f, 0f),
+            10f,
+            0f
         );
 
 
