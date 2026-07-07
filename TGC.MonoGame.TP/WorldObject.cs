@@ -11,6 +11,7 @@ public class WorldObject
     private readonly CustomModel _model;
 
     private Matrix _world;
+    private Light _light;
 
     public CustomModel Model => _model;
 
@@ -32,6 +33,12 @@ public class WorldObject
 
     public virtual void Update(GameTime gameTime)
     {
+    }
+
+    public virtual void SetLight(Light light)
+    {
+        _light = light;
+        _model.SetLight(light);
     }
 
     public virtual void SetShadowMap(Texture2D shadowMap, Matrix lightViewProjection)

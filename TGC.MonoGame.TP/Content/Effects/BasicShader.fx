@@ -17,6 +17,7 @@ float4x4 World;
 float4x4 View;
 float4x4 Projection;
 float4x4 LightViewProjection;
+float3 LightDirection = normalize(float3(1.0, 1.0, 1.0));
 
 float3 DiffuseColor;
 
@@ -24,10 +25,10 @@ float Time = 0;
 float ShadowBias = 0.003f;
 float ShadowStrength = 0.55f;
 
-Texture2D ShadowMap;
+Texture2D ShadowMapTexture;
 sampler2D shadowSampler = sampler_state
 {
-    Texture = (ShadowMap);
+    Texture = (ShadowMapTexture);
     MagFilter = Point;
     MinFilter = Point;
     AddressU = Clamp;

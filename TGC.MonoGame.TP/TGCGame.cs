@@ -25,8 +25,8 @@ public class TGCGame : Game
     private bool _showHitboxes = false;
     private RenderTarget2D _shadowMap;
     private Matrix _lightViewProjection;
+    private Light _light;
     private const int ShadowMapSize = 2048;
-    private static readonly Vector3 LightDirection = Vector3.Normalize(new Vector3(1f, 1f, 1f));
     private readonly RasterizerState _mainRasterizerState = new()
     {
         CullMode = CullMode.None
@@ -130,6 +130,7 @@ Scene _sceneNum = Scene.Menu;
             GraphicsDevice
         );
 
+        _light = new Light(Vector3.Zero, Vector3.Zero);
         _followCamera = new FollowCamera(GraphicsDevice);
 
         Window.ClientSizeChanged += _freeCamera.OnClientSizeChanged;
@@ -605,6 +606,12 @@ Scene _sceneNum = Scene.Menu;
         // SHADOW MAP
         // =========================
         UpdateLightViewProjection();
+        _road.SetLight(_light);
+        _playerVehicle.SetLight(_light);
+        foreach (var collectible in _collectibles)
+        {
+            collectible.SetLight(_light);
+        }
         DrawShadowMap();
         ResetMainRenderState(true);
         ApplyShadowMap();
@@ -725,10 +732,8 @@ Scene _sceneNum = Scene.Menu;
     private void UpdateLightViewProjection()
     {
         var center = _playerVehicle?.Position ?? Vector3.Zero;
-        var lightPosition = center + LightDirection * 1600f;
-        var lightView = Matrix.CreateLookAt(lightPosition, center, Vector3.Up);
-        var lightProjection = Matrix.CreateOrthographic(3200f, 3200f, 1f, 5000f);
-        _lightViewProjection = lightView * lightProjection;
+        _light.Follow(center);
+        _lightViewProjection = _light.ViewProjection;
     }
 
     private void DrawShadowMap()

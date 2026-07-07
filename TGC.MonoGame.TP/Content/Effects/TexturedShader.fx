@@ -13,6 +13,7 @@ float4x4 Projection;
 float3 CameraPosition;
 float4x4 WorldInverseTranspose;
 float4x4 LightViewProjection;
+float3 LightDirection = normalize(float3(1.0, 1.0, 1.0));
 bool UseLighting = true;
 float ShadowBias = 0.0005f; // Reducido un poco para evitar que la sombra se separe del objeto
 float ShadowStrength = 0.55f;
@@ -27,10 +28,10 @@ sampler2D textureSampler = sampler_state
     AddressV = Clamp;
 };
 
-Texture2D ShadowMap;
+Texture2D ShadowMapTexture;
 sampler2D shadowSampler = sampler_state
 {
-    Texture = (ShadowMap);
+    Texture = (ShadowMapTexture);
     MagFilter = Point;
     MinFilter = Point;
     AddressU = Clamp;
@@ -194,8 +195,7 @@ float4 MainPS(VertexShaderOutput input) : COLOR
     }
 
     float3 ambientColor = float3(0.2, 0.25, 0.35);
-    // FIX: Vector L corregido para que apunte HACIA la luz de forma correcta
-    float3 L = normalize(-float3(1.0, 1.0, 1.0)); 
+    float3 L = normalize(LightDirection);
     float3 diffuseColor = float3(0.8, 0.8, 0.8);
     float3 specularColor = float3(0.5, 0.5, 0.5);
     float3 N = normalize(input.normal);

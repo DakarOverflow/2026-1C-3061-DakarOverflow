@@ -10,6 +10,7 @@ public class CustomModel
 {
     private Effect _effect;
     private Model _model;
+    private Light _light;
 
     public Model Model => _model;
 
@@ -62,9 +63,15 @@ public class CustomModel
         }
     }
 
+    public void SetLight(Light light)
+    {
+        _light = light;
+    }
+
     public void SetShadowMap(Texture2D shadowMap, Matrix lightViewProjection)
     {
         _effect.Parameters["ShadowMap"]?.SetValue(shadowMap);
+        _effect.Parameters["ShadowMapTexture"]?.SetValue(shadowMap);
         _effect.Parameters["LightViewProjection"]?.SetValue(lightViewProjection);
     }
 
@@ -128,6 +135,9 @@ public class CustomModel
         _effect.Parameters["Projection"]?.SetValue(projection);
 
         _effect.Parameters["UseLighting"]?.SetValue(useLighting);
+
+        var lightDirection = _light?.Direction ?? Vector3.Normalize(new Vector3(1f, 1f, 1f));
+        _effect.Parameters["LightDirection"]?.SetValue(lightDirection);
 
         // 2. Determinar y asignar la técnica correcta basándonos en la textura
         EffectTechnique activeTechnique;

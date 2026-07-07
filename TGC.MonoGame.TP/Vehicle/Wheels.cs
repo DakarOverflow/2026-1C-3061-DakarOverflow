@@ -81,6 +81,11 @@ public class Wheel
         return world;
     }
 
+    public void SetLight(Light light)
+    {
+        _model.SetLight(light);
+    }
+
     public void SetShadowMap(Texture2D shadowMap, Matrix lightViewProjection)
     {
         _model.SetShadowMap(shadowMap, lightViewProjection);

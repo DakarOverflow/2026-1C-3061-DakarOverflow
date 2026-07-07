@@ -363,6 +363,15 @@ public class Vehicle
             Matrix.CreateRotationY(RotationY + ModelRotationOffset) *
             Matrix.CreateTranslation(Position);
     }
+    public void SetLight(Light light)
+    {
+        _bodyModel.SetLight(light);
+        _frontLeftWheel.SetLight(light);
+        _frontRightWheel.SetLight(light);
+        _backLeftWheel.SetLight(light);
+        _backRightWheel.SetLight(light);
+    }
+
     public void SetShadowMap(Texture2D shadowMap, Matrix lightViewProjection)
     {
         _bodyModel.SetShadowMap(shadowMap, lightViewProjection);

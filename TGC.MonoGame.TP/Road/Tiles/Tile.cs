@@ -292,6 +292,22 @@ public abstract class Tile
         }
     }
 
+    public void SetLight(Light light)
+    {
+        foreach (var obj in _tileObjects)
+        {
+            obj.SetLight(light);
+        }
+
+        foreach (var obstacle in _obstacles)
+        {
+            if (obstacle.IsActive)
+            {
+                obstacle.SetLight(light);
+            }
+        }
+    }
+
     public void SetShadowMap(Texture2D shadowMap, Matrix lightViewProjection)
     {
         foreach (var obj in _tileObjects)

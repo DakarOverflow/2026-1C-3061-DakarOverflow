@@ -65,6 +65,16 @@ public class Road
         }
     }
 
+    public void SetLight(Light light)
+    {
+        int start = Math.Max(0, this._tiles.Count - 10);
+
+        for (int i = start; i < this._tiles.Count; i++)
+        {
+            this._tiles[i].SetLight(light);
+        }
+    }
+
     public void SetShadowMap(Texture2D shadowMap, Matrix lightViewProjection)
     {
         int start = Math.Max(0, this._tiles.Count - 10);
