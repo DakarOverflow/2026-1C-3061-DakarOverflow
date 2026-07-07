@@ -29,11 +29,11 @@ public class TGCGame : Game
     private static readonly Vector3 LightDirection = Vector3.Normalize(new Vector3(1f, 1f, 1f));
     private readonly RasterizerState _mainRasterizerState = new()
     {
-        CullMode = CullMode.None
+        CullMode = CullMode.CullCounterClockwiseFace
     };
     private readonly RasterizerState _shadowRasterizerState = new()
     {
-        CullMode = CullMode.None,
+        CullMode = CullMode.CullCounterClockwiseFace,
         DepthBias = 0f,
         SlopeScaleDepthBias = 0f
     };
@@ -44,6 +44,8 @@ public class TGCGame : Game
     private Camera _cameraInUse;
     private bool _useFreeCamera;
     private bool _mouseCaptured = true;
+
+    public Vector3 _freeCameraOffset;
 
     // TECLADO
     private KeyboardState _previousKeyboardState;
@@ -117,6 +119,8 @@ Scene _sceneNum = Scene.Menu;
         // _worldMenuCar = Matrix.Identity;
         // Modelos Autos Menu
         // (Se movieron a MainMenu.cs)
+        _freeCameraOffset = new Vector3(110f, 50f, 110f);
+
 
         IsMouseVisible = false;
 
@@ -125,7 +129,7 @@ Scene _sceneNum = Scene.Menu;
         GraphicsDevice.RasterizerState = _mainRasterizerState;
 
         _freeCamera = new FreeCamera(
-            new Vector3(110f, 10f, 110f),
+            _freeCameraOffset,
             Vector3.Zero,
             GraphicsDevice
         );
@@ -454,6 +458,7 @@ Scene _sceneNum = Scene.Menu;
             _previousKeyboardState.IsKeyUp(Keys.F))
         {
             _useFreeCamera = !_useFreeCamera;
+            _freeCamera._position = _playerVehicle.GetWorld().Translation + _freeCameraOffset ;
         }
         //GOD MODE 
         if (keyboardState.IsKeyDown(Keys.G) &&_previousKeyboardState.IsKeyUp(Keys.G)) _godMode = !_godMode ;
