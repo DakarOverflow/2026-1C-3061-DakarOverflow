@@ -1008,6 +1008,34 @@ Scene _sceneNum = Scene.Menu;
 
         _mainMenu.Reset();
 
+        // Resetear vehículos a sus posiciones iniciales y restablecer estadísticas
+        _lightVehicle.Reset(Vector3.Zero + new Vector3(0f,-34f,0f));
+        _mediumVehicle.Reset(Vector3.Zero + new Vector3(0f,-34f,0f));
+        _heavyVehicle.Reset(Vector3.Zero + new Vector3(0f,-34f,0f));
+
+        // Recrear calle
+        _road = new Road(
+            new AsphaltBiome(
+                null,
+                new GameMode(BiomeType.RANDOM, _currentDifficulty)
+            ).GenerateNewTileOf(
+                TileType.STRAIGHT_LINE,
+                new Vector3(0f, -50f, 0f),
+                0f
+            ),
+            _obstacleModels
+        );
+
+        // Re-inicializar cámaras
+        _freeCamera = new FreeCamera(
+            new Vector3(110f, 10f, 110f),
+            Vector3.Zero,
+            GraphicsDevice
+        );
+        _followCamera = new FollowCamera(GraphicsDevice);
+        _useFreeCamera = false;
+        _cameraInUse = _followCamera;
+
         _mouseCaptured = true;
         IsMouseVisible = false;
     }
