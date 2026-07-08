@@ -54,6 +54,30 @@ public class HUD
 
     public void Draw(SpriteBatch spriteBatch, GraphicsDevice graphicsDevice, Vehicle playerVehicle, CameraStc cameraMenu)
     {
+        int W = graphicsDevice.Viewport.Width;
+        int H = graphicsDevice.Viewport.Height;
+
+        // Calculamos la posición 3D de los iconos para que se proyecten en las coordenadas 2D deseadas.
+        // Centro del velocímetro en W - 150 -> Centro simétrico de las barras en X = 150.
+        // El combustible se ubica a la izquierda (X = 130) y la salud a la derecha (X = 170).
+        // La altura del centro del velocímetro es Y = H - 80.
+        float fuelX2D = 130f;
+        float wrenchX2D = 170f;
+        float iconY2D = H - 80f;
+
+        // Moneda del puntaje se ubica arriba a la derecha, alineada simétricamente con el velocímetro
+        float coinX2D = W - 180f;
+        float coinY2D = 80f;
+
+        Vector3 fuelWorldPos = GetWorldPositionFromScreen(graphicsDevice, cameraMenu, fuelX2D, iconY2D);
+        _worldFuelTank = Matrix.CreateScale(0.15f) * Matrix.CreateTranslation(fuelWorldPos);
+
+        Vector3 wrenchWorldPos = GetWorldPositionFromScreen(graphicsDevice, cameraMenu, wrenchX2D, iconY2D);
+        _worldWrench = Matrix.CreateScale(0.4f) * Matrix.CreateTranslation(wrenchWorldPos);
+
+        Vector3 coinWorldPos = GetWorldPositionFromScreen(graphicsDevice, cameraMenu, coinX2D, coinY2D);
+        _worldCoin = Matrix.CreateScale(0.2f) * Matrix.CreateRotationZ(MathHelper.PiOver4) * Matrix.CreateTranslation(coinWorldPos);
+
         _fuelTankModel.DrawUnlit(_worldFuelTank, cameraMenu.View, cameraMenu.Projection);
         _wrenchModel.DrawUnlit(_worldWrench, cameraMenu.View, cameraMenu.Projection);
         _coinModel.DrawUnlit(_worldCoin, cameraMenu.View, cameraMenu.Projection);
@@ -122,8 +146,8 @@ public class HUD
     {
         Vector3 screenPos = graphicsDevice.Viewport.Project(Vector3.Zero, cameraMenu.Projection, cameraMenu.View, _worldCoin);
         
-        int x = (int)screenPos.X + 40;
-        int y = (int)screenPos.Y - 20; 
+        int x = (int)screenPos.X + 30;
+        int y = (int)screenPos.Y - 12; 
         
         string scoreText = playerVehicle.Score.ToString();
         
@@ -192,5 +216,22 @@ public class HUD
         spriteBatch.DrawString(_font, speedText, center + new Vector2(-speedTextSize.X / 2, 20), Color.White, 0, Vector2.Zero, 0.5f, SpriteEffects.None, 0);
 
         spriteBatch.End();
+    }
+
+    private Vector3 GetWorldPositionFromScreen(GraphicsDevice graphicsDevice, CameraStc cameraMenu, float screenX, float screenY)
+    {
+        var viewport = graphicsDevice.Viewport;
+        Vector3 nearSource = new Vector3(screenX, screenY, 0f);
+        Vector3 farSource = new Vector3(screenX, screenY, 1f);
+
+        Vector3 nearPoint = viewport.Unproject(nearSource, cameraMenu.Projection, cameraMenu.View, Matrix.Identity);
+        Vector3 farPoint = viewport.Unproject(farSource, cameraMenu.Projection, cameraMenu.View, Matrix.Identity);
+
+        float directionZ = farPoint.Z - nearPoint.Z;
+        if (Math.Abs(directionZ) < 0.0001f)
+            return nearPoint;
+
+        float t = -nearPoint.Z / directionZ;
+        return nearPoint + t * (farPoint - nearPoint);
     }
 }

@@ -36,6 +36,14 @@ public class MainMenu
 
     private KeyboardState _previousKeyboardState;
 
+    public void Reset()
+    {
+        CurrentState = MenuState.Home;
+        ChosenVehicle = SelectedVehicle.None;
+        ChosenDifficulty = GameDifficulty.EASY;
+        IsFinished = false;
+    }
+
     public void LoadContent(ContentManager content)
     {
         var carKitColormap = content.Load<Texture2D>(AssetPaths.ContentFolder3D + "car-kit/Textures/colormap");
@@ -167,13 +175,14 @@ public class MainMenu
             game.DrawCenterTextY("G: God Mode", height * 0.5f, 1, Color.LightBlue);
             game.DrawCenterTextY("H: Hitboxes", height * 0.6f, 1, Color.LightCoral);
             game.DrawCenterTextY("F: Modo Foto", height * 0.7f, 1, Color.LightGreen);
-            
+            game.DrawCenterTextY("P: FullScreen ", height * 0.78f, 1, Color.LightCyan);
+
             game.DrawCenterTextY("ESC - Volver", height * 0.85f, 1, Color.Gray);
         }
         else if (CurrentState == MenuState.SelectingVehicle)
         {
             game.DrawCenterTextY("SELECCIONA TU VEHICULO", height * 0.15f, 2, Color.White);
-            game.DrawCenterTextY("Preciona 1, 2 o 3", height * 0.25f, 1, Color.White);
+            game.DrawCenterTextY("Presiona 1, 2 o 3", height * 0.25f, 1, Color.White);
 
             Matrix scale = Matrix.CreateScale(0.08f);
             Matrix rotation = Matrix.CreateRotationY((float)gameTime.TotalGameTime.TotalSeconds);

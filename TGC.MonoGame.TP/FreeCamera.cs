@@ -11,7 +11,7 @@ public class FreeCamera : Camera
     private const float DefaultSpeed = 1000f;
     private const float DefaultMouseSensitivity = 0.2f;
 
-    private Vector3 _position;
+    public Vector3 _position;
     private Vector3 _target;
     private float _yaw;
     private float _pitch;

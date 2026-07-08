@@ -1,5 +1,4 @@
 using System;
-using ImGuiNET;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Graphics;
@@ -46,7 +45,7 @@ public class Vehicle
 
     public const float ScaleFactor = 0.5f;
 
-    private readonly Vector3 _boundingBoxHalfSize = new Vector3(100f, 50f, 100f) * ScaleFactor;
+    private readonly Vector3 _boundingBoxHalfSize;
     private readonly Vector3 _boundingBoxOffset = new Vector3(0f, 40f, 0f) * ScaleFactor;
 
 
@@ -61,7 +60,7 @@ public class Vehicle
     private bool _exploded;
 
     // Constructor
-    public Vehicle(CustomModel bodyModel, CustomModel wheelModel, Vector3 initialPosition, VehicleStats stats, VehicleType type, Vector3 frontLeftWheelPosition, Vector3 backLeftWheelPosition)
+    public Vehicle(CustomModel bodyModel, CustomModel wheelModel, Vector3 initialPosition, VehicleStats stats, VehicleType type, Vector3 boundingBoxHalfSize, Vector3 frontLeftWheelPosition, Vector3 backLeftWheelPosition)
     {
         _bodyModel = bodyModel;
         Position = initialPosition;
@@ -70,6 +69,8 @@ public class Vehicle
         RotationY = 0f;
         _speed = 0f;
         _currentAcceleration = 0f;
+
+        _boundingBoxHalfSize = boundingBoxHalfSize * ScaleFactor;
 
         // Se inicializan los medidores en su máximo en base a los stats del tipo de vehículo seleccionado.
         CurrentFuel = _stats.FuelCapacity;
@@ -86,6 +87,28 @@ public class Vehicle
 
         // --- PREPARACIÓN PARA COLISIONES ---
         // Inicializar el atributo de colisiones.
+    }
+
+    public void Reset(Vector3 initialPosition)
+    {
+        Position = initialPosition;
+        RotationY = 0f;
+        _speed = 0f;
+        _currentAcceleration = 0f;
+        _wheelSpin = 0f;
+        _wheelSteeringAngle = 0f;
+        _exploded = false;
+
+        CurrentFuel = _stats.FuelCapacity;
+        CurrentHealth = _stats.MaxHealth;
+        Score = 0;
+
+        _frontLeftWheel.Detached = false;
+        _frontRightWheel.Detached = false;
+        _backLeftWheel.Detached = false;
+        _backRightWheel.Detached = false;
+
+        UpdateBoundingBox();
     }
 
     public void Update(GameTime gameTime)
@@ -308,6 +331,21 @@ public class Vehicle
         _frontRightWheel.Detach(new Vector3(r.Next(-500,500), 800, r.Next(-500,500)));
         _backLeftWheel.Detach(new Vector3(r.Next(-500,500), 800, r.Next(-500,500)));
         _backRightWheel.Detach(new Vector3(r.Next(-500,500), 800, r.Next(-500,500)));
+    }
+
+    // ==========================================
+    // MÉTODOS PARA EL LÍMITE DEL MUNDO
+    // ==========================================
+    // Pequeña penalización al rozar el borde de la calle
+    public void ApplyOffRoadPenalty()
+    {
+        _speed *= 0.97f;
+    }
+
+    // Permite recalcular las hitboxes después de que algo externo (como Road) mueva Position
+    public void RefreshCollisionVolumes()
+    {
+        UpdateBoundingBox();
     }
     // ==========================================
     // MÉTODOS PARA DIBUJAR EL VEHÍCULO

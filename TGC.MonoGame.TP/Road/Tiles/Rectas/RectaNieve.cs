@@ -41,7 +41,7 @@ public class RectaNieve : Recta, IAssetLoader
         var towerdefenseColormap = content.Load<Texture2D>(AssetPaths.ContentFolder3D + "tower-defense-kit/Textures/colormap");
         
         // BASE
-        RectaNieve.LoadModel(content, "road-tiles/road-square", AssetPaths.ContentFolder3D + "road-tiles/road-square", AssetPaths.ContentFolderEffects + "BasicShader", Color.WhiteSmoke);
+        RectaNieve.LoadModel(content, "road-tiles/road-square", AssetPaths.ContentFolder3D + "road-tiles/road-square", AssetPaths.ContentFolderEffects + "TexturedShader", Color.WhiteSmoke);
         
         // RUTA
         RectaNieve.LoadModel(content, "tower-defense-kit/snow-tile-straight", AssetPaths.ContentFolder3D + "tower-defense-kit/snow-tile-straight",  AssetPaths.ContentFolderEffects + "TexturedShader", towerdefenseColormap);
@@ -195,17 +195,25 @@ public class RectaNieve : Recta, IAssetLoader
             0f
         );
         // Luces
-        AddObject(
+        AddObstacle(
             modelMap.GetValueOrDefault("road-tiles/light-curved", null),
             new Vector3(5f, 5f, 7f),
             new Vector3(229f, 22f, 300f),
-            rotation + MathHelper.PiOver2
+            rotation + MathHelper.PiOver2,
+            new Vector3(70f, 240f, 70f),
+            new Vector3(0f, 120f, 0f),
+            10f,
+            0f
         );
-        AddObject(
+        AddObstacle(
             modelMap.GetValueOrDefault("road-tiles/light-curved", null),
             new Vector3(5f, 5f, 7f),
             new Vector3(229f, 22f, -300f),
-            rotation + MathHelper.PiOver2
+            rotation + MathHelper.PiOver2,
+            new Vector3(70f, 240f, 70f),
+            new Vector3(0f, 120f, 0f),
+            10f,
+            0f
         );
         // Other side
        // EDIFICIO 1
@@ -312,17 +320,25 @@ public class RectaNieve : Recta, IAssetLoader
             0f
         );
         // Luces
-        AddObject(
+        AddObstacle(
             modelMap.GetValueOrDefault("road-tiles/light-curved", null),
             new Vector3(5f, 5f, 7f),
             new Vector3(-229f, 22f, 300f),
-            rotation + MathHelper.PiOver2 + MathHelper.Pi
+            rotation + MathHelper.PiOver2 + MathHelper.Pi,
+            new Vector3(70f, 240f, 70f),
+            new Vector3(0f, 120f, 0f),
+            10f,
+            0f
         );
-        AddObject(
+        AddObstacle(
             modelMap.GetValueOrDefault("road-tiles/light-curved", null),
             new Vector3(5f, 5f, 7f),
             new Vector3(-229f, 22f, -300f),
-            rotation + MathHelper.PiOver2 + MathHelper.Pi
+            rotation + MathHelper.PiOver2 + MathHelper.Pi,
+            new Vector3(70f, 240f, 70f),
+            new Vector3(0f, 120f, 0f),
+            10f,
+            0f
         );
 
         var collectibleToSpawn = biome.GetCollectibleToSpawn();

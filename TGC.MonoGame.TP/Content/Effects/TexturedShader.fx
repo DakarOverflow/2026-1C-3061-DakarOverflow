@@ -14,8 +14,16 @@ float3 CameraPosition;
 float4x4 WorldInverseTranspose;
 float4x4 LightViewProjection;
 bool UseLighting = true;
-float ShadowBias = 0.0005f; // Reducido un poco para evitar que la sombra se separe del objeto
+float ShadowBias = 0.0008f;
 float ShadowStrength = 0.55f;
+// Tiene que coincidir con ShadowMapRenderer (tamano del render target del shadow map)
+float ShadowMapSize = 1024.0f;
+// Tiene que coincidir con ShadowMapRenderer.LightDirection
+float3 LightDirection = float3(1.0f, 1.0f, 1.0f);
+// DEBUG: 0 = normal, 1 = ver normales, 2 = ver factor difuso, 3 = textura fullbright
+float DebugView = 0.0f;
+// Color plano para la técnica BasicColorDrawing (piso road-square, sin textura).
+float3 DiffuseColor = float3(1.0f, 1.0f, 1.0f);
 
 Texture2D ModelTexture;
 sampler2D textureSampler = sampler_state
@@ -140,7 +148,7 @@ float4 ShadowPS(ShadowVertexShaderOutput input) : COLOR
     return float4(depth, depth, depth, 1.0);
 }
 
-float GetShadowFactor(float4 lightPosition)
+float GetShadowFactor(float4 lightPosition, float3 Normal, float3 LightDirection)
 {
     if (lightPosition.w <= 0.0)
     {
@@ -148,11 +156,11 @@ float GetShadowFactor(float4 lightPosition)
     }
 
     float3 projectionCoordinates = lightPosition.xyz / lightPosition.w;
-    
+
     // Invertir Y para mapear espacio de proyección a coordenadas UV de textura
     float2 shadowTexCoord = projectionCoordinates.xy * float2(0.5, -0.5) + 0.5;
 
-    // FIX: Usamos la nueva función unificada para leer la profundidad del píxel actual
+    // Profundidad homogénea del píxel actual
     float currentDepth = FinalizeDepth(lightPosition);
 
     // Fuera de los límites del mapa de sombras = No hay sombra
@@ -161,14 +169,68 @@ float GetShadowFactor(float4 lightPosition)
         return 1.0;
     }
 
-    // Aplicar Bias para evitar el z-fighting (shadow acne)
-    currentDepth -= ShadowBias;
-    
-    // Leer el mapa de sombras grabado previamente
-    float closestDepth = tex2D(shadowSampler, shadowTexCoord).r;
-    
-    // Si la profundidad actual es mayor que la más cercana grabada, el píxel está en sombra
-    return currentDepth <= closestDepth ? 1.0 : (1.0 - ShadowStrength);
+    // Bias dependiente de la pendiente, más grande en superficies rasantes a la luz,
+    // para evitar shadow acne sin generar demasiado peter-panning en superficies frontales
+    float slope = 1.0 - saturate(dot(Normal, LightDirection));
+    float bias = ShadowBias + ShadowBias * 4.0 * slope;
+    currentDepth -= bias;
+
+    // Filtrado PCF 3x3, promediamos 9 muestras alrededor del texel para suavizar el borde
+    float texelSize = 1.0 / ShadowMapSize;
+    float shadow = 0.0;
+
+    [unroll]
+    for (int x = -1; x <= 1; x++)
+    {
+        [unroll]
+        for (int y = -1; y <= 1; y++)
+        {
+            float sampleDepth = tex2D(shadowSampler, shadowTexCoord + float2(x, y) * texelSize).r;
+            shadow += (currentDepth <= sampleDepth) ? 1.0 : (1.0 - ShadowStrength);
+        }
+    }
+
+    return shadow / 9.0;
+}
+
+// Iluminación compartida por la técnica texturizada y la de color plano.
+// albedo = color base (textura o DiffuseColor). Devuelve el color final RGB.
+float3 ShadeSurface(float3 albedo, float3 rawNormal, float3 worldPosition, float4 lightPosition)
+{
+    // Ambiente alto = piso de brillo: ninguna superficie queda negra aunque no mire al sol.
+    float3 ambientColor = float3(0.55, 0.57, 0.62);
+    // lightDir: superficie -> luz. +(1,1,1) = sol desde arriba, consistente con las sombras.
+    float3 lightDir = normalize(LightDirection);
+    float3 diffuseColorK = float3(0.6, 0.6, 0.6);
+    float3 specularColor = float3(0.5, 0.5, 0.5);
+    float shininess = 32.0;
+
+    float3 Normal = normalize(rawNormal);
+    float3 viewDirection = normalize(CameraPosition - worldPosition);
+    // Two-sided: algunos modelos (el piso road-square) tienen las normales invertidas. Como
+    // dibujamos con backface culling, la cara visible siempre mira a la cámara: si su normal
+    // apunta al lado contrario, la damos vuelta. Así todo se ilumina de forma coherente.
+    if (dot(Normal, viewDirection) < 0.0)
+        Normal = -Normal;
+    float3 halfVector = normalize(viewDirection + lightDir);
+
+    // DEBUG VIEWS (tecla U en el juego)
+    if (DebugView > 0.5 && DebugView < 1.5) return Normal * 0.5 + 0.5;              // 1: normales como color
+    if (DebugView > 1.5 && DebugView < 2.5) return saturate(dot(lightDir, Normal)).xxx; // 2: factor difuso
+    if (DebugView > 2.5) return albedo;                                            // 3: albedo sin iluminar
+
+    float3 ambientLight = ambientColor;
+    // Las sombras ya NO se calculan acá: se aplican como post-procesado (ShadowPostProcess.fx).
+    float shadowFactor = 1.0;
+
+    // Half-Lambert: mapea dot de [-1,1] a [0,1] envolviendo la luz, así el lado opuesto
+    // al sol queda tenue en vez de negro. La sombra afecta difuso y especular, nunca al ambiente.
+    float ndotl = dot(Normal, lightDir);
+    float diffuseFactor = saturate(ndotl * 0.5 + 0.5);
+    float3 diffuseLight = diffuseFactor * diffuseColorK * shadowFactor;
+    float3 specularLight = pow(saturate(dot(halfVector, Normal)), shininess) * specularColor * step(0.0, ndotl) * shadowFactor;
+
+    return (ambientLight + diffuseLight) * albedo + specularLight;
 }
 
 float4 MainPS(VertexShaderOutput input) : COLOR
@@ -193,29 +255,34 @@ float4 MainPS(VertexShaderOutput input) : COLOR
         return finalColor;
     }
 
-    float3 ambientColor = float3(0.2, 0.25, 0.35);
-    // FIX: Vector L corregido para que apunte HACIA la luz de forma correcta
-    float3 L = normalize(-float3(1.0, 1.0, 1.0)); 
-    float3 diffuseColor = float3(0.8, 0.8, 0.8);
-    float3 specularColor = float3(0.5, 0.5, 0.5);
-    float3 N = normalize(input.normal);
-    float3 viewDirection = normalize(CameraPosition - input.worldPosition);
-    float3 halfVector = normalize(viewDirection + L);
-    float1 shininess = 32;
-    float1 ka = 0.8;
-    float1 kd = 1;
-    float1 ks = 1;
-    
-    float3 ambientLight = ambientColor * ka;
-    
-    // Calculamos el factor de sombra
-    float shadowFactor = GetShadowFactor(input.lightPosition);
-    
-    // El factor de sombra afecta al difuso y al especular, pero NUNCA al ambiental
-    float3 diffuseLight = saturate(dot(L, N)) * diffuseColor * kd * shadowFactor;
-    float3 specularLight = pow(saturate(dot(halfVector, N)), shininess) * specularColor * ks * step(0.0, dot(N, L)) * shadowFactor;
-    
-    return float4((ambientLight + diffuseLight) * finalColor.xyz + specularLight, finalColor.a);
+    return float4(ShadeSurface(finalColor.xyz, input.normal, input.worldPosition, input.lightPosition), finalColor.a);
+}
+
+// Técnica de color plano CON iluminación (para el piso road-square, que antes usaba BasicShader).
+struct ColorVertexShaderInput
+{
+    float4 Position : POSITION0;
+    float3 normal : NORMAL;
+};
+
+VertexShaderOutput ColorVS(in ColorVertexShaderInput input)
+{
+    VertexShaderOutput output = (VertexShaderOutput)0;
+
+    float4 worldPosition = mul(input.Position, World);
+    float4 viewPosition = mul(worldPosition, View);
+    output.Position = mul(viewPosition, Projection);
+    output.lightPosition = mul(worldPosition, LightViewProjection);
+
+    output.TextureCoordinate = float2(0.0, 0.0);
+    output.normal = normalize(mul(input.normal, (float3x3)WorldInverseTranspose));
+    output.worldPosition = worldPosition.xyz;
+    return output;
+}
+
+float4 ColorPS(VertexShaderOutput input) : COLOR
+{
+    return float4(ShadeSurface(DiffuseColor, input.normal, input.worldPosition, input.lightPosition), 1.0);
 }
 
 technique TexturedDrawing
@@ -233,6 +300,15 @@ technique TexturedUnlitDrawing
 	{
 		VertexShader = compile VS_SHADERMODEL MainUnlitVS();
 		PixelShader = compile PS_SHADERMODEL MainPS();
+	}
+};
+
+technique BasicColorDrawing
+{
+	pass P0
+	{
+		VertexShader = compile VS_SHADERMODEL ColorVS();
+		PixelShader = compile PS_SHADERMODEL ColorPS();
 	}
 };
 

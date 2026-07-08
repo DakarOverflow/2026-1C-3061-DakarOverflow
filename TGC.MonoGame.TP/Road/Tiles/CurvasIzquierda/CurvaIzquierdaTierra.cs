@@ -42,7 +42,7 @@ public class CurvaIzquierdaTierra : CurvaIzquierda, IAssetLoader
         var towerdefenseColormap = content.Load<Texture2D>(AssetPaths.ContentFolder3D + "tower-defense-kit/Textures/colormap");
         
         // BASE
-        CurvaIzquierdaTierra.LoadModel(content, "road-tiles/road-square", AssetPaths.ContentFolder3D + "road-tiles/road-square", AssetPaths.ContentFolderEffects + "BasicShader", Color.DarkGreen);
+        CurvaIzquierdaTierra.LoadModel(content, "road-tiles/road-square", AssetPaths.ContentFolder3D + "road-tiles/road-square", AssetPaths.ContentFolderEffects + "TexturedShader", Color.DarkGreen);
 
         // RUTA
         CurvaIzquierdaTierra.LoadModel(content, "tower-defense-kit/tile-corner-large", AssetPaths.ContentFolder3D + "tower-defense-kit/tile-corner-large", AssetPaths.ContentFolderEffects + "TexturedShader", towerdefenseColormap);

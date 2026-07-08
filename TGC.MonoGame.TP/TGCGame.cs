@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -23,19 +23,17 @@ public class TGCGame : Game
     // SHADDER PARA DEBUGUEAR
     private Effect _debugEffect;
     private bool _showHitboxes = false;
-    private RenderTarget2D _shadowMap;
-    private Matrix _lightViewProjection;
-    private const int ShadowMapSize = 2048;
-    private static readonly Vector3 LightDirection = Vector3.Normalize(new Vector3(1f, 1f, 1f));
+    private ShadowMapRenderer _shadowMapRenderer;
+    private ShadowPostProcessor _shadowPostProcessor;
+    // DEBUG SHADOWS: T = activar/desactivar sombras, Y = ver el shadow map en pantalla
+    private bool _shadowsEnabled = true;
+    private bool _showShadowMap = false;
+    // DEBUG LIGHTING: U = ciclar vista (0=normal, 1=normales, 2=difuso, 3=fullbright)
+    private int _debugView = 0;
+    private Effect _texturedEffect;
     private readonly RasterizerState _mainRasterizerState = new()
     {
-        CullMode = CullMode.None
-    };
-    private readonly RasterizerState _shadowRasterizerState = new()
-    {
-        CullMode = CullMode.None,
-        DepthBias = 0f,
-        SlopeScaleDepthBias = 0f
+        CullMode = CullMode.CullCounterClockwiseFace
     };
 
     // CAMARAS
@@ -44,6 +42,8 @@ public class TGCGame : Game
     private Camera _cameraInUse;
     private bool _useFreeCamera;
     private bool _mouseCaptured = true;
+
+    public Vector3 _freeCameraOffset;
 
     // TECLADO
     private KeyboardState _previousKeyboardState;
@@ -89,6 +89,7 @@ Scene _sceneNum = Scene.Menu;
 
     private MainMenu _mainMenu;
     private HUD _hud;
+    private List<CustomModel> _obstacleModels;
     public TGCGame()
     {
         // Maneja la configuracion y la administracion del dispositivo grafico.
@@ -116,6 +117,8 @@ Scene _sceneNum = Scene.Menu;
         // _worldMenuCar = Matrix.Identity;
         // Modelos Autos Menu
         // (Se movieron a MainMenu.cs)
+        _freeCameraOffset = new Vector3(110f, 50f, 110f);
+
 
         IsMouseVisible = false;
 
@@ -124,7 +127,7 @@ Scene _sceneNum = Scene.Menu;
         GraphicsDevice.RasterizerState = _mainRasterizerState;
 
         _freeCamera = new FreeCamera(
-            new Vector3(110f, 10f, 110f),
+            _freeCameraOffset,
             Vector3.Zero,
             GraphicsDevice
         );
@@ -155,7 +158,10 @@ Scene _sceneNum = Scene.Menu;
         _blankTexture.SetData(new[] { Color.White });
 
         _debugEffect = Content.Load<Effect>(AssetPaths.ContentFolderEffects + "BasicShader");
-        _shadowMap = new RenderTarget2D(GraphicsDevice, ShadowMapSize, ShadowMapSize, false, SurfaceFormat.Single, DepthFormat.Depth24);
+        _texturedEffect = Content.Load<Effect>(AssetPaths.ContentFolderEffects + "TexturedShader");
+        _shadowMapRenderer = new ShadowMapRenderer(GraphicsDevice);
+        var shadowPostProcessEffect = Content.Load<Effect>(AssetPaths.ContentFolderEffects + "ShadowPostProcess");
+        _shadowPostProcessor = new ShadowPostProcessor(GraphicsDevice, shadowPostProcessEffect);
 
         var carKitColormap = Content.Load<Texture2D>(
             AssetPaths.ContentFolder3D +
@@ -216,7 +222,7 @@ Scene _sceneNum = Scene.Menu;
             carKitColormap
         );
 
-        var obstacleModels = new List<CustomModel>
+        _obstacleModels = new List<CustomModel>
         {
             policeModel,
             taxiModel,
@@ -243,7 +249,7 @@ Scene _sceneNum = Scene.Menu;
                 new Vector3(0f, -50f, 0f),
                 0f
             ),
-            obstacleModels
+            _obstacleModels
         );
 
         // =========================
@@ -325,9 +331,10 @@ Scene _sceneNum = Scene.Menu;
         _lightVehicle = new Vehicle(
             lightBodyModel,
             lightWheelModel,
-            Vector3.Zero + new Vector3(0f,-34f,0f),
+            Vector3.Zero + new Vector3(0f,-35f,0f),
             VehiclePresets.Light,
             VehicleType.Light,
+            new Vector3(60f, 50f, 100f),
             new Vector3(40f,30f,66f),
             new Vector3(40f,30f,-83f)
         );
@@ -335,9 +342,10 @@ Scene _sceneNum = Scene.Menu;
         _mediumVehicle = new Vehicle(
             mediumBodyModel,
             mediumWheelModel,
-            Vector3.Zero + new Vector3(0f,-34f,0f),
+            Vector3.Zero + new Vector3(0f,-35f,0f),
             VehiclePresets.Medium,
             VehicleType.Medium,
+            new Vector3(60f, 50f, 100f),
             new Vector3(40f,30f,66f),
             new Vector3(40f,30f,-67f)
         );
@@ -345,9 +353,10 @@ Scene _sceneNum = Scene.Menu;
         _heavyVehicle = new Vehicle(
             heavyBodyModel,
             heavyWheelModel,
-            Vector3.Zero + new Vector3(0f,-34f,0f),
+            Vector3.Zero + new Vector3(0f,-35f,0f),
             VehiclePresets.Heavy,
             VehicleType.Heavy,
+            new Vector3(65f, 50f, 120f),
             new Vector3(40f,30f,103f),
             new Vector3(40f,30f,-62f)
         );
@@ -369,6 +378,31 @@ Scene _sceneNum = Scene.Menu;
         {
             Exit();
         }
+        //FULl SCREN
+        if (keyboardState.IsKeyDown(Keys.P) &&
+            _previousKeyboardState.IsKeyUp(Keys.P))
+        {
+            _graphics.IsFullScreen = !_graphics.IsFullScreen;
+            
+            var displayMode = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode;
+            if (_graphics.IsFullScreen)
+            {
+                _graphics.PreferredBackBufferWidth = displayMode.Width;
+                _graphics.PreferredBackBufferHeight = displayMode.Height;
+            }
+            else
+            {
+                _graphics.PreferredBackBufferWidth = displayMode.Width;
+                _graphics.PreferredBackBufferHeight = (int)(displayMode.Height * 0.90f);
+            }
+            _graphics.ApplyChanges();
+            
+            // Forzar actualización de resolución en las cámaras y el HUD
+            _freeCamera.OnClientSizeChanged(null, EventArgs.Empty);
+            _followCamera.OnClientSizeChanged(null, EventArgs.Empty);
+            _hud.Initialize(_graphics.PreferredBackBufferWidth, _graphics.PreferredBackBufferHeight);
+        }
+        
         
         switch (_sceneNum)
         {
@@ -391,6 +425,15 @@ Scene _sceneNum = Scene.Menu;
             default:
                 if (_sceneNum == Scene.GameOver)
                 {
+                    if (keyboardState.IsKeyDown(Keys.R) && _previousKeyboardState.IsKeyUp(Keys.R))
+                    {
+                        RestartGame();
+                    }
+                    else if (keyboardState.IsKeyDown(Keys.Enter) && _previousKeyboardState.IsKeyUp(Keys.Enter))
+                    {
+                        ReturnToMainMenu();
+                    }
+                    _previousKeyboardState = keyboardState;
                     return;
                 }
         // TOGGLE MOUSE
@@ -416,9 +459,16 @@ Scene _sceneNum = Scene.Menu;
             _previousKeyboardState.IsKeyUp(Keys.F))
         {
             _useFreeCamera = !_useFreeCamera;
+            _freeCamera._position = _playerVehicle.GetWorld().Translation + _freeCameraOffset ;
         }
-        //GOD MODE 
+        //GOD MODE
         if (keyboardState.IsKeyDown(Keys.G) &&_previousKeyboardState.IsKeyUp(Keys.G)) _godMode = !_godMode ;
+
+        // DEBUG SHADOWS: T = sombras on/off, Y = ver el shadow map
+        if (keyboardState.IsKeyDown(Keys.T) && _previousKeyboardState.IsKeyUp(Keys.T)) _shadowsEnabled = !_shadowsEnabled;
+        if (keyboardState.IsKeyDown(Keys.Y) && _previousKeyboardState.IsKeyUp(Keys.Y)) _showShadowMap = !_showShadowMap;
+        // DEBUG LIGHTING: U = ciclar vista de debug (0..3)
+        if (keyboardState.IsKeyDown(Keys.U) && _previousKeyboardState.IsKeyUp(Keys.U)) _debugView = (_debugView + 1) % 4;
         
 
         // =========================
@@ -428,9 +478,13 @@ Scene _sceneNum = Scene.Menu;
         // Actualizo el coeficiente de fricción según el bioma actual
         _playerVehicle.FrictionCoefficient = _road.GetFrictionAtPosition(_playerVehicle.Position);
 
-        _playerVehicle.Update(gameTime);
-        SoundManager.GetInstance().Update(gameTime);
-        if(!_godMode) CheckObstacleCollisions();
+            _playerVehicle.Update(gameTime);
+
+            _road.ConstrainVehicleToRoad(_playerVehicle);
+            _playerVehicle.RefreshCollisionVolumes();
+
+            SoundManager.GetInstance().Update(gameTime);
+            if(!_godMode) CheckObstacleCollisions();
         }
 
         // =========================
@@ -451,8 +505,6 @@ Scene _sceneNum = Scene.Menu;
                 gameTime,
                 _mouseCaptured
             );
-
-            CheckFreeCameraModelPicking();
         }
         else
         {
@@ -485,7 +537,7 @@ Scene _sceneNum = Scene.Menu;
         }
 
         base.Update(gameTime);
-         break;
+            break;
         }
     }
 
@@ -498,21 +550,19 @@ Scene _sceneNum = Scene.Menu;
                 if (!obstacle.IsActive)
                     continue;
 
-                if (_playerVehicle.OBB
-                    .Intersects(obstacle.BoundingBox))
+                if (_playerVehicle.OBB.Intersects(obstacle.OBB))
                 {
                     Vector3 vehicleCenter = _playerVehicle.OBB.Center;
-                    Vector3 closestPointOnObstacle = Vector3.Clamp(vehicleCenter, obstacle.BoundingBox.Min, obstacle.BoundingBox.Max);
+                    Vector3 closestPointOnObstacle = ClosestPointOnOBB(obstacle.OBB, vehicleCenter);
 
                     Vector3 diff = closestPointOnObstacle - vehicleCenter;
-                    if (diff == Vector3.Zero) 
+                    if (diff == Vector3.Zero)
                     {
-                        Vector3 obstacleCenter = (obstacle.BoundingBox.Min + obstacle.BoundingBox.Max) / 2f;
-                        diff = obstacleCenter - vehicleCenter;
+                        diff = obstacle.OBB.Center - vehicleCenter;
                     }
 
                     Vector3 diffLocal = Vector3.Transform(diff, Matrix.CreateRotationY(-_playerVehicle.RotationY));
-                    
+
                     if (obstacle.IsFatalOnFrontalCollision && Math.Abs(diffLocal.Z) > Math.Abs(diffLocal.X))
                     {
                         // Choque frontal o trasero con objeto fatal -> termina la partida
@@ -532,59 +582,26 @@ Scene _sceneNum = Scene.Menu;
         }
     }
 
-    private void CheckFreeCameraModelPicking()
+    private Vector3 ClosestPointOnOBB(OrientedBoundingBox obb, Vector3 point)
     {
-        MouseState mouseState = Mouse.GetState();
+        Vector3 d = point - obb.Center;
+        Vector3 closest = obb.Center;
 
-        if (mouseState.LeftButton != ButtonState.Pressed ||
-            _previousMouseState.LeftButton != ButtonState.Released)
+        Vector3[] axes = { obb.Orientation.Right, obb.Orientation.Up, obb.Orientation.Backward };
+        float[] extents = { obb.Extents.X, obb.Extents.Y, obb.Extents.Z };
+
+        for (int i = 0; i < 3; i++)
         {
-            return;
+            Vector3 axis = axes[i];
+            if (axis.LengthSquared() > 0.0001f) axis.Normalize();
+
+            float distance = MathHelper.Clamp(Vector3.Dot(d, axis), -extents[i], extents[i]);
+            closest += axis * distance;
         }
 
-        Point screenPoint = _mouseCaptured
-            ? new Point(GraphicsDevice.Viewport.Width / 2, GraphicsDevice.Viewport.Height / 2)
-            : new Point(mouseState.X, mouseState.Y);
-        Ray ray = ModelRaycaster.CreateRayFromScreenPoint(screenPoint, GraphicsDevice, _freeCamera);
-        ModelRaycastHit? closestHit = null;
-        Tile closestTile = null;
-
-        foreach (var tile in _road.Tiles)
-        {
-            if (!tile.GetBoundingSphere().Intersects(ray).HasValue)
-            {
-                continue;
-            }
-
-            foreach (WorldObject obj in tile.WorldObjects)
-            {
-                if (!ModelRaycaster.TryIntersectObject(ray, obj, out ModelRaycastHit hit))
-                {
-                    continue;
-                }
-
-                if (!closestHit.HasValue || hit.Distance < closestHit.Value.Distance)
-                {
-                    closestHit = hit;
-                    closestTile = tile;
-                }
-            }
-        }
-
-        if (closestHit.HasValue && closestTile != null)
-        {
-            Vector3 localPoint = closestHit.Value.LocalPoint;
-            Vector3 worldPoint = closestHit.Value.WorldPoint;
-            Vector3 addObstacleOffset = Vector3.Transform(
-                worldPoint - closestTile.Position,
-                Matrix.CreateRotationY(-closestTile.Rotation)
-            );
-
-            Console.WriteLine($"Model local coordinates hit: X={localPoint.X:F3}, Y={localPoint.Y:F3}, Z={localPoint.Z:F3}");
-            Console.WriteLine($"World coordinates hit: X={worldPoint.X:F3}, Y={worldPoint.Y:F3}, Z={worldPoint.Z:F3}");
-            Console.WriteLine($"AddObstacle offset for this tile: new Vector3({addObstacleOffset.X:F3}f, {addObstacleOffset.Y:F3}f, {addObstacleOffset.Z:F3}f)");
-        }
+        return closest;
     }
+
 
     protected override void Draw(GameTime gameTime)
     {
@@ -597,55 +614,59 @@ Scene _sceneNum = Scene.Menu;
                 break;
             default:
         // =========================
-        // SHADOW MAP
+        // SOMBRAS COMO POST-PROCESADO
         // =========================
-        UpdateLightViewProjection();
-        DrawShadowMap();
-        ResetMainRenderState(true);
-        ApplyShadowMap();
+        var view = _cameraInUse.GetView();
+        var projection = _cameraInUse.GetProjection();
+        var cameraViewProjection = view * projection;
 
-        // =========================
-        // DRAW SKYBOX
-        // =========================
+        // Pass 1: profundidad de la escena desde la LUZ (shadow map)
+        _shadowMapRenderer.UpdateLightMatrices(_playerVehicle?.Position ?? Vector3.Zero);
+        _shadowMapRenderer.RenderDepth(lightViewProjection =>
         {
-            var view = _cameraInUse.GetView();
-            var projection = _cameraInUse.GetProjection();
+            _road.DrawDepth(lightViewProjection);
+            _playerVehicle.DrawDepth(lightViewProjection);
+        });
+
+        // Pass 2: profundidad de la escena desde la CÁMARA (para reconstruir la posición de mundo)
+        _shadowPostProcessor.RenderCameraDepth(cameraVp =>
+        {
+            _road.DrawDepth(cameraVp);
+            _playerVehicle.DrawDepth(cameraVp);
+        }, cameraViewProjection);
+
+        // Pass 3a: la escena se dibuja a una textura de color (SIN sombras)
+        _shadowPostProcessor.BeginSceneColor(Color.CornflowerBlue);
+        SetSceneRenderStates();
+        SetLightingParams();
+
+        // DRAW SKYBOX
+        {
             var cameraPosition = Matrix.Invert(view).Translation;
             _skybox.Draw(view, projection, cameraPosition);
         }
 
-        ResetMainRenderState(false);
+        SetSceneRenderStates();
 
-        // =========================
         // DRAW WORLD
-        // =========================
-
         _road.Draw(
             gameTime,
             _cameraInUse
         );
 
-        // =========================
         // DRAW PLAYER
-        // =========================
-
         _playerVehicle.Draw(
             gameTime,
             _cameraInUse
         );
 
-        // =========================
         // DRAW COLLECTIBLES
-        // =========================
-
         foreach (var collectible in _collectibles)
         {
-            collectible.Draw(gameTime, _cameraInUse.GetView(), _cameraInUse.GetProjection());
+            collectible.Draw(gameTime, view, projection);
         }
 
-        // =========================
         // DRAW HITBOXES
-        // =========================
         if(_showHitboxes)
         {
             DrawOrientedBoundingBox(_playerVehicle.OBB, _cameraInUse, Color.Red);
@@ -660,19 +681,37 @@ Scene _sceneNum = Scene.Menu;
             {
                 foreach (var obstacle in tile.Obstacles)
                 {
-                    DrawBoundingBox(
-                        obstacle.BoundingBox,
+                    DrawOrientedBoundingBox(
+                        obstacle.OBB,
                         _cameraInUse,
                         Color.Orange
                     );
                 }
             }
         }
+
+        // Pass 3b: full-screen quad que aplica las sombras sobre la imagen final (a pantalla)
+        _shadowPostProcessor.Apply(
+            _shadowMapRenderer.ShadowMap,
+            _shadowMapRenderer.LightViewProjection,
+            cameraViewProjection,
+            _shadowMapRenderer.Size,
+            _shadowsEnabled ? 0.55f : 0f,
+            0.0025f
+        );
+
         base.Draw(gameTime);
+
+        // DEBUG: preview del shadow map (tecla Y). El canal rojo = profundidad desde la luz.
+        if (_showShadowMap)
+        {
+            DrawShadowMapPreview();
+        }
+
         // =========================
         // UI
         // =========================
-        // DrawLeftText("Velocidad: " +string.Format("{0:N2}",_playerVehicle._speed), 10, 1,100); 
+        // DrawLeftText("Velocidad: " +string.Format("{0:N2}",_playerVehicle._speed), 10, 1,100);
 
         if (!_useFreeCamera){
             if (_godMode) DrawLeftText("GOD MODE",10f,1,0);
@@ -685,47 +724,36 @@ Scene _sceneNum = Scene.Menu;
             DrawCenterText("+", 3, Color.White);
         }
 
-        if (_gameOver &&  !_useFreeCamera)
+        if (_gameOver && !_useFreeCamera)
         {
-            DrawCenterText("GAME OVER",10, Color.Red);
-            DrawCenterTextY("PUNTAJE: "+ _playerVehicle.Score.ToString() ,100, 10,Color.Yellow);
+            var W = GraphicsDevice.Viewport.Width;
+            var H = GraphicsDevice.Viewport.Height;
+            
+            float scaleGameOver = 3f;
+            float scaleScore = 1.5f;
+            float scaleHelp = 0.8f;
+            
+            var sizeGameOver = font.MeasureString("GAME OVER") * scaleGameOver;
+            var scoreText = "PUNTAJE: " + _playerVehicle.Score.ToString();
+            var sizeScore = font.MeasureString(scoreText) * scaleScore;
+            var helpText = "Presiona [R] para volver a jugar o [Enter] para volver al menu";
+            var sizeHelp = font.MeasureString(helpText) * scaleHelp;
+            
+            float totalHeight = sizeGameOver.Y + sizeScore.Y + sizeHelp.Y + 50f;
+            float startY = (H - totalHeight) / 2f;
+            
+            float gameOverY = startY;
+            float scoreY = startY + sizeGameOver.Y + 20f;
+            float helpY = scoreY + sizeScore.Y + 30f;
+
+            DrawCenterTextY("GAME OVER", gameOverY, scaleGameOver, Color.Red);
+            DrawCenterTextY(scoreText, scoreY, scaleScore, Color.Yellow);
+            DrawCenterTextY(helpText, helpY, scaleHelp, Color.White);
             SoundManager.GetInstance().StopMotorSound();
         }
         break; 
         }
-       
 
-    }
-
-    private void UpdateLightViewProjection()
-    {
-        var center = _playerVehicle?.Position ?? Vector3.Zero;
-        var lightPosition = center + LightDirection * 1600f;
-        var lightView = Matrix.CreateLookAt(lightPosition, center, Vector3.Up);
-        var lightProjection = Matrix.CreateOrthographic(3200f, 3200f, 1f, 5000f);
-        _lightViewProjection = lightView * lightProjection;
-    }
-
-    private void DrawShadowMap()
-    {
-        var previousBlendState = GraphicsDevice.BlendState;
-        var previousDepthStencilState = GraphicsDevice.DepthStencilState;
-        var previousRasterizerState = GraphicsDevice.RasterizerState;
-
-        GraphicsDevice.SetRenderTarget(_shadowMap);
-        GraphicsDevice.BlendState = BlendState.Opaque;
-        GraphicsDevice.DepthStencilState = DepthStencilState.Default;
-        GraphicsDevice.Clear(ClearOptions.Target | ClearOptions.DepthBuffer, Color.White, 1f, 0);
-
-        GraphicsDevice.RasterizerState = _shadowRasterizerState;
-
-        _road.DrawDepth(_lightViewProjection);
-        _playerVehicle.DrawDepth(_lightViewProjection);
-
-        GraphicsDevice.RasterizerState = previousRasterizerState;
-        GraphicsDevice.DepthStencilState = previousDepthStencilState;
-        GraphicsDevice.BlendState = previousBlendState;
-        GraphicsDevice.SetRenderTarget(null);
     }
 
     private void ResetMainRenderState(bool clear)
@@ -743,10 +771,31 @@ Scene _sceneNum = Scene.Menu;
         }
     }
 
-    private void ApplyShadowMap()
+    /// Setea los estados de render para dibujar la escena SIN cambiar el render target
+    /// (durante el pase de color el target es la textura del post-procesador, no la pantalla).
+    private void SetSceneRenderStates()
     {
-        _road.SetShadowMap(_shadowMap, _lightViewProjection);
-        _playerVehicle.SetShadowMap(_shadowMap, _lightViewProjection);
+        GraphicsDevice.BlendState = BlendState.Opaque;
+        GraphicsDevice.DepthStencilState = DepthStencilState.Default;
+        GraphicsDevice.RasterizerState = _mainRasterizerState;
+        GraphicsDevice.SamplerStates[0] = SamplerState.LinearClamp;
+    }
+
+    private void SetLightingParams()
+    {
+        _texturedEffect.Parameters["LightDirection"]?.SetValue(_shadowMapRenderer.LightDirection);
+        _texturedEffect.Parameters["DebugView"]?.SetValue((float)_debugView);
+    }
+
+    private void DrawShadowMapPreview()
+    {
+        const int previewSize = 320;
+        var destination = new Rectangle(10, 10, previewSize, previewSize);
+
+        // Opaque para poder ver una textura de un solo canal (Single) sin que el alpha la oculte.
+        spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Opaque, SamplerState.PointClamp, DepthStencilState.None, RasterizerState.CullNone);
+        spriteBatch.Draw(_shadowMapRenderer.ShadowMap, destination, Color.White);
+        spriteBatch.End();
     }
 
     private void DrawBoundingBox(BoundingBox box, Camera camera, Color color)
@@ -831,7 +880,8 @@ Scene _sceneNum = Scene.Menu;
 
     protected override void UnloadContent()
     {
-        _shadowMap?.Dispose();
+        _shadowMapRenderer?.Dispose();
+        _shadowPostProcessor?.Dispose();
         Content.Unload();
 
         base.UnloadContent();
@@ -898,5 +948,64 @@ Scene _sceneNum = Scene.Menu;
             Matrix.CreateScale(escala) * Matrix.CreateTranslation(X - (size.X / 2), Y, 0));
         spriteBatch.DrawString(font, msg, new Vector2(0, 0), color);
         spriteBatch.End();
+    }
+
+    private void RestartGame()
+    {
+        _gameOver = false;
+        _gameOverTimer = GameOverDelay;
+        _sceneNum = Scene.Road;
+
+        // Resetear vehículos a sus posiciones iniciales y restablecer estadísticas
+        _lightVehicle.Reset(Vector3.Zero + new Vector3(0f,-34f,0f));
+        _mediumVehicle.Reset(Vector3.Zero + new Vector3(0f,-34f,0f));
+        _heavyVehicle.Reset(Vector3.Zero + new Vector3(0f,-34f,0f));
+
+        switch (_mainMenu.ChosenVehicle)
+        {
+            case SelectedVehicle.Light: _playerVehicle = _lightVehicle; break;
+            case SelectedVehicle.Medium: _playerVehicle = _mediumVehicle; break;
+            case SelectedVehicle.Heavy: _playerVehicle = _heavyVehicle; break;
+        }
+
+        // Recrear calle
+        _road = new Road(
+            new AsphaltBiome(
+                null,
+                new GameMode(BiomeType.RANDOM, _currentDifficulty)
+            ).GenerateNewTileOf(
+                TileType.STRAIGHT_LINE,
+                new Vector3(0f, -50f, 0f),
+                0f
+            ),
+            _obstacleModels
+        );
+
+        // Re-inicializar cámaras
+        _freeCamera = new FreeCamera(
+            new Vector3(110f, 10f, 110f),
+            Vector3.Zero,
+            GraphicsDevice
+        );
+        _followCamera = new FollowCamera(GraphicsDevice);
+        _useFreeCamera = false;
+        _cameraInUse = _followCamera;
+
+        _mouseCaptured = true;
+        IsMouseVisible = false;
+
+        SoundManager.GetInstance().StartMotorSound();
+    }
+
+    private void ReturnToMainMenu()
+    {
+        _gameOver = false;
+        _gameOverTimer = GameOverDelay;
+        _sceneNum = Scene.Menu;
+
+        _mainMenu.Reset();
+
+        _mouseCaptured = true;
+        IsMouseVisible = false;
     }
 }

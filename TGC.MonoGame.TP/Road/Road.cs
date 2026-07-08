@@ -22,9 +22,16 @@ public class Road
         get => _tiles;
     }
 
+    private const float ObstacleForwardSpeed = 150f;
+    private const float ObstacleVisualYOffset = 20f;
+
+    private const float ObstacleModelRotationOffset = MathHelper.Pi;
+
     private readonly Random _randomGenerator;
 
     private readonly List<CustomModel> _obstacleModels;
+
+    private const float TileHalfSize = 600f;
 
     public Road(Tile firstTile, List<CustomModel> obstacleModels)
     {
@@ -83,13 +90,18 @@ public class Road
         Camera camera
     )
     {
+        var frustum = new BoundingFrustum(camera.GetView() * camera.GetProjection());
+
         int start = Math.Max(0, this._tiles.Count - 10);
 
         for (int i = start; i < this._tiles.Count; i++)
         {
             Tile tile = this._tiles[i];
 
-            tile.Draw(gameTime, camera);
+            if (frustum.Intersects(tile.GetBoundingBox()))
+            {
+                tile.Draw(gameTime, camera);
+            }
         }
     }
 
@@ -130,11 +142,13 @@ public class Road
             carRotation += MathHelper.Pi;
         }
 
-        Matrix world = Matrix.CreateScale(Vehicle.ScaleFactor) * Matrix.CreateRotationY(carRotation) * Matrix.CreateTranslation(worldPoint);
+        Vector3 visualPoint = worldPoint + new Vector3(0f, ObstacleVisualYOffset, 0f);
 
-        // Hitbox similar a la del auto (200x100x200), daño alto (100) y son fatales de frente (true)
-        tile.AddObstacle(new Obstacle(obstacleModel, world, worldPoint, new Vector3(200f, 100f, 200f) * Vehicle.ScaleFactor,
-            new Vector3(0f, 40f, 0f) * Vehicle.ScaleFactor, 40f, 0f, true));
+        Matrix world = Matrix.CreateScale(Vehicle.ScaleFactor) * Matrix.CreateRotationY(carRotation + ObstacleModelRotationOffset) * Matrix.CreateTranslation(visualPoint);
+
+        // Hitbox similar a la del auto (140f, 100f, 200f), daño medio (40) y son fatales de frente (true)
+        tile.AddObstacle(new Obstacle(obstacleModel, world, worldPoint, new Vector3(140f, 100f, 200f) * Vehicle.ScaleFactor,
+            new Vector3(0f, 80f, 0f) * Vehicle.ScaleFactor, 40f, 0f, true, carRotation, ObstacleForwardSpeed));
     }
 
     private CustomModel GetRandomObstacleModel()
@@ -196,13 +210,10 @@ public class Road
         return this._tiles.Last<Tile>();
     }
 
-    //TOOD: Intentar resolverlo con colisiones para reutilizar la lógica de los coleccionables
-    public float GetFrictionAtPosition(Vector3 position)
+        private Tile GetNearestTile(Vector3 position)
     {
-        const float detectionThreshold = 800f;
-        float detectionThresholdSq = detectionThreshold * detectionThreshold;
+        Tile best = null;
         float bestDistSq = float.MaxValue;
-        float bestFriction = 1f;
 
         foreach (Tile tile in this._tiles)
         {
@@ -213,13 +224,69 @@ public class Road
             if (distSq < bestDistSq)
             {
                 bestDistSq = distSq;
-                if (distSq <= detectionThresholdSq)
-                {
-                    bestFriction = tile.GetFrictionCoefficient();
-                }
+                best = tile;
             }
         }
 
-        return bestFriction;
+        return best;
+    }
+
+    public float GetFrictionAtPosition(Vector3 position)
+    {
+        const float detectionThreshold = 800f;
+        float detectionThresholdSq = detectionThreshold * detectionThreshold;
+
+        Tile nearest = GetNearestTile(position);
+        if (nearest == null) return 1f;
+
+        float dx = nearest.Position.X - position.X;
+        float dz = nearest.Position.Z - position.Z;
+        float distSq = dx * dx + dz * dz;
+
+        return distSq <= detectionThresholdSq ? nearest.GetFrictionCoefficient() : 1f;
+    }
+
+    public void ConstrainVehicleToRoad(Vehicle car)
+    {
+        int start = Math.Max(0, this._tiles.Count - 10);
+
+        for (int i = start; i < this._tiles.Count; i++)
+        {
+            if (IsInsideTileBounds(car.Position, this._tiles[i]))
+            {
+                return;
+            }
+        }
+
+        // No está dentro de ningún tile cercano, empujamos el auto de vuelta al más cercano
+        Tile nearest = GetNearestTile(car.Position);
+        if (nearest == null) return;
+
+        Vector3 localPos = ToLocalSpace(car.Position, nearest);
+
+        localPos.X = MathHelper.Clamp(localPos.X, -TileHalfSize, TileHalfSize);
+        localPos.Z = MathHelper.Clamp(localPos.Z, -TileHalfSize, TileHalfSize);
+
+        Vector3 worldPos = ToWorldSpace(localPos, nearest);
+
+        car.Position = new Vector3(worldPos.X, car.Position.Y, worldPos.Z);
+
+        car.ApplyOffRoadPenalty();
+    }
+
+    private bool IsInsideTileBounds(Vector3 position, Tile tile)
+    {
+        Vector3 local = ToLocalSpace(position, tile);
+        return Math.Abs(local.X) <= TileHalfSize && Math.Abs(local.Z) <= TileHalfSize;
+    }
+
+    private Vector3 ToLocalSpace(Vector3 worldPos, Tile tile)
+    {
+        return Vector3.Transform(worldPos - tile.Position, Matrix.CreateRotationY(-tile.Rotation));
+    }
+
+    private Vector3 ToWorldSpace(Vector3 localPos, Tile tile)
+    {
+        return Vector3.Transform(localPos, Matrix.CreateRotationY(tile.Rotation)) + tile.Position;
     }
 }
