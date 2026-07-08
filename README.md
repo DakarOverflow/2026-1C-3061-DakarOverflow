@@ -47,6 +47,14 @@ TGC, Tgcito  |  Apellido, Nombre
 
 [3] -> Cambiar a Vehículo Pesado
 
+### Debug
+
+[T] -> Activar y desactivar sombras
+
+[Y] -> Activar ventana con Shadow Map
+
+[U] -> Alternar vistas de depuración para iluminación y sombras
+
 
 ## Capturas
 
@@ -54,6 +62,9 @@ TGC, Tgcito  |  Apellido, Nombre
 ![screenshot](/Imagenes/MenuAutos.png)
 ![screenshot](/Imagenes/MenuComandos.png)
 ![screenshot](/Imagenes/MenuDificultad.png)
+<img width="1882" height="948" alt="image" src="https://github.com/user-attachments/assets/a3c0cbf5-e65c-4668-9fbe-c2f055bfc737" />
+<img width="1899" height="955" alt="image" src="https://github.com/user-attachments/assets/ed6646d1-c39f-4205-9c4a-311f15d500bc" />
+
 
 ## Game Play
 
