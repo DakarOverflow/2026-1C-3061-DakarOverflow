@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -520,11 +520,14 @@ Scene _sceneNum = Scene.Menu;
         _previousMouseState = Mouse.GetState();
 
         // Cuando Termina el juego
-        if (!_gameOver && _playerVehicle.CurrentHealth == 0)
+        if (!_gameOver && (_playerVehicle.CurrentHealth <= 0 || _playerVehicle.CurrentFuel <= 0))
         {
             _gameOver = true;
             _gameOverTimer = GameOverDelay;
-            SoundManager.GetInstance().SonarExplosion();
+            if (_playerVehicle.CurrentHealth <= 0) 
+            {
+                SoundManager.GetInstance().SonarExplosion();
+            }
         }
         if (_gameOver && !_useFreeCamera)
         {
