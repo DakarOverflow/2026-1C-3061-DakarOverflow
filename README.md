@@ -68,5 +68,5 @@ TGC, Tgcito  |  Apellido, Nombre
 
 ## Game Play
 
-[![Trailer](https://i3.ytimg.com/vi/O1mrJwI3H1E/maxresdefault.jpg)](https://youtu.be/O1mrJwI3H1E)
+[![Trailer](https://i3.ytimg.com/vi/O1mrJwI3H1E/maxresdefault.jpg)](https://youtu.be/endImzM7e2g?si=tiOJDCC3_Y1YefMv)
 
